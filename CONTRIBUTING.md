@@ -73,13 +73,13 @@ Closes #1
 
 ## 로컬 자동화
 
-- `npm install` 이후 `lefthook`이 설치되어 pre-commit hook이 활성화됩니다.
+- `pnpm install` 이후 `lefthook`이 설치되어 pre-commit hook이 활성화됩니다.
 - 커밋 전에는 staged 파일 기준으로 `eslint --fix`와 `prettier --write`가 자동 실행됩니다.
 - 전체 검사는 필요할 때 직접 아래 명령으로 실행합니다.
 
 ```text
-npm run lint
-npm run format
-npm run test
-npm run security:check
+pnpm run lint
+pnpm run format
+pnpm run test
+pnpm run security:check
 ```

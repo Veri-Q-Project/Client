@@ -14,7 +14,8 @@
 ```text
 src/
   app/          # 앱 진입점, 전역 설정, provider
-  pages/        # 페이지 단위 화면
+  pages/        # 일반 규칙상 페이지 단위 화면
+  screens/      # 이 프로젝트에서 사용하는 페이지 단위 화면
   widgets/      # 페이지를 구성하는 큰 UI 블록
   features/     # 사용자 액션 단위 기능
   entities/     # 핵심 도메인 모델
@@ -68,7 +69,7 @@ export const MAX_URL_LENGTH = 2048;
 
 프로젝트 내부 절대 경로는 가능하면 아래 순서를 따릅니다.
 
-`shared -> entities -> features -> widgets -> pages -> app -> local`
+`shared -> entities -> features -> widgets -> pages/screens -> app -> local`
 
 추가 규칙:
 
@@ -156,7 +157,7 @@ import { useUrlScan } from '@/features/scan-url/model/useUrlScan';
 
 짧은 예시:
 
-- `pages/scan` : URL 검사 페이지 조합
+- `screens/scan` : URL 검사 페이지 조합
 - `features/scan-url` : URL 제출과 검사 요청
 - `entities/scan-result` : 결과 데이터 모델과 표시 UI
 - `shared/ui/Button` : 공통 버튼
@@ -187,3 +188,14 @@ shared/ui/loading/Loading.tsx
 shared/ui/error-state/ErrorState.tsx
 shared/ui/empty-state/EmptyState.tsx
 ```
+
+## Router Note
+
+- TanStack Router 파일은 `src/routes`에 둡니다.
+- `src/routes` 파일은 라우트 연결만 담당하고, 실제 화면 컴포넌트는 별도 슬라이스에서 import 합니다.
+- 이 프로젝트는 `Next.js App Router`를 함께 사용하므로, 예약 디렉터리 충돌을 피하기 위해 페이지 단위 화면 슬라이스를 `src/pages` 대신 `src/screens`에 둡니다.
+- import 순서에서는 `pages`와 같은 위치로 보고 `widgets -> screens -> app -> local` 순서를 따릅니다.
+- `src/screens`도 기존 규칙을 그대로 따릅니다.
+  - 폴더명: `kebab-case`
+  - 컴포넌트 파일명: `PascalCase`
+  - 슬라이스 진입점: `index.ts`
