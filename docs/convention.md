@@ -35,11 +35,11 @@ features/
 
 ## 컴포넌트 선언 및 내보내기
 
-| 구분 | export 방식 | 함수 선언 형태 | 예시 |
-| --- | --- | --- | --- |
-| 주요 컴포넌트 | `default` | 일반 함수 선언 | `export default function Header() {}` |
-| 유틸 / 훅 / 상수 | `named` | 화살표 함수 또는 일반 함수 | `export const formatDate = ...` |
-| 여러 기능 재노출 파일 | `named` | 혼합 가능 | `export { Header, Footer }` |
+| 구분                  | export 방식 | 함수 선언 형태             | 예시                                  |
+| --------------------- | ----------- | -------------------------- | ------------------------------------- |
+| 주요 컴포넌트         | `default`   | 일반 함수 선언             | `export default function Header() {}` |
+| 유틸 / 훅 / 상수      | `named`     | 화살표 함수 또는 일반 함수 | `export const formatDate = ...`       |
+| 여러 기능 재노출 파일 | `named`     | 혼합 가능                  | `export { Header, Footer }`           |
 
 규칙:
 
@@ -98,21 +98,21 @@ import './UrlScanForm.css';
 
 기본적인 파일명 규칙은 다음과 같습니다.
 
-| 구분 | 규칙 | 예시 |
-| --- | --- | --- |
-| 폴더명 | `kebab-case` | `scan-url`, `result-summary` |
-| 컴포넌트 파일 | `PascalCase` | `Header.tsx`, `UrlScanForm.tsx` |
-| util 함수 / 상수 파일 | `lowerCamelCase` | `formatDate.ts`, `constants.ts` |
-| 라우트 세그먼트 | `kebab-case` | `scan-result/page.tsx` |
-| 테스트 파일 | 대상 파일명 + `.test` | `formatDate.test.ts` |
+| 구분                  | 규칙                  | 예시                            |
+| --------------------- | --------------------- | ------------------------------- |
+| 폴더명                | `kebab-case`          | `scan-url`, `result-summary`    |
+| 컴포넌트 파일         | `PascalCase`          | `Header.tsx`, `UrlScanForm.tsx` |
+| util 함수 / 상수 파일 | `lowerCamelCase`      | `formatDate.ts`, `constants.ts` |
+| 라우트 세그먼트       | `kebab-case`          | `scan-result/page.tsx`          |
+| 테스트 파일           | 대상 파일명 + `.test` | `formatDate.test.ts`            |
 
 REST API 관련 파일명과 함수명은 아래 접두사를 사용합니다.
 
-| HTTP Method | 접두사 | 파일명 예시 | 함수명 예시 |
-| --- | --- | --- | --- |
-| GET | `fetch` | `fetchPostDetail.ts` | `fetchPostDetail` |
-| POST | `submit` | `submitPost.ts` | `submitPost` |
-| DELETE | `remove` | `removePost.ts` | `removePost` |
+| HTTP Method | 접두사   | 파일명 예시           | 함수명 예시        |
+| ----------- | -------- | --------------------- | ------------------ |
+| GET         | `fetch`  | `fetchPostDetail.ts`  | `fetchPostDetail`  |
+| POST        | `submit` | `submitPost.ts`       | `submitPost`       |
+| DELETE      | `remove` | `removePost.ts`       | `removePost`       |
 | PUT / PATCH | `update` | `updatePostDetail.ts` | `updatePostDetail` |
 
 커스텀 훅은 위 접두사 앞에 `use`를 붙입니다.
