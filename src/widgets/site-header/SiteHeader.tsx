@@ -3,10 +3,10 @@ export default function SiteHeader() {
     <header className="site-header">
       <div className="site-header__inner">
         <a className="site-header__brand" href="#top">
-          <span className="site-header__mark">QG</span>
+          <span className="site-header__mark">VQ</span>
           <span className="site-header__text">
-            <span className="site-header__eyebrow">Quishing Response</span>
-            <span className="site-header__title">Quishing Guard</span>
+            <span className="site-header__eyebrow">QR Risk Check</span>
+            <span className="site-header__title">Veri-Q</span>
           </span>
         </a>
 
