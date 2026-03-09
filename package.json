@@ -1,0 +1,44 @@
+{
+  "name": "quishing-client",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "prepare": "lefthook install",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "security:secrets": "secretlint \"**/*\"",
+    "security:audit": "npm audit --audit-level=high",
+    "security:check": "npm run security:secrets && npm run security:audit"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@secretlint/secretlint-rule-preset-recommend": "^11.3.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^17.4.0",
+    "lefthook": "^1.13.6",
+    "lint-staged": "^16.2.0",
+    "prettier": "^3.8.1",
+    "secretlint": "^11.3.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1",
+    "vitest": "^3.2.4"
+  }
+}

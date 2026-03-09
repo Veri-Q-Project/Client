@@ -70,3 +70,16 @@ Closes #1
 - 관련 이슈가 연결되어 있는지 확인합니다.
 - 커밋 메시지와 PR 제목이 규칙에 맞는지 확인합니다.
 - 변경 범위와 의도가 PR 본문에 드러나는지 확인합니다.
+
+## 로컬 자동화
+
+- `npm install` 이후 `lefthook`이 설치되어 pre-commit hook이 활성화됩니다.
+- 커밋 전에는 staged 파일 기준으로 `eslint --fix`와 `prettier --write`가 자동 실행됩니다.
+- 전체 검사는 필요할 때 직접 아래 명령으로 실행합니다.
+
+```text
+npm run lint
+npm run format
+npm run test
+npm run security:check
+```
