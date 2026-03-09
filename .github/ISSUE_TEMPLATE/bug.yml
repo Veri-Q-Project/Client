@@ -1,0 +1,59 @@
+name: '🐞 Bug'
+description: '버그가 발생했나요?'
+title: '[Bug]: '
+labels: 'bug'
+body:
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: 이슈 유형
+      description: 어떤 종류의 문제인지 선택해 주세요.
+      options:
+        - 기능 오류
+        - 오탐(False Positive)
+        - 미탐(False Negative)
+        - UI/UX 문제
+        - 성능 문제
+        - 접근성 문제
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: 버그 설명
+      description: 어떤 문제가 발생했는지 명확하게 작성해 주세요.
+      placeholder: 예) 정상 URL인데 위험으로 표시됩니다.
+    validations:
+      required: true
+  - type: textarea
+    id: target
+    attributes:
+      label: 문제 대상 URL/화면 경로
+      description: 문제가 발생한 URL, 도메인, 화면 경로를 작성해 주세요.
+      placeholder: 예) /scan-result, example.com
+  - type: textarea
+    id: expected
+    attributes:
+      label: 예상 결과
+      description: 원래 기대했던 동작을 작성해 주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 실제 결과
+      description: 실제로 발생한 결과를 작성해 주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 절차
+      description: 버그를 재현할 수 있도록 단계별로 적어주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: etc
+    attributes:
+      label: 참고 자료
+      description: 스크린샷, 로그, 관련 링크 등 추가 정보가 있다면 작성해 주세요.
