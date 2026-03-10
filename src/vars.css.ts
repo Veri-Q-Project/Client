@@ -1,4 +1,4 @@
-import { createGlobalTheme } from '@vanilla-extract/css';
+import { createGlobalTheme, globalStyle } from '@vanilla-extract/css';
 
 export const vars = createGlobalTheme('#app', {
   colors: {
@@ -59,4 +59,15 @@ export const vars = createGlobalTheme('#app', {
     authLogo: '48px',
     header: '72px',
   },
+});
+
+globalStyle('*, *::before, *::after', {
+  boxSizing: 'border-box',
+});
+
+globalStyle('html, body, #app', {
+  margin: 0,
+  minHeight: '100%',
+  padding: 0,
+  width: '100%',
 });

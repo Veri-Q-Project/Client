@@ -11,7 +11,9 @@ export const page = style({
 });
 
 export const shell = style({
-  width: 'min(1120px, 100%)',
+  boxSizing: 'border-box',
+  maxWidth: '1120px',
+  width: '100%',
   margin: '0 auto',
   padding: `0 ${vars.spacing.md} ${vars.spacing.lg}`,
   '@media': {
