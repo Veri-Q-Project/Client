@@ -1,15 +1,22 @@
+import tsParser from '@typescript-eslint/parser';
 import { defineConfig, globalIgnores } from 'eslint/config';
-import nextVitals from 'eslint-config-next/core-web-vitals';
-import nextTypescript from 'eslint-config-next/typescript';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import pluginImport from 'eslint-plugin-import';
 
 export default defineConfig([
-  ...nextVitals,
-  ...nextTypescript,
   eslintConfigPrettier,
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
     plugins: {
       import: pluginImport,
     },
@@ -37,19 +44,14 @@ export default defineConfig([
               position: 'before',
             },
             {
-              pattern: 'next',
+              pattern: '@tanstack/**',
               group: 'external',
-              position: 'before',
+              position: 'after',
             },
             {
               pattern: '@/shared/**',
               group: 'internal',
               position: 'before',
-            },
-            {
-              pattern: '@/entities/**',
-              group: 'internal',
-              position: 'after',
             },
             {
               pattern: '@/features/**',
@@ -67,12 +69,7 @@ export default defineConfig([
               position: 'after',
             },
             {
-              pattern: '@/screens/**',
-              group: 'internal',
-              position: 'after',
-            },
-            {
-              pattern: '@/app/**',
+              pattern: '@/routes/**',
               group: 'internal',
               position: 'after',
             },
@@ -88,17 +85,13 @@ export default defineConfig([
       'no-implied-eval': 'error',
       'no-new-func': 'error',
       'no-script-url': 'error',
-      '@next/next/no-html-link-for-pages': 'off',
     },
   },
   globalIgnores([
     '**/node_modules/**',
     '**/.next/**',
-    '**/coverage/**',
     '**/dist/**',
-    '**/out/**',
+    '**/coverage/**',
     '**/*.min.js',
-    'next-env.d.ts',
-    'src/routeTree.gen.ts',
   ]),
 ]);
