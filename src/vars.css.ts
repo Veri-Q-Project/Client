@@ -16,9 +16,9 @@ export const vars = createGlobalTheme('#app', {
     subText: '#4B4E57',
     border: '#CECECE',
     label: '#404040',
-    error: '#E64848',
-    success: '#22C55E',
-    warning: '#FACC15',
+    error: '#F20D0D',
+    success: '#11D483',
+    warning: '#F2DF0D',
   },
   font: {
     size: {
