@@ -1,10 +1,8 @@
-'use client';
-
 import { useState } from 'react';
 
 import { isSafeExternalUrl } from '@/shared/lib/security/isSafeExternalUrl';
 
-import ScanResultCard from '@/entities/scan-result/ui/ScanResultCard';
+import ScanResultCard from './ScanResultCard';
 type ScanState = 'idle' | 'safe' | 'warning';
 
 function createScanFeedback(url: string): {
