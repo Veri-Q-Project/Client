@@ -1,13 +1,13 @@
 import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
 
-import CaptchaPage from '@/pages/CaptchaPage';
-import HomePage from '@/pages/HomePage';
-import LoadingPage from '@/pages/LoadingPage';
-import ReportPage from '@/pages/ReportPage';
-import ResultCriticalPage from '@/pages/ResultCriticalPage';
-import ResultSafePage from '@/pages/ResultSafePage';
-import ResultWarningPage from '@/pages/ResultWarningPage';
-import ScanHistoryPage from '@/pages/ScanHistoryPage';
+import CaptchaPage from '@/pages/Captcha';
+import HomePage from '@/pages/Home';
+import LoadingPage from '@/pages/Loading';
+import ReportPage from '@/pages/Report';
+import ResultCriticalPage from '@/pages/ResultCritical';
+import ResultSafePage from '@/pages/ResultSafe';
+import ResultWarningPage from '@/pages/ResultWarning';
+import ScanHistoryPage from '@/pages/ScanHistory';
 
 function RootLayout() {
   return <Outlet />;
