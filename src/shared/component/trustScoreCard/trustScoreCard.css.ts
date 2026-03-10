@@ -1,4 +1,4 @@
-import { style } from '@vanilla-extract/css';
+import { style, styleVariants } from '@vanilla-extract/css';
 
 import { vars } from '@/vars.css';
 
@@ -60,4 +60,16 @@ export const bar = style({
   height: '100%',
   borderRadius: '999px',
   backgroundColor: vars.colors.success,
+});
+
+export const barTone = styleVariants({
+  safe: {
+    backgroundColor: vars.colors.success,
+  },
+  warning: {
+    backgroundColor: vars.colors.warning,
+  },
+  critical: {
+    backgroundColor: vars.colors.error,
+  },
 });

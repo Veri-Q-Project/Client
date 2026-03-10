@@ -1,4 +1,4 @@
-import { style } from '@vanilla-extract/css';
+import { style, styleVariants } from '@vanilla-extract/css';
 
 import { vars } from '@/vars.css';
 
@@ -47,6 +47,21 @@ export const checkBadge = style({
   placeItems: 'center',
 });
 
+export const checkBadgeTone = styleVariants({
+  safe: {
+    backgroundColor: vars.colors.success,
+    color: vars.colors.white,
+  },
+  warning: {
+    backgroundColor: vars.colors.warning,
+    color: vars.colors.black,
+  },
+  critical: {
+    backgroundColor: vars.colors.error,
+    color: vars.colors.white,
+  },
+});
+
 export const titleRow = style({
   display: 'flex',
   alignItems: 'center',
@@ -73,6 +88,21 @@ export const official = style({
   fontSize: vars.font.size.xs,
   fontWeight: vars.font.weight.bold,
   letterSpacing: '0.04em',
+});
+
+export const officialTone = styleVariants({
+  safe: {
+    backgroundColor: 'rgba(34, 197, 94, 0.14)',
+    color: vars.colors.success,
+  },
+  warning: {
+    backgroundColor: 'rgba(242, 223, 13, 0.2)',
+    color: '#8A7800',
+  },
+  critical: {
+    backgroundColor: 'rgba(242, 13, 13, 0.12)',
+    color: vars.colors.error,
+  },
 });
 
 export const siteUrl = style({
@@ -103,9 +133,24 @@ export const visitButton = style({
   fontWeight: vars.font.weight.semibold,
 });
 
+export const visitButtonTone = styleVariants({
+  safe: {
+    backgroundColor: vars.colors.success,
+    color: vars.colors.white,
+  },
+  warning: {
+    backgroundColor: vars.colors.warning,
+    color: vars.colors.white,
+  },
+  critical: {
+    backgroundColor: vars.colors.error,
+    color: vars.colors.white,
+  },
+});
+
 export const visitButtonIcon = style({
-  width: '14px',
-  height: '14px',
+  width: '30px',
+  height: '30px',
   display: 'inline-flex',
   flexShrink: 0,
 });

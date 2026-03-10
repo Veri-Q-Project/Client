@@ -1,4 +1,4 @@
-import { style } from '@vanilla-extract/css';
+import { style, styleVariants } from '@vanilla-extract/css';
 
 import { vars } from '@/vars.css';
 
@@ -41,6 +41,18 @@ export const level = style({
   color: vars.colors.success,
   fontSize: vars.font.size['4xl'],
   lineHeight: 1.2,
+});
+
+export const levelTone = styleVariants({
+  safe: {
+    color: vars.colors.success,
+  },
+  warning: {
+    color: vars.colors.warning,
+  },
+  critical: {
+    color: vars.colors.error,
+  },
 });
 
 export const description = style({
