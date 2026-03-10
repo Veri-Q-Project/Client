@@ -5,11 +5,9 @@
   "packageManager": "pnpm@10.13.1",
   "scripts": {
     "prepare": "lefthook install",
-    "dev": "next dev --webpack",
-    "build": "next build --webpack",
-    "start": "next start",
-    "routes:generate": "tsr generate",
-    "routes:watch": "tsr watch",
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --check .",
@@ -27,15 +25,14 @@
     ]
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^16.1.6",
     "@secretlint/secretlint-rule-preset-recommend": "^11.3.0",
-    "@tanstack/router-cli": "^1.166.2",
+    "@typescript-eslint/parser": "^8.47.0",
+    "@vanilla-extract/vite-plugin": "^5.1.0",
+    "@vitejs/plugin-react": "^5.1.0",
     "@types/node": "^24.3.1",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
-    "@vanilla-extract/next-plugin": "^2.4.17",
     "eslint": "^9.39.1",
-    "eslint-config-next": "^16.1.6",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "lefthook": "^1.13.6",
@@ -43,12 +40,12 @@
     "prettier": "^3.8.1",
     "secretlint": "^11.3.0",
     "typescript": "^5.9.3",
+    "vite": "^7.3.1",
     "vitest": "^3.2.4"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.166.3",
     "@vanilla-extract/css": "^1.18.0",
-    "next": "^16.1.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   }
