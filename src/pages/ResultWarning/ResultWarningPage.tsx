@@ -42,6 +42,7 @@ export default function ResultWarningPage() {
             siteName={resultWarningData.siteName}
             siteUrl={resultWarningData.siteUrl}
             tone="warning"
+            visitLabel="주의하여 사이트 방문하기"
           />
 
           <ResultActionButtons onRescanClick={handleRescan} onShareClick={handleShareResult} />
