@@ -1,6 +1,9 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 
+import { openExternalLink } from '@/shared/lib/browser/openExternalLink';
+import { shareCurrentPage } from '@/shared/lib/browser/shareCurrentPage';
+
 import {
   fetchResultWarningPageData,
   mockResultWarningPageData,
@@ -42,33 +45,14 @@ export function useResultWarningPage(): UseResultWarningPageReturn {
   }, []);
 
   const handleOpenVisitSite = useCallback(() => {
-    window.open(resultWarningData.visitUrl, '_blank', 'noopener,noreferrer');
+    openExternalLink(resultWarningData.visitUrl);
   }, [resultWarningData.visitUrl]);
 
   const handleShareResult = useCallback(async () => {
-    const shareData: ShareData = {
-      title: 'Veri-Q 분석 결과',
+    await shareCurrentPage({
       text: 'Veri-Q 분석 결과를 확인해 보세요.',
-      url: window.location.href,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          return;
-        }
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      window.alert('결과 링크를 복사했습니다.');
-    } catch {
-      window.alert('현재 환경에서는 공유를 지원하지 않습니다.');
-    }
+      title: 'Veri-Q 분석 결과',
+    });
   }, []);
 
   const handleRescan = useCallback(() => {
