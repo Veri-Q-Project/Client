@@ -48,3 +48,17 @@ export const shareIconImage = style({
   height: '100%',
   objectFit: 'contain',
 });
+
+export const reportButton = style({
+  height: '52px',
+  borderRadius: '999px',
+  fontSize: vars.font.size.xl,
+  fontWeight: vars.font.weight.semibold,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '100%',
+  border: `1px solid ${vars.colors.error}`,
+  backgroundColor: vars.colors.white,
+  color: vars.colors.error,
+});

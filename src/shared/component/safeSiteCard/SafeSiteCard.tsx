@@ -11,6 +11,7 @@ type SafeSiteCardProps = {
   siteMeta?: string;
   siteName: string;
   siteUrl: string;
+  statusLabel?: string;
   tone?: ResultTone;
   visitLabel?: string;
 };
@@ -21,6 +22,7 @@ export default function SafeSiteCard({
   siteMeta = 'SSL 인증서 유효함 · 도메인 생성일 2018.05.12',
   siteName,
   siteUrl,
+  statusLabel = 'OFFICIAL',
   tone = 'safe',
   visitLabel = '사이트 방문하기',
 }: SafeSiteCardProps) {
@@ -37,7 +39,7 @@ export default function SafeSiteCard({
         <div>
           <div className={styles.titleRow}>
             <h2 className={styles.title}>{siteName}</h2>
-            <span className={`${styles.official} ${styles.officialTone[tone]}`}>OFFICIAL</span>
+            <span className={`${styles.official} ${styles.officialTone[tone]}`}>{statusLabel}</span>
           </div>
           <p className={styles.siteUrl}>{siteUrl}</p>
           <p className={styles.siteMeta}>{siteMeta}</p>
