@@ -1,21 +1,12 @@
-import shieldIcon from '@/shared/icon/shield.svg';
-import shieldRedIcon from '@/shared/icon/shieldRed.svg';
-import shieldYellowIcon from '@/shared/icon/shieldyellow.svg';
+import { shieldIconByTone } from '@/shared/icon/resultIcons';
+import type { ResultTone } from '@/shared/types/resultTone';
 
 import * as styles from './riskLevelCard.css';
-
-type ResultTone = 'safe' | 'warning' | 'critical';
 
 type RiskLevelCardProps = {
   description?: string;
   levelText?: string;
   tone?: ResultTone;
-};
-
-const shieldIconByTone: Record<ResultTone, string> = {
-  safe: shieldIcon,
-  warning: shieldYellowIcon,
-  critical: shieldRedIcon,
 };
 
 export default function RiskLevelCard({

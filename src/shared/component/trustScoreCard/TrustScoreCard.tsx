@@ -1,20 +1,11 @@
-import shieldIcon from '@/shared/icon/shield.svg';
-import shieldRedIcon from '@/shared/icon/shieldRed.svg';
-import shieldYellowIcon from '@/shared/icon/shieldyellow.svg';
+import { shieldIconByTone } from '@/shared/icon/resultIcons';
+import type { ResultTone } from '@/shared/types/resultTone';
 
 import * as styles from './trustScoreCard.css';
-
-type ResultTone = 'safe' | 'warning' | 'critical';
 
 type TrustScoreCardProps = {
   score: number;
   tone?: ResultTone;
-};
-
-const shieldIconByTone: Record<ResultTone, string> = {
-  safe: shieldIcon,
-  warning: shieldYellowIcon,
-  critical: shieldRedIcon,
 };
 
 export default function TrustScoreCard({ score, tone = 'safe' }: TrustScoreCardProps) {
