@@ -1,0 +1,87 @@
+import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
+
+import CaptchaPage from '@/pages/Captcha';
+import HomePage from '@/pages/Home';
+import LoadingPage from '@/pages/Loading';
+import ReportPage from '@/pages/Report';
+import ResultCriticalPage from '@/pages/ResultCritical';
+import ResultSafePage from '@/pages/ResultSafe';
+import ResultWarningPage from '@/pages/ResultWarning';
+import ScanHistoryPage from '@/pages/ScanHistory';
+
+function RootLayout() {
+  return <Outlet />;
+}
+
+const rootRoute = createRootRoute({
+  component: RootLayout,
+});
+
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  component: HomePage,
+});
+
+const captchaRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/captcha',
+  component: CaptchaPage,
+});
+
+const loadingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/loading',
+  component: LoadingPage,
+});
+
+const reportRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/report',
+  component: ReportPage,
+});
+
+const scanHistoryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/scan-history',
+  component: ScanHistoryPage,
+});
+
+const resultCriticalRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/result/critical',
+  component: ResultCriticalPage,
+});
+
+const resultSafeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/result/safe',
+  component: ResultSafePage,
+});
+
+const resultWarningRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/result/warning',
+  component: ResultWarningPage,
+});
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  captchaRoute,
+  loadingRoute,
+  reportRoute,
+  scanHistoryRoute,
+  resultCriticalRoute,
+  resultSafeRoute,
+  resultWarningRoute,
+]);
+
+export const router = createRouter({
+  routeTree,
+});
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
