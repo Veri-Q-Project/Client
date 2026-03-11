@@ -5,7 +5,7 @@ import {
   SafeSiteCard,
   TrustScoreCard,
 } from '@/shared/component';
-import qrYellowIcon from '@/shared/icon/QRyellow.svg';
+import { qrIconByTone } from '@/shared/icon/resultIcons';
 import AppHeader from '@/shared/ui/app-header';
 
 import { useResultWarningPage } from './hooks/useResultWarningPage';
@@ -25,7 +25,7 @@ export default function ResultWarningPage() {
 
   return (
     <main className={styles.page}>
-      <AppHeader iconSrc={qrYellowIcon} />
+      <AppHeader iconSrc={qrIconByTone.warning} />
 
       <div className={styles.shell}>
         <section className={styles.content}>

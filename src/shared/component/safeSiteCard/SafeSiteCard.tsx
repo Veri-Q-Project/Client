@@ -1,9 +1,7 @@
-import siteVisitIcon from '@/shared/icon/사이트방문하기 .svg';
-import internetPreviewIcon from '@/shared/icon/인터넷 미리보기.svg';
+import { internetPreviewIcon, visitSiteIcon } from '@/shared/icon/actionIcons';
+import type { ResultTone } from '@/shared/types/resultTone';
 
 import * as styles from './safeSiteCard.css';
-
-type ResultTone = 'safe' | 'warning' | 'critical';
 
 type SafeSiteCardProps = {
   badgeLabel?: string;
@@ -52,7 +50,7 @@ export default function SafeSiteCard({
         type="button"
       >
         <span aria-hidden className={styles.visitButtonIcon}>
-          <img alt="" className={styles.visitButtonIconImage} src={siteVisitIcon} />
+          <img alt="" className={styles.visitButtonIconImage} src={visitSiteIcon} />
         </span>
         {visitLabel}
       </button>

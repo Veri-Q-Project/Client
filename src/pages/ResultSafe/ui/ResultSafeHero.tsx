@@ -1,4 +1,4 @@
-import safeMarkIcon from '@/shared/icon/안전표시.svg';
+import { statusMarkIconByTone } from '@/shared/icon/resultIcons';
 
 import * as styles from '../styles/resultSafePage.css';
 
@@ -6,7 +6,7 @@ export default function ResultSafeHero() {
   return (
     <header className={styles.hero}>
       <div className={styles.statusHalo}>
-        <img alt="" aria-hidden className={styles.statusBadge} src={safeMarkIcon} />
+        <img alt="" aria-hidden className={styles.statusBadge} src={statusMarkIconByTone.safe} />
       </div>
 
       <h1 className={styles.heroTitle}>

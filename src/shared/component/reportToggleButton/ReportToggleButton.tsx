@@ -1,4 +1,4 @@
-import detailViewIcon from '@/shared/icon/자세히보기.svg';
+import { viewDetailsIcon } from '@/shared/icon/actionIcons';
 
 import * as styles from './reportToggleButton.css';
 
@@ -15,7 +15,7 @@ export default function ReportToggleButton({ isOpen, onToggle }: ReportToggleBut
         aria-hidden
         className={`${styles.trailingIcon} ${isOpen ? styles.trailingIconOpen : ''}`}
       >
-        <img alt="" className={styles.trailingIconImage} src={detailViewIcon} />
+        <img alt="" className={styles.trailingIconImage} src={viewDetailsIcon} />
       </span>
     </button>
   );

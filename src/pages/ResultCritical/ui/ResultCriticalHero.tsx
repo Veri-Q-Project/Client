@@ -1,4 +1,4 @@
-import criticalMarkIcon from '@/shared/icon/심각 마크.svg';
+import { statusMarkIconByTone } from '@/shared/icon/resultIcons';
 
 import * as styles from '../styles/resultCriticalPage.css';
 
@@ -6,7 +6,12 @@ export default function ResultCriticalHero() {
   return (
     <header className={styles.hero}>
       <div className={styles.statusHalo}>
-        <img alt="" aria-hidden className={styles.statusBadge} src={criticalMarkIcon} />
+        <img
+          alt=""
+          aria-hidden
+          className={styles.statusBadge}
+          src={statusMarkIconByTone.critical}
+        />
       </div>
 
       <h1 className={styles.heroTitle}>

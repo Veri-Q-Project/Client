@@ -1,4 +1,4 @@
-import shareResultIcon from '@/shared/icon/결과 공유.svg';
+import { shareResultIcon } from '@/shared/icon/actionIcons';
 
 import * as styles from './resultActionButtons.css';
 

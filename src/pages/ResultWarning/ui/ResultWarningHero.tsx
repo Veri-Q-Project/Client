@@ -1,4 +1,4 @@
-import warningMarkIcon from '@/shared/icon/주의마크.svg';
+import { statusMarkIconByTone } from '@/shared/icon/resultIcons';
 
 import * as styles from '../styles/resultWarningPage.css';
 
@@ -6,7 +6,7 @@ export default function ResultWarningHero() {
   return (
     <header className={styles.hero}>
       <div className={styles.statusHalo}>
-        <img alt="" aria-hidden className={styles.statusBadge} src={warningMarkIcon} />
+        <img alt="" aria-hidden className={styles.statusBadge} src={statusMarkIconByTone.warning} />
       </div>
 
       <h1 className={styles.heroTitle}>

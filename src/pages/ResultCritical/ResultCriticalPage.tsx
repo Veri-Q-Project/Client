@@ -5,7 +5,7 @@ import {
   SafeSiteCard,
   TrustScoreCard,
 } from '@/shared/component';
-import qrRedIcon from '@/shared/icon/QRred.svg';
+import { qrIconByTone } from '@/shared/icon/resultIcons';
 import AppHeader from '@/shared/ui/app-header';
 
 import { useResultCriticalPage } from './hooks/useResultCriticalPage';
@@ -26,7 +26,7 @@ export default function ResultCriticalPage() {
 
   return (
     <main className={styles.page}>
-      <AppHeader iconSrc={qrRedIcon} />
+      <AppHeader iconSrc={qrIconByTone.critical} />
 
       <div className={styles.shell}>
         <section className={styles.content}>

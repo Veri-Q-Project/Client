@@ -5,7 +5,7 @@ import {
   SafeSiteCard,
   TrustScoreCard,
 } from '@/shared/component';
-import qrGreenIcon from '@/shared/icon/QRgreen.svg';
+import { qrIconByTone } from '@/shared/icon/resultIcons';
 import AppHeader from '@/shared/ui/app-header';
 
 import { useResultSafePage } from './hooks/useResultSafePage';
@@ -25,7 +25,7 @@ export default function ResultSafePage() {
 
   return (
     <main className={styles.page}>
-      <AppHeader iconSrc={qrGreenIcon} />
+      <AppHeader iconSrc={qrIconByTone.safe} />
 
       <div className={styles.shell}>
         <section className={styles.content}>
