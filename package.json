@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "packageManager": "pnpm@10.13.1",
   "scripts": {
+    "postinstall": "node scripts/setupEnv.mjs",
+    "dev:captcha-server": "node scripts/captchaVerifyServer.mjs",
+    "dev:local": "node scripts/devWithCaptcha.mjs",
     "prepare": "lefthook install",
     "dev": "vite",
     "build": "vite build",
