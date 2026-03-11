@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+﻿import { useEffect, useRef } from 'react';
 
 import * as styles from '../styles/captchaPage.css';
 
@@ -36,37 +36,80 @@ declare global {
 
 let enterpriseScriptPromise: Promise<void> | null = null;
 
+function isEnterpriseApiReady() {
+  return typeof window.grecaptcha?.enterprise?.render === 'function';
+}
+
 function loadEnterpriseScript(): Promise<void> {
+  if (isEnterpriseApiReady()) {
+    return Promise.resolve();
+  }
+
   if (enterpriseScriptPromise) {
     return enterpriseScriptPromise;
   }
 
-  enterpriseScriptPromise = new Promise((resolve, reject) => {
+  const scriptPromise = new Promise<void>((resolve, reject) => {
     const existingScript = document.querySelector<HTMLScriptElement>(
       'script[data-recaptcha-enterprise="true"]',
     );
 
+    const onLoad = () => {
+      if (isEnterpriseApiReady()) {
+        resolve();
+        return;
+      }
+
+      reject(new Error('Enterprise API is not ready after script load'));
+    };
+
+    const onError = () => {
+      reject(new Error('Failed to load reCAPTCHA Enterprise script'));
+    };
+
     if (existingScript) {
-      existingScript.addEventListener('load', () => resolve(), { once: true });
-      existingScript.addEventListener('error', () => reject(new Error('Failed to load script')), {
-        once: true,
-      });
+      const loadStatus = existingScript.dataset.loadStatus;
+
+      if (loadStatus === 'loaded' || isEnterpriseApiReady()) {
+        onLoad();
+        return;
+      }
+
+      if (loadStatus === 'error') {
+        onError();
+        return;
+      }
+
+      existingScript.addEventListener('load', onLoad, { once: true });
+      existingScript.addEventListener('error', onError, { once: true });
       return;
     }
 
     const script = document.createElement('script');
     script.async = true;
     script.defer = true;
+    script.dataset.loadStatus = 'loading';
     script.dataset.recaptchaEnterprise = 'true';
     script.src = 'https://www.google.com/recaptcha/enterprise.js?render=explicit';
 
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load script'));
+    script.onload = () => {
+      script.dataset.loadStatus = 'loaded';
+      onLoad();
+    };
+
+    script.onerror = () => {
+      script.dataset.loadStatus = 'error';
+      onError();
+    };
 
     document.head.appendChild(script);
+  }).catch((error) => {
+    enterpriseScriptPromise = null;
+    throw error;
   });
 
-  return enterpriseScriptPromise;
+  enterpriseScriptPromise = scriptPromise;
+  return scriptPromise;
 }
 
 export default function CaptchaWidget({

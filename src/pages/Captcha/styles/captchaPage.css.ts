@@ -124,6 +124,10 @@ export const mockCheckboxIndicator = style({
       borderColor: vars.colors.success,
       boxShadow: `inset 0 0 0 3px ${vars.colors.white}`,
     },
+    [`${mockCheckboxInput}:focus-visible + &`]: {
+      outline: `2px solid ${vars.colors.main}`,
+      outlineOffset: '2px',
+    },
   },
 });
 

@@ -12,6 +12,7 @@
     "dev:web": "vite",
     "build": "vite build",
     "start": "node scripts/devWithCaptcha.mjs",
+    "start:dev": "node scripts/devWithCaptcha.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

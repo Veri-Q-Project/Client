@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router';
+﻿import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useMemo, useState } from 'react';
 
 import { submitCaptchaVerification } from '../api/submitCaptchaVerification';
@@ -20,12 +20,19 @@ type UseCaptchaPageReturn = {
   token: string | null;
 };
 
-function resolveCaptchaProvider(rawProvider: string | undefined): CaptchaProvider {
-  if (rawProvider === 'googleRecaptchaV2') {
+function resolveCaptchaProvider(
+  rawProvider: string | undefined,
+  isDebugCaptchaEnabled: boolean,
+): CaptchaProvider {
+  if (rawProvider === 'googleRecaptchaV2' || rawProvider === 'googleRecaptchaEnterprise') {
     return 'googleRecaptchaEnterprise';
   }
 
-  return rawProvider === 'googleRecaptchaEnterprise' ? 'googleRecaptchaEnterprise' : 'mock';
+  if (rawProvider === 'mock' && isDebugCaptchaEnabled) {
+    return 'mock';
+  }
+
+  return 'googleRecaptchaEnterprise';
 }
 
 export function useCaptchaPage(): UseCaptchaPageReturn {
@@ -34,37 +41,54 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  const isDebugCaptchaEnabled = import.meta.env.VITE_ENABLE_DEBUG_CAPTCHA === 'true';
+
   const configuredProvider = useMemo(
-    () => resolveCaptchaProvider(import.meta.env.VITE_CAPTCHA_PROVIDER),
-    [],
+    () => resolveCaptchaProvider(import.meta.env.VITE_CAPTCHA_PROVIDER, isDebugCaptchaEnabled),
+    [isDebugCaptchaEnabled],
   );
   const [selectedProvider, setSelectedProvider] = useState<CaptchaProvider>(configuredProvider);
 
   const recaptchaSiteKey = (import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? '').trim();
 
-  const effectiveProvider: CaptchaProvider =
-    selectedProvider === 'googleRecaptchaEnterprise' && recaptchaSiteKey.length > 0
-      ? 'googleRecaptchaEnterprise'
-      : 'mock';
+  const shouldFallbackToMock =
+    isDebugCaptchaEnabled &&
+    selectedProvider === 'googleRecaptchaEnterprise' &&
+    recaptchaSiteKey.length === 0;
 
-  const isUsingMockFallback =
-    selectedProvider === 'googleRecaptchaEnterprise' && effectiveProvider === 'mock';
+  const effectiveProvider: CaptchaProvider = shouldFallbackToMock ? 'mock' : selectedProvider;
 
-  const handleProviderChange = useCallback((provider: CaptchaProvider) => {
-    setSelectedProvider(provider);
-    setToken(null);
-    setFeedbackMessage(null);
-  }, []);
+  const isUsingMockFallback = shouldFallbackToMock;
 
-  const handleMockToggle = useCallback((checked: boolean) => {
-    if (checked) {
-      setToken(`mock-token-${Date.now()}`);
-    } else {
+  const handleProviderChange = useCallback(
+    (provider: CaptchaProvider) => {
+      if (!isDebugCaptchaEnabled) {
+        return;
+      }
+
+      setSelectedProvider(provider);
       setToken(null);
-    }
+      setFeedbackMessage(null);
+    },
+    [isDebugCaptchaEnabled],
+  );
 
-    setFeedbackMessage(null);
-  }, []);
+  const handleMockToggle = useCallback(
+    (checked: boolean) => {
+      if (!isDebugCaptchaEnabled) {
+        return;
+      }
+
+      if (checked) {
+        setToken(`mock-token-${Date.now()}`);
+      } else {
+        setToken(null);
+      }
+
+      setFeedbackMessage(null);
+    },
+    [isDebugCaptchaEnabled],
+  );
 
   const handleCaptchaTokenChange = useCallback((nextToken: string | null) => {
     setToken(nextToken);
@@ -74,8 +98,19 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
   const handleSubmit = useCallback(async () => {
     setFeedbackMessage(null);
 
+    if (effectiveProvider === 'googleRecaptchaEnterprise' && recaptchaSiteKey.length === 0) {
+      setFeedbackMessage('reCAPTCHA 사이트 키가 비어 있습니다. `.env.local`을 확인해 주세요.');
+      return;
+    }
+
     if (!token) {
       setFeedbackMessage('캡차를 먼저 완료해 주세요.');
+      return;
+    }
+
+    if (effectiveProvider === 'mock') {
+      setFeedbackMessage('Mock 캡차 검증이 완료되었습니다. 로딩 화면으로 이동합니다.');
+      void navigate({ to: '/loading' });
       return;
     }
 
@@ -94,7 +129,7 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
     } finally {
       setIsVerifying(false);
     }
-  }, [navigate, token]);
+  }, [effectiveProvider, navigate, recaptchaSiteKey, token]);
 
   return {
     configuredProvider,

@@ -68,7 +68,7 @@ function isLocalDevOrigin(origin) {
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/u.test(origin);
 }
 
-function resolveAllowedOrigin(requestOrigin, configuredOrigin) {
+function resolveAllowedOrigin(requestOrigin, configuredOrigin, allowLocalhostOrigins) {
   if (!requestOrigin) {
     return configuredOrigin;
   }
@@ -86,7 +86,7 @@ function resolveAllowedOrigin(requestOrigin, configuredOrigin) {
     return requestOrigin;
   }
 
-  if (isLocalDevOrigin(requestOrigin)) {
+  if (allowLocalhostOrigins && isLocalDevOrigin(requestOrigin)) {
     return requestOrigin;
   }
 
@@ -140,8 +140,19 @@ async function verifyCaptchaToken(secretKey, token) {
     };
   }
 
-  const data = await response.json();
-  const errorCodes = Array.isArray(data['error-codes']) ? data['error-codes'] : [];
+  let data;
+  let errorCodes = [];
+  try {
+    data = await response.json();
+    errorCodes = Array.isArray(data['error-codes']) ? data['error-codes'] : [];
+  } catch (error) {
+    console.error('[captcha-server] failed to parse Google verify response');
+    console.error(error);
+    return {
+      message: 'Failed to parse Google verify response payload.',
+      success: false,
+    };
+  }
 
   if (!data.success) {
     return {
@@ -187,11 +198,18 @@ async function main() {
   const port = Number.parseInt(env.CAPTCHA_SERVER_PORT ?? '8080', 10);
   const allowedOrigin = env.CAPTCHA_ALLOWED_ORIGIN ?? 'http://localhost:5173';
   const secretKey = (env.CAPTCHA_SECRET_KEY ?? '').trim();
+  const allowLocalhostOriginsRaw =
+    env.ALLOW_LOCALHOST_ORIGINS ?? (env.NODE_ENV === 'production' ? 'false' : 'true');
+  const allowLocalhostOrigins = allowLocalhostOriginsRaw.toLowerCase() === 'true';
 
   const server = http.createServer(async (request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://localhost:${port}`);
     const requestOrigin = typeof request.headers.origin === 'string' ? request.headers.origin : '';
-    const allowedOriginForRequest = resolveAllowedOrigin(requestOrigin, allowedOrigin);
+    const allowedOriginForRequest = resolveAllowedOrigin(
+      requestOrigin,
+      allowedOrigin,
+      allowLocalhostOrigins,
+    );
 
     if (request.method === 'OPTIONS') {
       setCorsHeaders(response, allowedOriginForRequest);
@@ -282,6 +300,7 @@ async function main() {
     console.info('[captcha-server] endpoint: POST /api/captcha/verify');
     console.info('[captcha-server] health: GET /health');
     console.info(`[captcha-server] allowed origin: ${allowedOrigin}`);
+    console.info(`[captcha-server] allow localhost origins: ${allowLocalhostOrigins}`);
     console.info(`[captcha-server] secret key loaded: ${secretKey.length > 0 ? 'yes' : 'no'}`);
   });
 
