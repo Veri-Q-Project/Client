@@ -14,8 +14,26 @@ function runCommand(command, name) {
   return child;
 }
 
+function resolveDevCommand() {
+  const userAgent = (process.env.npm_config_user_agent ?? '').toLowerCase();
+
+  if (userAgent.includes('pnpm/')) {
+    return 'pnpm run dev:web';
+  }
+
+  if (userAgent.includes('yarn/')) {
+    return 'yarn dev:web';
+  }
+
+  if (userAgent.includes('bun/')) {
+    return 'bun run dev:web';
+  }
+
+  return 'npm run dev:web';
+}
+
 const captchaServer = runCommand('node scripts/captchaVerifyServer.mjs', 'captcha server');
-const viteDev = runCommand('pnpm dev', 'vite dev server');
+const viteDev = runCommand(resolveDevCommand(), 'vite dev server');
 
 let shuttingDown = false;
 
