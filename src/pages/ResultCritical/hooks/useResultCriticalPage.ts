@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
+import { App } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 
 import { shareCurrentPage } from '@/shared/lib/browser/shareCurrentPage';
@@ -21,6 +22,7 @@ type UseResultCriticalPageReturn = {
 };
 
 export function useResultCriticalPage(): UseResultCriticalPageReturn {
+  const { message, modal } = App.useApp();
   const navigate = useNavigate();
   const [resultCriticalData, setResultCriticalData] = useState<ResultCriticalPageData>(
     mockResultCriticalPageData,
@@ -46,12 +48,27 @@ export function useResultCriticalPage(): UseResultCriticalPageReturn {
   }, []);
 
   const handleBlockAccess = useCallback(() => {
-    window.alert('위험 사이트 접속을 차단했습니다.');
-  }, []);
+    modal.error({
+      centered: true,
+      content: '이 URL은 악성 위험이 높아 접속이 차단되었습니다.',
+      okText: '확인',
+      title: '접속 차단',
+    });
+  }, [modal]);
 
   const handleReport = useCallback(() => {
-    window.alert('신고가 접수되었습니다. 빠르게 확인하겠습니다.');
-  }, []);
+    modal.confirm({
+      cancelText: '취소',
+      centered: true,
+      content: '해당 URL을 위험 사이트로 신고하시겠습니까?',
+      okText: '신고하기',
+      okType: 'danger',
+      title: '위험 URL 신고',
+      onOk: () => {
+        message.success('신고가 접수되었습니다. 빠르게 확인하겠습니다.');
+      },
+    });
+  }, [message, modal]);
 
   const handleShareResult = useCallback(async () => {
     await shareCurrentPage({

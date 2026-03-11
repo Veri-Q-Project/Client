@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
+import { App } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 
 import { openExternalLink } from '@/shared/lib/browser/openExternalLink';
@@ -21,6 +22,7 @@ type UseResultWarningPageReturn = {
 };
 
 export function useResultWarningPage(): UseResultWarningPageReturn {
+  const { modal } = App.useApp();
   const navigate = useNavigate();
   const [resultWarningData, setResultWarningData] =
     useState<ResultWarningPageData>(mockResultWarningPageData);
@@ -45,8 +47,17 @@ export function useResultWarningPage(): UseResultWarningPageReturn {
   }, []);
 
   const handleOpenVisitSite = useCallback(() => {
-    openExternalLink(resultWarningData.visitUrl);
-  }, [resultWarningData.visitUrl]);
+    modal.confirm({
+      cancelText: '취소',
+      centered: true,
+      content: '주의가 필요한 사이트입니다. 그래도 방문하시겠습니까?',
+      okText: '방문하기',
+      title: '주의 사이트 방문',
+      onOk: () => {
+        openExternalLink(resultWarningData.visitUrl);
+      },
+    });
+  }, [modal, resultWarningData.visitUrl]);
 
   const handleShareResult = useCallback(async () => {
     await shareCurrentPage({

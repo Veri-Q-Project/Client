@@ -14,6 +14,8 @@ import {
   shieldPercentIcon,
   totalAnalysisReadyIcon,
 } from '@/shared/icon/loadingIcons';
+import { qrBlackIcon } from '@/shared/icon/resultIcons';
+import AppHeader from '@/shared/ui/app-header';
 
 import { useLoadingProgress } from './hooks/useLoadingProgress';
 import * as styles from './styles/loadingPage.css';
@@ -118,6 +120,8 @@ export default function LoadingPage() {
 
   return (
     <main className={styles.page}>
+      <AppHeader iconSrc={qrBlackIcon} />
+
       <section className={styles.container}>
         <header className={styles.progressSection}>
           <div className={styles.progressRingWrap}>
