@@ -12,3 +12,7 @@ export async function fetchResultWarningPageData(): Promise<ResultWarningPageDat
   // TODO: Replace this mock return with real API integration.
   return Promise.resolve(mockResultWarningPageData);
 }
+
+export function getInitialResultWarningPageData(): ResultWarningPageData {
+  return mockResultWarningPageData;
+}

@@ -1,22 +1,41 @@
 import { useEffect, useMemo, useState } from 'react';
 
-const MAX_PROGRESS = 100;
-const PROGRESS_INTERVAL_MS = 90;
+import {
+  getProgressRanges,
+  getProgressState,
+  getThresholds,
+  resolveLocalProgress,
+} from '../loadingProgressUtils';
 
-export type LoadingState = 'active' | 'done' | 'pending';
+import type { LoadingDetailStep, LoadingState, LoadingStep } from '../types/loadingPage.types';
+
+const MAX_PROGRESS = 100;
+const DEFAULT_PROGRESS_INTERVAL_MS = 90;
 
 type LoadingProgressResult = {
-  getAnalysisDetailState: (index: number) => LoadingState;
-  getMainStepState: (index: number) => LoadingState;
+  visibleStepCount: number;
+  getDetailStepState: (stepIndex: number, detailIndex: number) => LoadingState;
+  getStepState: (index: number) => LoadingState;
   progress: number;
   statusDescription: string;
 };
 
-const mainStepThresholds = [18, 78, 88, 96, 100];
-const analysisDetailThresholds = [34, 48, 62, 76];
+type UseLoadingProgressOptions = {
+  progressIntervalMs?: number;
+  revealStepsSequentially?: boolean;
+};
 
-export function useLoadingProgress(): LoadingProgressResult {
+export function useLoadingProgress(
+  steps: LoadingStep[],
+  options?: UseLoadingProgressOptions,
+): LoadingProgressResult {
   const [progress, setProgress] = useState(0);
+  const progressIntervalMs = options?.progressIntervalMs ?? DEFAULT_PROGRESS_INTERVAL_MS;
+  const revealStepsSequentially = options?.revealStepsSequentially ?? true;
+
+  useEffect(() => {
+    setProgress(0);
+  }, [steps]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -27,73 +46,77 @@ export function useLoadingProgress(): LoadingProgressResult {
 
         return prev + 1;
       });
-    }, PROGRESS_INTERVAL_MS);
+    }, progressIntervalMs);
 
     return () => {
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [progressIntervalMs, steps]);
 
-  const activeMainStepIndex = useMemo(() => {
-    const foundIndex = mainStepThresholds.findIndex((threshold) => progress < threshold);
+  const stepThresholds = useMemo(() => getThresholds(steps), [steps]);
+  const stepRanges = useMemo(() => getProgressRanges(stepThresholds), [stepThresholds]);
+  const activeStepIndex = useMemo(() => {
+    const foundIndex = stepThresholds.findIndex((threshold) => progress < threshold);
     return foundIndex === -1 ? null : foundIndex;
-  }, [progress]);
-
-  const getMainStepState = (index: number): LoadingState => {
-    if (activeMainStepIndex === null) {
-      return 'done';
+  }, [progress, stepThresholds]);
+  const visibleStepCount = useMemo(() => {
+    if (!revealStepsSequentially) {
+      return steps.length;
     }
 
-    if (index < activeMainStepIndex) {
-      return 'done';
+    if (activeStepIndex === null) {
+      return steps.length;
     }
 
-    if (index === activeMainStepIndex) {
-      return 'active';
-    }
+    return Math.min(activeStepIndex + 1, steps.length);
+  }, [activeStepIndex, revealStepsSequentially, steps.length]);
 
-    return 'pending';
+  const getStepState = (index: number): LoadingState => {
+    return getProgressState(progress, stepThresholds, index);
   };
 
-  const getAnalysisDetailState = (index: number): LoadingState => {
-    const analysisStepState = getMainStepState(1);
+  const getDetailStepState = (stepIndex: number, detailIndex: number): LoadingState => {
+    const step = steps[stepIndex];
+    const detailSteps = step?.details;
 
-    if (analysisStepState === 'pending') {
+    if (!detailSteps || detailSteps.length === 0) {
       return 'pending';
     }
 
-    if (analysisStepState === 'done') {
+    const stepState = getStepState(stepIndex);
+
+    if (stepState === 'pending') {
+      return 'pending';
+    }
+
+    if (stepState === 'done') {
       return 'done';
     }
 
-    const activeSubStepIndex = analysisDetailThresholds.findIndex(
-      (threshold) => progress < threshold,
-    );
-    const resolvedActiveSubStepIndex = activeSubStepIndex === -1 ? null : activeSubStepIndex;
+    const stepRange = stepRanges[stepIndex];
 
-    if (resolvedActiveSubStepIndex === null) {
-      return 'done';
+    if (!stepRange) {
+      return 'pending';
     }
 
-    if (index < resolvedActiveSubStepIndex) {
-      return 'done';
-    }
+    const localProgress = resolveLocalProgress(progress, stepRange);
+    const detailThresholds = getThresholds<LoadingDetailStep>(detailSteps);
 
-    if (index === resolvedActiveSubStepIndex) {
-      return 'active';
-    }
-
-    return 'pending';
+    return getProgressState(localProgress, detailThresholds, detailIndex);
   };
 
-  const statusDescription =
-    progress < 100
-      ? '시스템을 안전하게 점검하고 있습니다.'
-      : '분석이 완료되었습니다. 결과 페이지로 이동합니다.';
+  const statusDescription = useMemo(() => {
+    if (activeStepIndex === null) {
+      return steps[steps.length - 1]?.doneDescription ?? '분석이 완료되었습니다.';
+    }
+
+    return steps[activeStepIndex]?.activeDescription ?? '분석을 진행하고 있습니다.';
+  }, [activeStepIndex, steps]);
 
   return {
-    getAnalysisDetailState,
-    getMainStepState,
+    visibleStepCount,
+    getDetailStepState,
+    getStepState,
     progress,
     statusDescription,
   };

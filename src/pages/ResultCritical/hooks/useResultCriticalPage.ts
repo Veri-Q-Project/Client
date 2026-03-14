@@ -6,7 +6,7 @@ import { shareCurrentPage } from '@/shared/lib/browser/shareCurrentPage';
 
 import {
   fetchResultCriticalPageData,
-  mockResultCriticalPageData,
+  getInitialResultCriticalPageData,
 } from '../api/fetchResultCriticalPageData';
 
 import type { ResultCriticalPageData } from '../types/resultCriticalPage.types';
@@ -25,7 +25,7 @@ export function useResultCriticalPage(): UseResultCriticalPageReturn {
   const { message, modal } = App.useApp();
   const navigate = useNavigate();
   const [resultCriticalData, setResultCriticalData] = useState<ResultCriticalPageData>(
-    mockResultCriticalPageData,
+    getInitialResultCriticalPageData,
   );
   const [isReportOpen, setIsReportOpen] = useState(false);
 

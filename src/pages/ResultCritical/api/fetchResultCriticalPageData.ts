@@ -12,3 +12,7 @@ export async function fetchResultCriticalPageData(): Promise<ResultCriticalPageD
   // TODO: Replace this mock return with real API integration.
   return Promise.resolve(mockResultCriticalPageData);
 }
+
+export function getInitialResultCriticalPageData(): ResultCriticalPageData {
+  return mockResultCriticalPageData;
+}
