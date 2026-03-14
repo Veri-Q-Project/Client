@@ -22,7 +22,7 @@ const riskDetectionCatalog: RiskDetectionCatalogItem[] = [
     description:
       '데이터 전송 시 암호화를 거치지 않는 구식 통신 방식(http://) 사용이 감지되었습니다.',
     englishLabel: 'INSECURE HTTP',
-    names: ['HTTPS 미사용', 'http 미사용', 'https 없음'],
+    names: ['HTTPS 미사용', 'HTTP 사용', '비암호화 HTTP 사용'],
     risk: '아이디, 비밀번호 같은 민감 정보가 중간에서 탈취될 수 있어 금융/인증 화면에서는 매우 치명적입니다.',
     title: 'HTTPS 미사용 감지',
   },

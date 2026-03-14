@@ -10,6 +10,8 @@ import { resolveRiskDetectionContent } from './constants/riskDetectionCatalog';
 import { useReportPage } from './hooks/useReportPage';
 import * as styles from './styles/reportPage.css';
 
+import type { ReportStatusTone } from './types/reportPage.types';
+
 type ProtocolTone = 'secure' | 'unknown' | 'warning';
 
 const riskLevelLabel = {
@@ -46,6 +48,12 @@ const protocolLabelByTone: Record<ProtocolTone, string> = {
   warning: 'HTTP',
 };
 
+const certificateStatusClassNameByTone: Record<ReportStatusTone, string> = {
+  error: styles.certificateError,
+  success: styles.certificateSuccess,
+  warning: styles.certificateWarning,
+};
+
 export default function ReportPage() {
   const { reportPageData } = useReportPage();
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -60,7 +68,7 @@ export default function ReportPage() {
   const destinationProtocolTone = resolveProtocolTone(reportPageData.urlAnalysis.destinationUrl);
 
   const hasInsecureProtocol =
-    originalProtocolTone === 'warning' || destinationProtocolTone === 'warning';
+    originalProtocolTone !== 'secure' || destinationProtocolTone !== 'secure';
 
   const reputationBadgeTone = totalReputationCount === 0 ? 'clean' : 'warning';
   const providerStatusTone = totalReputationCount === 0 ? 'safe' : reportPageData.riskLevel;
@@ -82,6 +90,16 @@ export default function ReportPage() {
         element: reportContentRef.current,
         fileName: '상세 보고서.pdf',
       });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+
+      console.error('PDF 내보내기 실패', {
+        error,
+        reportContentElement: reportContentRef.current,
+      });
+
+      window.alert(`PDF 내보내기 실패: ${errorMessage}`);
     } finally {
       setIsExportingPdf(false);
     }
@@ -327,7 +345,13 @@ export default function ReportPage() {
               <div className={styles.serverInfoRow}>
                 <p className={styles.serverInfoKey}>인증서</p>
                 <p className={styles.serverInfoValue}>
-                  <span className={styles.certificateStatus}>
+                  <span
+                    className={`${styles.certificateStatus} ${
+                      certificateStatusClassNameByTone[
+                        reportPageData.serverInfo.certificateStatusTone
+                      ]
+                    }`}
+                  >
                     {reportPageData.serverInfo.certificateStatusText}
                   </span>{' '}
                   · {reportPageData.serverInfo.certificateIssuer}

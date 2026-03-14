@@ -1,5 +1,7 @@
 import type { ResultTone } from '@/shared/types/resultTone';
 
+export type ReportStatusTone = 'error' | 'success' | 'warning';
+
 export type ReportReputationSummary = {
   malwareCount: number;
   phishingCount: number;
@@ -8,6 +10,7 @@ export type ReportReputationSummary = {
 
 export type ReportServerInfo = {
   certificateIssuer: string;
+  certificateStatusTone: ReportStatusTone;
   certificateStatusText: string;
   certificateValidityPeriod: string;
   serverLocation: string;

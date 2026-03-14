@@ -733,7 +733,7 @@ export const providerDescriptionCard = style({
 export const providerDescriptionText = style({
   margin: 0,
   color: '#34465D',
-  fontSize: 'clamp(10px, 0.9vw, 14px)',
+  fontSize: `clamp(${vars.font.size.sm}, 1.1vw, ${vars.font.size.md})`,
   fontWeight: vars.font.weight.medium,
   lineHeight: 1.65,
 });
@@ -773,8 +773,19 @@ export const serverInfoValue = style({
 });
 
 export const certificateStatus = style({
-  color: vars.colors.success,
   fontWeight: vars.font.weight.semibold,
+});
+
+export const certificateSuccess = style({
+  color: vars.colors.success,
+});
+
+export const certificateWarning = style({
+  color: '#8D7200',
+});
+
+export const certificateError = style({
+  color: vars.colors.error,
 });
 
 export const exportActionWrap = style({
