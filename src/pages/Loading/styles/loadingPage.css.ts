@@ -111,6 +111,92 @@ export const flowSection = style({
   gap: vars.spacing.md,
 });
 
+export const caseControlSection = style({
+  display: 'grid',
+  gap: vars.spacing.md,
+  paddingTop: vars.spacing.sm,
+  borderTop: `1px solid ${vars.colors.border}`,
+});
+
+export const caseControlHeader = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: vars.spacing.sm,
+  flexWrap: 'wrap',
+});
+
+export const caseControlTitle = style({
+  margin: 0,
+  color: vars.colors.black,
+  fontSize: vars.font.size.lg,
+  fontWeight: vars.font.weight.semibold,
+});
+
+export const caseControlCurrent = style({
+  margin: 0,
+  color: vars.colors.subText,
+  fontSize: vars.font.size.sm,
+  fontWeight: vars.font.weight.medium,
+});
+
+export const caseButtonList = style({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))',
+  gap: vars.spacing.sm,
+});
+
+export const caseButton = style({
+  minHeight: '44px',
+  border: `1px solid ${vars.colors.border}`,
+  borderRadius: vars.radius.md,
+  backgroundColor: vars.colors.white,
+  color: vars.colors.black,
+  fontSize: vars.font.size.sm,
+  fontWeight: vars.font.weight.semibold,
+  cursor: 'pointer',
+  transition: 'background-color 160ms ease, border-color 160ms ease, color 160ms ease',
+  selectors: {
+    '&:hover': {
+      borderColor: vars.colors.mainBorder,
+      backgroundColor: vars.colors.mainXLight,
+    },
+  },
+});
+
+export const caseButtonActive = style({
+  borderColor: vars.colors.main,
+  backgroundColor: vars.colors.main,
+  color: vars.colors.white,
+});
+
+export const randomCaseButton = style({
+  borderColor: vars.colors.success,
+  color: vars.colors.success,
+  selectors: {
+    '&:hover': {
+      borderColor: vars.colors.success,
+      backgroundColor: 'rgba(34, 197, 94, 0.08)',
+    },
+  },
+});
+
+export const branchDemoButton = style({
+  borderColor: vars.colors.black,
+  color: vars.colors.black,
+  selectors: {
+    '&:hover': {
+      borderColor: vars.colors.black,
+      backgroundColor: vars.colors.sub,
+    },
+  },
+});
+
+export const branchDemoButtonActive = style({
+  backgroundColor: vars.colors.black,
+  color: vars.colors.white,
+});
+
 export const flowList = style({
   margin: 0,
   padding: 0,
@@ -243,8 +329,6 @@ export const detailIcon = style({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: vars.font.size.xs,
-  fontWeight: vars.font.weight.bold,
 });
 
 export const detailIconImage = style({
