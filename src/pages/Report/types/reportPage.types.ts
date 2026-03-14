@@ -1,14 +1,49 @@
-export type ReportSection = {
-  id: string;
-  items: string[];
+import type { ResultTone } from '@/shared/types/resultTone';
+
+export type ReportReputationSummary = {
+  malwareCount: number;
+  phishingCount: number;
+  spamCount: number;
+};
+
+export type ReportServerInfo = {
+  certificateIssuer: string;
+  certificateStatusText: string;
+  certificateValidityPeriod: string;
+  serverLocation: string;
+  serverType: string;
+};
+
+export type ReportUrlAnalysis = {
+  destinationUrl: string;
+  originalUrl: string;
+};
+
+export type ReportDomainComparison = {
+  officialUrl: string;
+  riskBadgeText: string;
   summary: string;
-  title: string;
+  suspiciousUrl: string;
+};
+
+export type ReportReputation = {
+  detailDescription: string;
+  providerName: string;
+  providerStatusText: string;
+  summary: ReportReputationSummary;
 };
 
 export type ReportPageData = {
+  detectedRiskTypes: string[];
+  domainComparison: ReportDomainComparison;
+  reputation: ReportReputation;
   reportTitle: string;
-  riskLevel: 'safe' | 'warning' | 'critical';
+  riskDescription: string;
+  riskLevel: ResultTone;
+  riskLevelText: string;
   scannedAt: string;
   scannedUrl: string;
-  sections: ReportSection[];
+  serverInfo: ReportServerInfo;
+  trustScore: number;
+  urlAnalysis: ReportUrlAnalysis;
 };
