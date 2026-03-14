@@ -15,8 +15,8 @@ export default function ReportPage() {
           <h2>{section.title}</h2>
           <p>{section.summary}</p>
           <ul>
-            {section.items.map((item) => (
-              <li key={item}>{item}</li>
+            {section.items.map((item, index) => (
+              <li key={`${section.id}-${item}-${index}`}>{item}</li>
             ))}
           </ul>
         </section>

@@ -62,15 +62,25 @@ export function useLoadingPage(): UseLoadingPageReturn {
   );
 
   useEffect(() => {
-    setLoadingPageData(getInitialLoadingPageData(loadingCaseNumber, revealMode));
+    const fallbackData = getInitialLoadingPageData(loadingCaseNumber, revealMode);
+
+    setLoadingPageData(fallbackData);
 
     let isMounted = true;
 
     const loadLoadingPageData = async () => {
-      const response = await fetchLoadingPageData(loadingCaseNumber, revealMode);
+      try {
+        const response = await fetchLoadingPageData(loadingCaseNumber, revealMode);
 
-      if (isMounted) {
-        setLoadingPageData(response);
+        if (isMounted) {
+          setLoadingPageData(response);
+        }
+      } catch (error) {
+        console.error('Failed to load loading page data.', error);
+
+        if (isMounted) {
+          setLoadingPageData(fallbackData);
+        }
       }
     };
 
