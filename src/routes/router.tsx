@@ -5,6 +5,7 @@ import HomePage from '@/pages/Home';
 import LoadingPage from '@/pages/Loading';
 import ReportPage from '@/pages/Report';
 import ResultCriticalPage from '@/pages/ResultCritical';
+import ResultNonUrlPage from '@/pages/ResultNonUrl';
 import ResultSafePage from '@/pages/ResultSafe';
 import ResultWarningPage from '@/pages/ResultWarning';
 import ScanHistoryPage from '@/pages/ScanHistory';
@@ -53,6 +54,12 @@ const resultCriticalRoute = createRoute({
   component: ResultCriticalPage,
 });
 
+const resultNonUrlRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/result/non-url',
+  component: ResultNonUrlPage,
+});
+
 const resultSafeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/result/safe',
@@ -72,6 +79,7 @@ const routeTree = rootRoute.addChildren([
   reportRoute,
   scanHistoryRoute,
   resultCriticalRoute,
+  resultNonUrlRoute,
   resultSafeRoute,
   resultWarningRoute,
 ]);
