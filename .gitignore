@@ -1,9 +1,12 @@
-build
+﻿build
 coverage
 dist
 .next
 node_modules
 out
+*.tsbuildinfo
+.env
+.env.server
 .env.local
 .env.server.local
-*.tsbuildinfo
+.env.*.local

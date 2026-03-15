@@ -7,7 +7,7 @@ import { shareCurrentPage } from '@/shared/lib/browser/shareCurrentPage';
 
 import {
   fetchResultWarningPageData,
-  mockResultWarningPageData,
+  getInitialResultWarningPageData,
 } from '../api/fetchResultWarningPageData';
 
 import type { ResultWarningPageData } from '../types/resultWarningPage.types';
@@ -24,8 +24,9 @@ type UseResultWarningPageReturn = {
 export function useResultWarningPage(): UseResultWarningPageReturn {
   const { modal } = App.useApp();
   const navigate = useNavigate();
-  const [resultWarningData, setResultWarningData] =
-    useState<ResultWarningPageData>(mockResultWarningPageData);
+  const [resultWarningData, setResultWarningData] = useState<ResultWarningPageData>(
+    getInitialResultWarningPageData,
+  );
   const [isReportOpen, setIsReportOpen] = useState(false);
 
   useEffect(() => {

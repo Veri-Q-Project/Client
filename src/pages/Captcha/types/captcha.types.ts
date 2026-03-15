@@ -1,4 +1,4 @@
-export type CaptchaVerificationResponse = {
+﻿export type CaptchaVerificationResponse = {
   challengeTs?: string;
   errorCodes?: string[];
   hostname?: string;

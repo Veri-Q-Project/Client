@@ -1,4 +1,6 @@
 pre-commit:
   commands:
+    block-env:
+      run: node scripts/blockEnvLocalCommit.mjs
     lint-staged:
       run: npx lint-staged
