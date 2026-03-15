@@ -1,140 +1,189 @@
-import { useEffect, useEffectEvent, useRef } from 'react';
+﻿import { useEffect, useRef } from 'react';
 
-const RECAPTCHA_SCRIPT_ID = 'google-recaptcha-v2-script';
-const RECAPTCHA_SCRIPT_SOURCE = 'https://www.google.com/recaptcha/api.js?render=explicit';
+import * as styles from '../styles/captchaPage.css';
 
-let recaptchaScriptPromise: Promise<Grecaptcha> | null = null;
+import type { CaptchaProvider } from '../types/captcha.types';
 
-function loadRecaptchaScript(): Promise<Grecaptcha> {
-  if (window.grecaptcha) {
-    return Promise.resolve(window.grecaptcha);
+type CaptchaWidgetProps = {
+  onMockToggle: (checked: boolean) => void;
+  onTokenChange: (token: string | null) => void;
+  provider: CaptchaProvider;
+  recaptchaSiteKey: string;
+  token: string | null;
+};
+
+type GrecaptchaEnterprise = {
+  ready: (callback: () => void) => void;
+  render: (
+    container: HTMLElement,
+    parameters: {
+      callback: (token: string) => void;
+      'error-callback': () => void;
+      'expired-callback': () => void;
+      sitekey: string;
+      theme?: 'light' | 'dark';
+    },
+  ) => number;
+};
+
+declare global {
+  interface Window {
+    grecaptcha?: {
+      enterprise?: GrecaptchaEnterprise;
+    };
+  }
+}
+
+let enterpriseScriptPromise: Promise<void> | null = null;
+
+function isEnterpriseApiReady() {
+  return typeof window.grecaptcha?.enterprise?.render === 'function';
+}
+
+function loadEnterpriseScript(): Promise<void> {
+  if (isEnterpriseApiReady()) {
+    return Promise.resolve();
   }
 
-  if (recaptchaScriptPromise) {
-    return recaptchaScriptPromise;
+  if (enterpriseScriptPromise) {
+    return enterpriseScriptPromise;
   }
 
-  recaptchaScriptPromise = new Promise<Grecaptcha>((resolve, reject) => {
-    const existingScript = document.getElementById(RECAPTCHA_SCRIPT_ID) as HTMLScriptElement | null;
+  const scriptPromise = new Promise<void>((resolve, reject) => {
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[data-recaptcha-enterprise="true"]',
+    );
 
-    const resolveGrecaptcha = () => {
-      if (window.grecaptcha) {
-        resolve(window.grecaptcha);
-
+    const onLoad = () => {
+      if (isEnterpriseApiReady()) {
+        resolve();
         return;
       }
 
-      recaptchaScriptPromise = null;
-      reject(new Error('reCAPTCHA script loaded without grecaptcha.'));
+      reject(new Error('Enterprise API is not ready after script load'));
     };
 
-    const rejectScriptLoad = () => {
-      recaptchaScriptPromise = null;
-      reject(new Error('Failed to load reCAPTCHA script.'));
+    const onError = () => {
+      reject(new Error('Failed to load reCAPTCHA Enterprise script'));
     };
 
     if (existingScript) {
-      if (window.grecaptcha) {
-        resolve(window.grecaptcha);
+      const loadStatus = existingScript.dataset.loadStatus;
 
+      if (loadStatus === 'loaded' || isEnterpriseApiReady()) {
+        onLoad();
         return;
       }
 
-      existingScript.addEventListener('load', resolveGrecaptcha, { once: true });
-      existingScript.addEventListener('error', rejectScriptLoad, { once: true });
+      if (loadStatus === 'error') {
+        onError();
+        return;
+      }
 
+      existingScript.addEventListener('load', onLoad, { once: true });
+      existingScript.addEventListener('error', onError, { once: true });
       return;
     }
 
     const script = document.createElement('script');
-    script.id = RECAPTCHA_SCRIPT_ID;
     script.async = true;
     script.defer = true;
-    script.src = RECAPTCHA_SCRIPT_SOURCE;
-    script.addEventListener('load', resolveGrecaptcha, { once: true });
-    script.addEventListener('error', rejectScriptLoad, { once: true });
-    document.head.append(script);
+    script.dataset.loadStatus = 'loading';
+    script.dataset.recaptchaEnterprise = 'true';
+    script.src = 'https://www.google.com/recaptcha/enterprise.js?render=explicit';
+
+    script.onload = () => {
+      script.dataset.loadStatus = 'loaded';
+      onLoad();
+    };
+
+    script.onerror = () => {
+      script.dataset.loadStatus = 'error';
+      onError();
+    };
+
+    document.head.appendChild(script);
   }).catch((error) => {
-    recaptchaScriptPromise = null;
+    enterpriseScriptPromise = null;
     throw error;
   });
 
-  return recaptchaScriptPromise;
+  enterpriseScriptPromise = scriptPromise;
+  return scriptPromise;
 }
 
-type CaptchaWidgetProps = {
-  onLoadError: (message: string) => void;
-  onTokenChange: (token: string | null) => void;
-  resetSignal: number;
-  siteKey: string;
-};
-
 export default function CaptchaWidget({
-  onLoadError,
+  onMockToggle,
   onTokenChange,
-  resetSignal,
-  siteKey,
+  provider,
+  recaptchaSiteKey,
+  token,
 }: CaptchaWidgetProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const widgetIdRef = useRef<number | null>(null);
-  const handleLoadError = useEffectEvent((message: string) => {
-    onLoadError(message);
-  });
-  const handleTokenChange = useEffectEvent((token: string | null) => {
-    onTokenChange(token);
-  });
+  const widgetContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function renderCaptcha() {
-      if (!containerRef.current) {
-        return;
-      }
-
-      try {
-        const grecaptcha = await loadRecaptchaScript();
-
-        if (!isMounted || !containerRef.current) {
-          return;
-        }
-
-        grecaptcha.ready(() => {
-          if (!isMounted || !containerRef.current || widgetIdRef.current !== null) {
-            return;
-          }
-
-          widgetIdRef.current = grecaptcha.render(containerRef.current, {
-            callback: (token: string) => handleTokenChange(token),
-            'error-callback': () => {
-              handleTokenChange(null);
-              handleLoadError('캡차 위젯에서 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
-            },
-            'expired-callback': () => handleTokenChange(null),
-            sitekey: siteKey,
-            theme: 'light',
-          });
-        });
-      } catch {
-        handleLoadError('Google reCAPTCHA 스크립트를 불러오지 못했습니다.');
-      }
-    }
-
-    void renderCaptcha();
-
-    return () => {
-      isMounted = false;
-      widgetIdRef.current = null;
-    };
-  }, [handleLoadError, handleTokenChange, siteKey]);
-
-  useEffect(() => {
-    if (widgetIdRef.current === null || !window.grecaptcha) {
+    if (provider !== 'googleRecaptchaEnterprise') {
       return;
     }
 
-    window.grecaptcha.reset(widgetIdRef.current);
-  }, [resetSignal]);
+    const container = widgetContainerRef.current;
 
-  return <div ref={containerRef} />;
+    if (!container || !recaptchaSiteKey) {
+      return;
+    }
+
+    container.innerHTML = '';
+
+    loadEnterpriseScript()
+      .then(() => {
+        const enterprise = window.grecaptcha?.enterprise;
+
+        if (!enterprise) {
+          onTokenChange(null);
+          return;
+        }
+
+        enterprise.ready(() => {
+          enterprise.render(container, {
+            callback: (nextToken) => {
+              onTokenChange(nextToken);
+            },
+            'error-callback': () => {
+              onTokenChange(null);
+            },
+            'expired-callback': () => {
+              onTokenChange(null);
+            },
+            sitekey: recaptchaSiteKey,
+            theme: 'light',
+          });
+        });
+      })
+      .catch(() => {
+        onTokenChange(null);
+      });
+  }, [onTokenChange, provider, recaptchaSiteKey]);
+
+  if (provider === 'googleRecaptchaEnterprise') {
+    return (
+      <div className={styles.enterpriseBox}>
+        <div ref={widgetContainerRef} />
+      </div>
+    );
+  }
+
+  return (
+    <label className={styles.mockCheckbox}>
+      <input
+        checked={token !== null}
+        className={styles.mockCheckboxInput}
+        onChange={(event) => {
+          onMockToggle(event.currentTarget.checked);
+        }}
+        type="checkbox"
+      />
+      <span className={styles.mockCheckboxIndicator} />
+      <span className={styles.mockCheckboxText}>I&apos;m not a robot (Mock)</span>
+    </label>
+  );
 }

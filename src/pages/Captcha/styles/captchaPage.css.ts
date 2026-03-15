@@ -2,20 +2,7 @@ import { style } from '@vanilla-extract/css';
 
 import { vars } from '@/vars.css';
 
-const palette = {
-  bodyText: '#5D6472',
-  cardBackground: '#F7F8FA',
-  cardBorder: '#D5DAE3',
-  hint: '#7C8598',
-  notice: '#FFF8D9',
-  noticeBorder: '#F2DF0D',
-  panelBackground: '#434A59',
-  panelText: '#F9FAFB',
-  statusError: '#F20D0D',
-  statusErrorDark: '#9B1C1C',
-  statusSuccess: '#11D483',
-  statusSuccessDark: '#0F6B4B',
-};
+const bpTablet = 'screen and (min-width: 768px)';
 
 export const page = style({
   minHeight: '100vh',
@@ -23,164 +10,182 @@ export const page = style({
 });
 
 export const shell = style({
+  boxSizing: 'border-box',
   width: '100%',
-  maxWidth: '960px',
+  maxWidth: '680px',
   margin: '0 auto',
-  padding: `${vars.spacing.xl} ${vars.spacing.md} 80px`,
+  padding: `24px ${vars.spacing.md} 48px`,
+  display: 'grid',
+  gap: vars.spacing.lg,
+  '@media': {
+    [bpTablet]: {
+      padding: `32px ${vars.spacing.xl} 56px`,
+    },
+  },
 });
 
-export const content = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: vars.spacing.xl,
-  alignItems: 'center',
-});
-
-export const hero = style({
+export const intro = style({
+  display: 'grid',
+  gap: vars.spacing.sm,
   textAlign: 'center',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: vars.spacing.md,
-  alignItems: 'center',
 });
 
-export const heroTitle = style({
-  fontSize: 'clamp(36px, 5vw, 64px)',
-  fontWeight: vars.font.weight.bold,
+export const title = style({
+  margin: 0,
   color: vars.colors.black,
-  margin: 0,
-  lineHeight: 1.15,
-});
-
-export const heroDescription = style({
-  margin: 0,
-  color: palette.bodyText,
-  fontSize: 'clamp(16px, 2vw, 22px)',
-  lineHeight: 1.6,
-});
-
-export const panel = style({
-  width: '100%',
-  maxWidth: '640px',
-  padding: vars.spacing.lg,
-  backgroundColor: palette.panelBackground,
-  borderRadius: '24px',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: vars.spacing.md,
-  boxShadow: '0 18px 40px rgba(12, 22, 44, 0.12)',
-});
-
-export const panelTitle = style({
-  margin: 0,
-  color: palette.panelText,
-  fontSize: vars.font.size.xl,
+  fontSize: 'clamp(28px, 5vw, 42px)',
   fontWeight: vars.font.weight.bold,
+  lineHeight: 1.2,
+});
+
+export const description = style({
+  margin: 0,
+  color: vars.colors.subText,
+  fontSize: vars.font.size.md,
+  lineHeight: 1.5,
+});
+
+export const card = style({
+  display: 'grid',
+  gap: vars.spacing.md,
+  backgroundColor: '#2E333D',
+  borderRadius: vars.radius.lg,
+  padding: vars.spacing.lg,
+});
+
+export const modeSwitch = style({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  gap: vars.spacing.sm,
+});
+
+export const modeButton = style({
+  border: '1px solid rgba(255, 255, 255, 0.35)',
+  borderRadius: vars.radius.md,
+  backgroundColor: 'transparent',
+  color: vars.colors.white,
+  padding: `${vars.spacing.sm} ${vars.spacing.md}`,
+  fontSize: vars.font.size.sm,
+  fontWeight: vars.font.weight.medium,
+  cursor: 'pointer',
+});
+
+export const modeButtonActive = style({
+  backgroundColor: vars.colors.white,
+  color: vars.colors.black,
+  borderColor: vars.colors.white,
+});
+
+export const providerLabel = style({
+  margin: 0,
+  color: vars.colors.white,
+  fontSize: vars.font.size.sm,
+  fontWeight: vars.font.weight.medium,
   textAlign: 'center',
 });
 
-export const widgetWrap = style({
-  padding: vars.spacing.lg,
-  borderRadius: vars.radius.xl,
+export const widgetFrame = style({
   backgroundColor: vars.colors.white,
-  border: `1px solid ${palette.cardBorder}`,
+  borderRadius: vars.radius.md,
+  border: `1px solid ${vars.colors.border}`,
+  padding: vars.spacing.md,
+});
+
+export const enterpriseBox = style({
   display: 'flex',
   justifyContent: 'center',
-  overflowX: 'auto',
+  alignItems: 'center',
+  minHeight: '78px',
 });
 
-export const helperText = style({
-  margin: 0,
-  color: palette.panelText,
-  fontSize: vars.font.size.sm,
-  textAlign: 'center',
-  lineHeight: 1.6,
+export const mockCheckbox = style({
+  display: 'grid',
+  gridTemplateColumns: '24px 1fr',
+  alignItems: 'center',
+  columnGap: vars.spacing.sm,
+  cursor: 'pointer',
 });
 
-export const missingConfigNotice = style({
-  width: '100%',
-  maxWidth: '640px',
-  padding: vars.spacing.md,
-  borderRadius: vars.radius.lg,
-  backgroundColor: palette.notice,
-  border: `1px solid ${palette.noticeBorder}`,
+export const mockCheckboxInput = style({
+  position: 'absolute',
+  opacity: 0,
+  pointerEvents: 'none',
+});
+
+export const mockCheckboxIndicator = style({
+  width: '24px',
+  height: '24px',
+  borderRadius: vars.radius.sm,
+  border: `1px solid ${vars.colors.border}`,
+  backgroundColor: vars.colors.white,
+  selectors: {
+    [`${mockCheckboxInput}:checked + &`]: {
+      backgroundColor: vars.colors.success,
+      borderColor: vars.colors.success,
+      boxShadow: `inset 0 0 0 3px ${vars.colors.white}`,
+    },
+    [`${mockCheckboxInput}:focus-visible + &`]: {
+      outline: `2px solid ${vars.colors.main}`,
+      outlineOffset: '2px',
+    },
+  },
+});
+
+export const mockCheckboxText = style({
   color: vars.colors.black,
-  fontSize: vars.font.size.sm,
-  lineHeight: 1.6,
+  fontSize: vars.font.size.lg,
+  fontWeight: vars.font.weight.medium,
+  lineHeight: 1.3,
 });
 
-export const submitButton = style({
+export const fallbackMessage = style({
+  margin: 0,
+  color: vars.colors.warning,
+  fontSize: vars.font.size.sm,
+  lineHeight: 1.4,
+});
+
+export const captchaHint = style({
+  margin: 0,
+  color: vars.colors.mainXLight,
+  fontSize: vars.font.size.sm,
+  lineHeight: 1.4,
+});
+
+export const footer = style({
+  display: 'grid',
+  gap: vars.spacing.sm,
+});
+
+export const verifyButton = style({
   width: '100%',
-  maxWidth: '640px',
-  height: '56px',
-  border: 'none',
-  borderRadius: '999px',
+  border: 0,
+  borderRadius: vars.radius.md,
   backgroundColor: vars.colors.main,
   color: vars.colors.white,
-  fontSize: vars.font.size.xl,
-  fontWeight: vars.font.weight.bold,
+  padding: `${vars.spacing.sm} ${vars.spacing.md}`,
+  fontSize: vars.font.size.md,
+  fontWeight: vars.font.weight.semibold,
   cursor: 'pointer',
-  boxShadow: '0 18px 32px rgba(0, 106, 228, 0.18)',
   selectors: {
     '&:disabled': {
+      opacity: 0.6,
       cursor: 'not-allowed',
-      opacity: 0.55,
-      boxShadow: 'none',
-    },
-    '&:focus-visible': {
-      outline: `3px solid ${vars.colors.mainLightHover}`,
-      outlineOffset: '3px',
     },
   },
 });
 
 export const feedback = style({
-  minHeight: '24px',
   margin: 0,
+  color: vars.colors.subText,
   fontSize: vars.font.size.sm,
+  lineHeight: 1.4,
+});
+
+export const envHint = style({
+  margin: 0,
+  color: vars.colors.subDark,
+  fontSize: vars.font.size.xs,
   lineHeight: 1.5,
   textAlign: 'center',
-});
-
-export const feedbackSuccess = style({
-  color: palette.statusSuccessDark,
-});
-
-export const feedbackError = style({
-  color: palette.statusErrorDark,
-});
-
-export const guideCard = style({
-  width: '100%',
-  maxWidth: '640px',
-  padding: vars.spacing.lg,
-  borderRadius: '20px',
-  border: `1px solid ${palette.cardBorder}`,
-  backgroundColor: palette.cardBackground,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: vars.spacing.sm,
-});
-
-export const guideTitle = style({
-  margin: 0,
-  color: vars.colors.black,
-  fontSize: vars.font.size.lg,
-  fontWeight: vars.font.weight.bold,
-});
-
-export const guideList = style({
-  margin: 0,
-  paddingLeft: vars.spacing.lg,
-  color: palette.bodyText,
-  fontSize: vars.font.size.sm,
-  lineHeight: 1.7,
-});
-
-export const footerHint = style({
-  margin: 0,
-  color: palette.hint,
-  fontSize: vars.font.size.xs,
-  textAlign: 'center',
-  lineHeight: 1.6,
 });
