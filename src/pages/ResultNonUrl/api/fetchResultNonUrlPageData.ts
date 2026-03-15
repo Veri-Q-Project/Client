@@ -9,9 +9,9 @@ export const mockResultNonUrlPageData: ResultNonUrlPageData = {
 };
 
 export async function fetchResultNonUrlPageData(): Promise<ResultNonUrlPageData> {
-  return Promise.resolve(mockResultNonUrlPageData);
+  return Promise.resolve({ ...mockResultNonUrlPageData });
 }
 
 export function getInitialResultNonUrlPageData(): ResultNonUrlPageData {
-  return mockResultNonUrlPageData;
+  return { ...mockResultNonUrlPageData };
 }

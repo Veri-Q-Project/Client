@@ -26,10 +26,14 @@ export function useResultNonUrlPage(): UseResultNonUrlPageReturn {
     let isMounted = true;
 
     const loadResultNonUrlPageData = async () => {
-      const response = await fetchResultNonUrlPageData();
+      try {
+        const response = await fetchResultNonUrlPageData();
 
-      if (isMounted) {
-        setResultNonUrlPageData(response);
+        if (isMounted) {
+          setResultNonUrlPageData(response);
+        }
+      } catch (error) {
+        console.error('[ResultNonUrlPage] failed to load page data', error);
       }
     };
 

@@ -69,7 +69,7 @@ export const descriptionTone = styleVariants<Record<ResultTone, object>>({
   critical: [
     baseDescription,
     {
-      color: '#D98282',
+      color: vars.colors.resultCriticalText,
     },
   ],
   safe: [
@@ -81,7 +81,7 @@ export const descriptionTone = styleVariants<Record<ResultTone, object>>({
   warning: [
     baseDescription,
     {
-      color: '#C8B95A',
+      color: vars.colors.resultWarningText,
     },
   ],
 });

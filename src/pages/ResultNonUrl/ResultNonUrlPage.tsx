@@ -81,7 +81,9 @@ export default function ResultNonUrlPage() {
             </button>
 
             {executionFeedbackMessage ? (
-              <p className={styles.executionFeedback}>{executionFeedbackMessage}</p>
+              <p aria-live="polite" className={styles.executionFeedback} role="status">
+                {executionFeedbackMessage}
+              </p>
             ) : null}
 
             <ResultActionButtons
@@ -97,6 +99,7 @@ export default function ResultNonUrlPage() {
               <div className={styles.previewButtonList}>
                 {nonUrlActionPreviewItems.map((previewItem) => (
                   <button
+                    aria-pressed={displayedActionType === previewItem.actionType}
                     className={`${styles.previewButton} ${
                       displayedActionType === previewItem.actionType
                         ? styles.previewButtonActive

@@ -2,6 +2,33 @@ import { style } from '@vanilla-extract/css';
 
 import { vars } from '@/vars.css';
 
+const nonUrlPalette = {
+  accentEnd: '#D9B800',
+  accentStart: vars.colors.warning,
+  actionBodyBackground: '#FFF9E8',
+  actionBodyBorder: 'rgba(242, 223, 13, 0.4)',
+  actionCardBorder: 'rgba(242, 223, 13, 0.34)',
+  actionCardShadow: '0 20px 48px rgba(242, 223, 13, 0.08)',
+  actionDivider: 'rgba(217, 184, 0, 0.32)',
+  actionTitleText: '#16345B',
+  cautionText: '#50637C',
+  detailText: '#B28300',
+  executionButtonShadow: '0 14px 32px rgba(242, 223, 13, 0.18)',
+  focusRing: 'rgba(0, 106, 228, 0.24)',
+  previewActiveText: '#3D3200',
+  previewBackground: '#FFFBEF',
+  previewBorder: 'rgba(242, 223, 13, 0.28)',
+  previewText: '#7D6200',
+  previewValueText: '#6F5A00',
+  sectionBackground: '#FFFDF6',
+  sectionBorder: 'rgba(242, 223, 13, 0.45)',
+  sectionNumberBackground: '#FFF1B8',
+  sectionNumberBorder: 'rgba(242, 223, 13, 0.72)',
+  sectionNumberText: '#A27200',
+  strongText: '#1D3557',
+  subtleText: '#7D8FB3',
+};
+
 export const futureContent = style({
   display: 'grid',
   gap: vars.spacing.md,
@@ -12,8 +39,8 @@ export const analysisSection = style({
   gap: vars.spacing.md,
   padding: vars.spacing.lg,
   borderRadius: '24px',
-  border: '1px solid rgba(242, 223, 13, 0.45)',
-  backgroundColor: '#FFFDF6',
+  border: `1px solid ${nonUrlPalette.sectionBorder}`,
+  backgroundColor: nonUrlPalette.sectionBackground,
 });
 
 export const sectionHeader = style({
@@ -30,9 +57,9 @@ export const sectionNumber = style({
   height: '32px',
   padding: '0 10px',
   borderRadius: '12px',
-  backgroundColor: '#FFF1B8',
-  border: '1px solid rgba(242, 223, 13, 0.72)',
-  color: '#A27200',
+  backgroundColor: nonUrlPalette.sectionNumberBackground,
+  border: `1px solid ${nonUrlPalette.sectionNumberBorder}`,
+  color: nonUrlPalette.sectionNumberText,
   fontSize: vars.font.size.sm,
   fontWeight: vars.font.weight.bold,
   lineHeight: 1,
@@ -45,7 +72,7 @@ export const sectionHeaderTextBlock = style({
 
 export const sectionTitle = style({
   margin: 0,
-  color: '#1D3557',
+  color: nonUrlPalette.strongText,
   fontSize: 'clamp(20px, 2.6vw, 28px)',
   fontWeight: vars.font.weight.bold,
   lineHeight: 1.3,
@@ -63,9 +90,9 @@ export const actionCard = style({
   gap: vars.spacing.md,
   padding: vars.spacing.lg,
   borderRadius: '24px',
-  border: '1px solid rgba(242, 223, 13, 0.34)',
+  border: `1px solid ${nonUrlPalette.actionCardBorder}`,
   backgroundColor: vars.colors.white,
-  boxShadow: '0 20px 48px rgba(242, 223, 13, 0.08)',
+  boxShadow: nonUrlPalette.actionCardShadow,
 });
 
 export const actionCardHeader = style({
@@ -79,7 +106,7 @@ export const actionAccent = style({
   width: '4px',
   minHeight: '52px',
   borderRadius: '999px',
-  background: 'linear-gradient(180deg, #F2DF0D 0%, #D9B800 100%)',
+  background: `linear-gradient(180deg, ${nonUrlPalette.accentStart} 0%, ${nonUrlPalette.accentEnd} 100%)`,
 });
 
 export const actionHeaderTextBlock = style({
@@ -89,7 +116,7 @@ export const actionHeaderTextBlock = style({
 
 export const actionTitle = style({
   margin: 0,
-  color: '#16345B',
+  color: nonUrlPalette.actionTitleText,
   fontSize: 'clamp(20px, 2.8vw, 34px)',
   fontWeight: vars.font.weight.bold,
   lineHeight: 1.25,
@@ -98,7 +125,7 @@ export const actionTitle = style({
 
 export const actionEnglishLabel = style({
   margin: 0,
-  color: '#7D8FB3',
+  color: nonUrlPalette.subtleText,
   fontSize: 'clamp(13px, 1.3vw, 18px)',
   fontWeight: vars.font.weight.semibold,
   letterSpacing: '0.08em',
@@ -111,8 +138,8 @@ export const actionBody = style({
   gap: vars.spacing.md,
   padding: vars.spacing.lg,
   borderRadius: '20px',
-  backgroundColor: '#FFF9E8',
-  border: '1px solid rgba(242, 223, 13, 0.4)',
+  backgroundColor: nonUrlPalette.actionBodyBackground,
+  border: `1px solid ${nonUrlPalette.actionBodyBorder}`,
 });
 
 export const detailLabelRow = style({
@@ -125,12 +152,12 @@ export const detailLabelDot = style({
   width: '10px',
   height: '10px',
   borderRadius: '999px',
-  backgroundColor: '#D9B800',
+  backgroundColor: nonUrlPalette.accentEnd,
 });
 
 export const detailLabel = style({
   margin: 0,
-  color: '#B28300',
+  color: nonUrlPalette.detailText,
   fontSize: vars.font.size.md,
   fontWeight: vars.font.weight.bold,
   lineHeight: 1.4,
@@ -138,7 +165,7 @@ export const detailLabel = style({
 
 export const actionDescription = style({
   margin: 0,
-  color: '#16345B',
+  color: nonUrlPalette.actionTitleText,
   fontSize: 'clamp(16px, 1.7vw, 22px)',
   fontWeight: vars.font.weight.medium,
   lineHeight: 1.7,
@@ -148,19 +175,19 @@ export const actionDescription = style({
 export const actionDivider = style({
   width: '100%',
   height: '1px',
-  backgroundColor: 'rgba(217, 184, 0, 0.32)',
+  backgroundColor: nonUrlPalette.actionDivider,
 });
 
 export const actionCaution = style({
   margin: 0,
-  color: '#50637C',
+  color: nonUrlPalette.cautionText,
   fontSize: 'clamp(15px, 1.5vw, 20px)',
   lineHeight: 1.75,
   wordBreak: 'keep-all',
 });
 
 export const actionCautionLabel = style({
-  color: '#B28300',
+  color: nonUrlPalette.detailText,
   fontWeight: vars.font.weight.bold,
 });
 
@@ -175,12 +202,25 @@ export const executionButton = style({
   fontWeight: vars.font.weight.bold,
   lineHeight: 1.2,
   cursor: 'pointer',
-  boxShadow: '0 14px 32px rgba(242, 223, 13, 0.18)',
+  boxShadow: nonUrlPalette.executionButtonShadow,
+  selectors: {
+    '&:focus-visible': {
+      outline: `2px solid ${vars.colors.main}`,
+      outlineOffset: '3px',
+      boxShadow: `0 0 0 4px ${nonUrlPalette.focusRing}, ${nonUrlPalette.executionButtonShadow}`,
+    },
+    '&:disabled': {
+      opacity: 0.55,
+      cursor: 'not-allowed',
+      pointerEvents: 'none',
+      boxShadow: 'none',
+    },
+  },
 });
 
 export const executionFeedback = style({
   margin: 0,
-  color: '#7D6200',
+  color: nonUrlPalette.previewText,
   fontSize: vars.font.size.sm,
   lineHeight: 1.6,
   textAlign: 'center',
@@ -191,13 +231,13 @@ export const previewSection = style({
   gap: vars.spacing.sm,
   padding: vars.spacing.md,
   borderRadius: vars.radius.lg,
-  border: '1px solid rgba(242, 223, 13, 0.28)',
-  backgroundColor: '#FFFBEF',
+  border: `1px solid ${nonUrlPalette.previewBorder}`,
+  backgroundColor: nonUrlPalette.previewBackground,
 });
 
 export const previewTitle = style({
   margin: 0,
-  color: '#7D6200',
+  color: nonUrlPalette.previewText,
   fontSize: vars.font.size.md,
   fontWeight: vars.font.weight.semibold,
   lineHeight: 1.5,
@@ -210,19 +250,45 @@ export const previewButtonList = style({
 });
 
 export const previewButton = style({
-  border: '1px solid rgba(242, 223, 13, 0.45)',
+  border: `1px solid ${nonUrlPalette.sectionBorder}`,
   borderRadius: '999px',
   backgroundColor: vars.colors.white,
-  color: '#6F5A00',
+  color: nonUrlPalette.previewValueText,
   padding: '8px 14px',
   fontSize: vars.font.size.sm,
   fontWeight: vars.font.weight.medium,
   lineHeight: 1.2,
   cursor: 'pointer',
+  selectors: {
+    '&:focus-visible': {
+      outline: `2px solid ${vars.colors.main}`,
+      outlineOffset: '2px',
+      boxShadow: `0 0 0 4px ${nonUrlPalette.focusRing}`,
+    },
+    '&:disabled': {
+      opacity: 0.55,
+      cursor: 'not-allowed',
+      pointerEvents: 'none',
+      boxShadow: 'none',
+    },
+  },
 });
 
 export const previewButtonActive = style({
-  backgroundColor: '#F2DF0D',
-  borderColor: '#D9B800',
-  color: '#3D3200',
+  backgroundColor: vars.colors.warning,
+  borderColor: nonUrlPalette.accentEnd,
+  color: nonUrlPalette.previewActiveText,
+  selectors: {
+    '&:focus-visible': {
+      outline: `2px solid ${vars.colors.main}`,
+      outlineOffset: '2px',
+      boxShadow: `0 0 0 4px ${nonUrlPalette.focusRing}`,
+    },
+    '&:disabled': {
+      opacity: 0.55,
+      cursor: 'not-allowed',
+      pointerEvents: 'none',
+      boxShadow: 'none',
+    },
+  },
 });

@@ -21,7 +21,11 @@ function normalizePhoneNumber(targetValue?: string): string {
     return '';
   }
 
-  return targetValue.replace(/[^0-9+]/g, '');
+  return targetValue.trim().replace(/[\s()-]/g, '');
+}
+
+function isValidPhoneNumber(targetValue: string): boolean {
+  return /^\+?\d{7,15}$/u.test(targetValue);
 }
 
 export function resolveNonUrlActionExecution(
@@ -32,7 +36,7 @@ export function resolveNonUrlActionExecution(
     case 'telSms': {
       const normalizedPhoneNumber = normalizePhoneNumber(targetValue);
 
-      if (!normalizedPhoneNumber) {
+      if (!isValidPhoneNumber(normalizedPhoneNumber)) {
         return {
           kind: 'unsupported',
           message: '전화 또는 문자 실행을 위한 번호 정보가 없습니다.',
