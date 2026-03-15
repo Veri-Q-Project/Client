@@ -3,109 +3,146 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { submitCaptchaVerification } from '../api/submitCaptchaVerification';
 
-const DEFAULT_VERIFY_ENDPOINT = '/api/captcha/verify';
-const SUPPORTED_CAPTCHA_PROVIDER = 'googleRecaptchaV2';
+import type { CaptchaProvider } from '../types/captcha.types';
 
-export function useCaptchaPage() {
+type UseCaptchaPageReturn = {
+  configuredProvider: CaptchaProvider;
+  effectiveProvider: CaptchaProvider;
+  feedbackMessage: string | null;
+  handleCaptchaTokenChange: (nextToken: string | null) => void;
+  handleMockToggle: (checked: boolean) => void;
+  handleProviderChange: (provider: CaptchaProvider) => void;
+  handleSubmit: () => Promise<void>;
+  isUsingMockFallback: boolean;
+  isVerifying: boolean;
+  recaptchaSiteKey: string;
+  selectedProvider: CaptchaProvider;
+  token: string | null;
+};
+
+function resolveCaptchaProvider(
+  rawProvider: string | undefined,
+  isDebugCaptchaEnabled: boolean,
+): CaptchaProvider {
+  if (rawProvider === 'googleRecaptchaV2' || rawProvider === 'googleRecaptchaEnterprise') {
+    return 'googleRecaptchaEnterprise';
+  }
+
+  if (rawProvider === 'mock' && isDebugCaptchaEnabled) {
+    return 'mock';
+  }
+
+  return 'googleRecaptchaEnterprise';
+}
+
+export function useCaptchaPage(): UseCaptchaPageReturn {
   const navigate = useNavigate();
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [resetSignal, setResetSignal] = useState(0);
 
-  // siteKey/captchaProvider use ?? so missing env falls back, while verifyEndpoint uses
-  // || so an empty endpoint string still falls back to DEFAULT_VERIFY_ENDPOINT.
-  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY?.trim() ?? '';
-  const captchaProvider =
-    import.meta.env.VITE_CAPTCHA_PROVIDER?.trim() ?? SUPPORTED_CAPTCHA_PROVIDER;
-  const verifyEndpoint =
-    import.meta.env.VITE_CAPTCHA_VERIFY_ENDPOINT?.trim() || DEFAULT_VERIFY_ENDPOINT;
+  const isDebugCaptchaEnabled = import.meta.env.VITE_ENABLE_DEBUG_CAPTCHA === 'true';
 
-  const isCaptchaConfigured = siteKey.length > 0;
-  const isSupportedProvider = captchaProvider === SUPPORTED_CAPTCHA_PROVIDER;
-  const canSubmit = isCaptchaConfigured && isSupportedProvider && !!captchaToken && !isVerifying;
+  const configuredProvider = useMemo(
+    () => resolveCaptchaProvider(import.meta.env.VITE_CAPTCHA_PROVIDER, isDebugCaptchaEnabled),
+    [isDebugCaptchaEnabled],
+  );
+  const [selectedProvider, setSelectedProvider] = useState<CaptchaProvider>(configuredProvider);
 
-  const providerStatusMessage = useMemo(() => {
-    if (!isCaptchaConfigured) {
-      return 'reCAPTCHA 사이트 키가 설정되지 않았습니다.';
-    }
+  const recaptchaSiteKey = (import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? '').trim();
 
-    if (!isSupportedProvider) {
-      return `지원되지 않는 캡차 제공자입니다: ${captchaProvider}`;
-    }
+  const shouldFallbackToMock =
+    isDebugCaptchaEnabled &&
+    selectedProvider === 'googleRecaptchaEnterprise' &&
+    recaptchaSiteKey.length === 0;
 
-    return '';
-  }, [captchaProvider, isCaptchaConfigured, isSupportedProvider]);
+  const effectiveProvider: CaptchaProvider = shouldFallbackToMock ? 'mock' : selectedProvider;
 
-  const handleLoadError = useCallback((message: string) => {
-    setIsSuccess(false);
-    setFeedbackMessage(message);
-  }, []);
+  const isUsingMockFallback = shouldFallbackToMock;
 
-  const handleTokenChange = useCallback((token: string | null) => {
-    setCaptchaToken(token);
-    setIsSuccess(false);
-    setFeedbackMessage('');
+  const handleProviderChange = useCallback(
+    (provider: CaptchaProvider) => {
+      if (!isDebugCaptchaEnabled) {
+        return;
+      }
+
+      setSelectedProvider(provider);
+      setToken(null);
+      setFeedbackMessage(null);
+    },
+    [isDebugCaptchaEnabled],
+  );
+
+  const handleMockToggle = useCallback(
+    (checked: boolean) => {
+      if (!isDebugCaptchaEnabled) {
+        return;
+      }
+
+      if (checked) {
+        setToken(`mock-token-${Date.now()}`);
+      } else {
+        setToken(null);
+      }
+
+      setFeedbackMessage(null);
+    },
+    [isDebugCaptchaEnabled],
+  );
+
+  const handleCaptchaTokenChange = useCallback((nextToken: string | null) => {
+    setToken(nextToken);
+    setFeedbackMessage(null);
   }, []);
 
   const handleSubmit = useCallback(async () => {
-    if (!captchaToken || !isCaptchaConfigured || !isSupportedProvider) {
-      setIsSuccess(false);
-      setFeedbackMessage(providerStatusMessage || '캡차 검증을 완료한 뒤 다시 시도해 주세요.');
+    setFeedbackMessage(null);
 
+    if (effectiveProvider === 'googleRecaptchaEnterprise' && recaptchaSiteKey.length === 0) {
+      setFeedbackMessage('reCAPTCHA 사이트 키가 비어 있습니다. `.env.local`을 확인해 주세요.');
+      return;
+    }
+
+    if (!token) {
+      setFeedbackMessage('캡차를 먼저 완료해 주세요.');
+      return;
+    }
+
+    if (effectiveProvider === 'mock') {
+      setFeedbackMessage('Mock 캡차 검증이 완료되었습니다. 로딩 화면으로 이동합니다.');
+      void navigate({ to: '/loading' });
       return;
     }
 
     setIsVerifying(true);
-    setIsSuccess(false);
-    setFeedbackMessage('');
 
     try {
-      const verificationResponse = await submitCaptchaVerification({
-        endpoint: verifyEndpoint,
-        token: captchaToken,
-      });
+      const result = await submitCaptchaVerification({ token });
 
-      if (!verificationResponse.success) {
-        setFeedbackMessage(verificationResponse.message);
-        setCaptchaToken(null);
-        setResetSignal((currentValue) => currentValue + 1);
-
+      if (!result.success) {
+        setFeedbackMessage(result.message ?? '캡차 검증에 실패했습니다.');
         return;
       }
 
-      setIsSuccess(true);
-      setFeedbackMessage(verificationResponse.message);
-      navigate({ to: '/loading' });
-    } catch {
-      setCaptchaToken(null);
-      setResetSignal((currentValue) => currentValue + 1);
-      setFeedbackMessage('검증 요청 처리 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      setFeedbackMessage('캡차 검증이 완료되었습니다. 로딩 화면으로 이동합니다.');
+      void navigate({ to: '/loading' });
     } finally {
       setIsVerifying(false);
     }
-  }, [
-    captchaToken,
-    isCaptchaConfigured,
-    isSupportedProvider,
-    navigate,
-    providerStatusMessage,
-    verifyEndpoint,
-  ]);
+  }, [effectiveProvider, navigate, recaptchaSiteKey, token]);
 
   return {
-    canSubmit,
+    configuredProvider,
+    effectiveProvider,
     feedbackMessage,
-    handleLoadError,
+    handleCaptchaTokenChange,
+    handleMockToggle,
+    handleProviderChange,
     handleSubmit,
-    handleTokenChange,
-    isCaptchaConfigured,
-    isSuccess,
-    isSupportedProvider,
+    isUsingMockFallback,
     isVerifying,
-    providerStatusMessage,
-    resetSignal,
-    siteKey,
+    recaptchaSiteKey,
+    selectedProvider,
+    token,
   };
 }

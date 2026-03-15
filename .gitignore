@@ -8,5 +8,4 @@ out
 .env
 .env.server
 .env.local
-.env.server.local
 .env.*.local
