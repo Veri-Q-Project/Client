@@ -1,4 +1,4 @@
-type CaptchaRequestBody = {
+﻿type CaptchaRequestBody = {
   token?: string;
 };
 
@@ -29,6 +29,8 @@ type CaptchaResponseBody = {
   message: string;
   success: boolean;
 };
+
+const CAPTCHA_VERIFY_TIMEOUT_MS = 8_000;
 
 function getOriginHeader(headers: ApiRequest['headers']): string | null {
   const originHeader = headers.origin;
@@ -107,6 +109,10 @@ function resolveRequestBody(body: ApiRequest['body']): CaptchaRequestBody {
   return body ?? {};
 }
 
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
+
 export default async function handler(request: ApiRequest, response: ApiResponse) {
   setCorsHeaders(request, response);
   response.setHeader('Cache-Control', 'no-store');
@@ -152,6 +158,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   }
 
   let verifyResponse: globalThis.Response;
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => abortController.abort(), CAPTCHA_VERIFY_TIMEOUT_MS);
 
   try {
     verifyResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
@@ -160,13 +168,24 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       method: 'POST',
+      signal: abortController.signal,
     });
-  } catch {
+  } catch (error) {
+    if (isAbortError(error)) {
+      response
+        .status(504)
+        .json(buildFailureResponse('Google reCAPTCHA 검증 시간이 초과되었습니다.'));
+
+      return;
+    }
+
     response
       .status(502)
       .json(buildFailureResponse('Google reCAPTCHA 검증 서버에 연결하지 못했습니다.'));
 
     return;
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   let verifyData: CaptchaSiteVerifyResponse;

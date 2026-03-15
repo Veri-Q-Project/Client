@@ -1,4 +1,4 @@
-import { qrBlackIcon } from '@/shared/icon/resultIcons';
+﻿import { qrBlackIcon } from '@/shared/icon/resultIcons';
 import AppHeader from '@/shared/ui/app-header';
 
 import { useCaptchaPage } from './hooks/useCaptchaPage';
@@ -13,15 +13,14 @@ export default function CaptchaPage() {
     handleSubmit,
     handleTokenChange,
     isCaptchaConfigured,
+    isSuccess,
     isSupportedProvider,
     isVerifying,
     providerStatusMessage,
     resetSignal,
     siteKey,
   } = useCaptchaPage();
-
-  const isSuccessFeedback =
-    feedbackMessage.length > 0 && feedbackMessage === '캡차 검증에 성공했습니다.';
+  const showDevGuide = import.meta.env.DEV;
 
   return (
     <main className={styles.page}>
@@ -70,22 +69,24 @@ export default function CaptchaPage() {
 
           <p
             aria-live="polite"
-            className={`${styles.feedback} ${
-              isSuccessFeedback ? styles.feedbackSuccess : styles.feedbackError
-            }`}
+            className={`${styles.feedback} ${isSuccess ? styles.feedbackSuccess : styles.feedbackError}`}
             role="status"
           >
             {feedbackMessage}
           </p>
 
-          <section className={styles.guideCard}>
-            <h2 className={styles.guideTitle}>운영 배포 체크</h2>
-            <ul className={styles.guideList}>
-              <li>Vercel 환경변수에 VITE_RECAPTCHA_SITE_KEY를 등록합니다.</li>
-              <li>Vercel 환경변수에 CAPTCHA_SECRET_KEY를 등록합니다.</li>
-              <li>VITE_CAPTCHA_VERIFY_ENDPOINT가 비어 있으면 /api/captcha/verify를 사용합니다.</li>
-            </ul>
-          </section>
+          {showDevGuide ? (
+            <section className={styles.guideCard}>
+              <h2 className={styles.guideTitle}>운영 배포 체크</h2>
+              <ul className={styles.guideList}>
+                <li>Vercel 환경변수에 VITE_RECAPTCHA_SITE_KEY를 등록합니다.</li>
+                <li>Vercel 환경변수에 CAPTCHA_SECRET_KEY를 등록합니다.</li>
+                <li>
+                  VITE_CAPTCHA_VERIFY_ENDPOINT가 비어 있으면 /api/captcha/verify를 사용합니다.
+                </li>
+              </ul>
+            </section>
+          ) : null}
 
           <p className={styles.footerHint}>
             배포 환경에서는 Vercel Function이 Google reCAPTCHA 검증 요청을 처리합니다.

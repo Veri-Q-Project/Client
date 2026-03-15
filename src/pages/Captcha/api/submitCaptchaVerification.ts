@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   CaptchaVerificationResponse,
   SubmitCaptchaVerificationParams,
 } from '../types/captcha.types';
@@ -42,7 +42,7 @@ export async function submitCaptchaVerification({
     if (!response.ok) {
       return {
         errorCodes: responseData?.errorCodes ?? [],
-        message: responseData?.message ?? `Verification request failed. (HTTP ${response.status})`,
+        message: responseData?.message ?? `인증 요청에 실패했습니다. (HTTP ${response.status})`,
         success: false,
       };
     }
