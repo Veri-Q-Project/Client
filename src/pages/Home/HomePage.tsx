@@ -8,6 +8,7 @@ const routeLinks = [
   { to: '/report', label: '/report' },
   { to: '/scan-history', label: '/scan-history' },
   { to: '/result/critical', label: '/result/critical' },
+  { to: '/result/non-url', label: '/result/non-url' },
   { to: '/result/safe', label: '/result/safe' },
   { to: '/result/warning', label: '/result/warning' },
 ] as const;
