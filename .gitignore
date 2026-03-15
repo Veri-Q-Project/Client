@@ -4,3 +4,6 @@ dist
 .next
 node_modules
 out
+.env.local
+.env.server.local
+*.tsbuildinfo
