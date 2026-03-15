@@ -1,10 +1,13 @@
-export type CaptchaProvider = 'mock' | 'googleRecaptchaEnterprise';
-
-export type CaptchaVerifyResponse = {
-  message?: string;
+﻿export type CaptchaVerificationResponse = {
+  challengeTs?: string;
+  errorCodes?: string[];
+  hostname?: string;
+  message: string;
   success: boolean;
 };
 
-export type SubmitCaptchaVerificationPayload = {
+export type SubmitCaptchaVerificationParams = {
+  endpoint: string;
+  timeoutMs?: number;
   token: string;
 };

@@ -1,189 +1,140 @@
-﻿import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
 
-import * as styles from '../styles/captchaPage.css';
+const RECAPTCHA_SCRIPT_ID = 'google-recaptcha-v2-script';
+const RECAPTCHA_SCRIPT_SOURCE = 'https://www.google.com/recaptcha/api.js?render=explicit';
 
-import type { CaptchaProvider } from '../types/captcha.types';
+let recaptchaScriptPromise: Promise<Grecaptcha> | null = null;
 
-type CaptchaWidgetProps = {
-  onMockToggle: (checked: boolean) => void;
-  onTokenChange: (token: string | null) => void;
-  provider: CaptchaProvider;
-  recaptchaSiteKey: string;
-  token: string | null;
-};
-
-type GrecaptchaEnterprise = {
-  ready: (callback: () => void) => void;
-  render: (
-    container: HTMLElement,
-    parameters: {
-      callback: (token: string) => void;
-      'error-callback': () => void;
-      'expired-callback': () => void;
-      sitekey: string;
-      theme?: 'light' | 'dark';
-    },
-  ) => number;
-};
-
-declare global {
-  interface Window {
-    grecaptcha?: {
-      enterprise?: GrecaptchaEnterprise;
-    };
-  }
-}
-
-let enterpriseScriptPromise: Promise<void> | null = null;
-
-function isEnterpriseApiReady() {
-  return typeof window.grecaptcha?.enterprise?.render === 'function';
-}
-
-function loadEnterpriseScript(): Promise<void> {
-  if (isEnterpriseApiReady()) {
-    return Promise.resolve();
+function loadRecaptchaScript(): Promise<Grecaptcha> {
+  if (window.grecaptcha) {
+    return Promise.resolve(window.grecaptcha);
   }
 
-  if (enterpriseScriptPromise) {
-    return enterpriseScriptPromise;
+  if (recaptchaScriptPromise) {
+    return recaptchaScriptPromise;
   }
 
-  const scriptPromise = new Promise<void>((resolve, reject) => {
-    const existingScript = document.querySelector<HTMLScriptElement>(
-      'script[data-recaptcha-enterprise="true"]',
-    );
+  recaptchaScriptPromise = new Promise<Grecaptcha>((resolve, reject) => {
+    const existingScript = document.getElementById(RECAPTCHA_SCRIPT_ID) as HTMLScriptElement | null;
 
-    const onLoad = () => {
-      if (isEnterpriseApiReady()) {
-        resolve();
+    const resolveGrecaptcha = () => {
+      if (window.grecaptcha) {
+        resolve(window.grecaptcha);
+
         return;
       }
 
-      reject(new Error('Enterprise API is not ready after script load'));
+      recaptchaScriptPromise = null;
+      reject(new Error('reCAPTCHA script loaded without grecaptcha.'));
     };
 
-    const onError = () => {
-      reject(new Error('Failed to load reCAPTCHA Enterprise script'));
+    const rejectScriptLoad = () => {
+      recaptchaScriptPromise = null;
+      reject(new Error('Failed to load reCAPTCHA script.'));
     };
 
     if (existingScript) {
-      const loadStatus = existingScript.dataset.loadStatus;
+      if (window.grecaptcha) {
+        resolve(window.grecaptcha);
 
-      if (loadStatus === 'loaded' || isEnterpriseApiReady()) {
-        onLoad();
         return;
       }
 
-      if (loadStatus === 'error') {
-        onError();
-        return;
-      }
+      existingScript.addEventListener('load', resolveGrecaptcha, { once: true });
+      existingScript.addEventListener('error', rejectScriptLoad, { once: true });
 
-      existingScript.addEventListener('load', onLoad, { once: true });
-      existingScript.addEventListener('error', onError, { once: true });
       return;
     }
 
     const script = document.createElement('script');
+    script.id = RECAPTCHA_SCRIPT_ID;
     script.async = true;
     script.defer = true;
-    script.dataset.loadStatus = 'loading';
-    script.dataset.recaptchaEnterprise = 'true';
-    script.src = 'https://www.google.com/recaptcha/enterprise.js?render=explicit';
-
-    script.onload = () => {
-      script.dataset.loadStatus = 'loaded';
-      onLoad();
-    };
-
-    script.onerror = () => {
-      script.dataset.loadStatus = 'error';
-      onError();
-    };
-
-    document.head.appendChild(script);
+    script.src = RECAPTCHA_SCRIPT_SOURCE;
+    script.addEventListener('load', resolveGrecaptcha, { once: true });
+    script.addEventListener('error', rejectScriptLoad, { once: true });
+    document.head.append(script);
   }).catch((error) => {
-    enterpriseScriptPromise = null;
+    recaptchaScriptPromise = null;
     throw error;
   });
 
-  enterpriseScriptPromise = scriptPromise;
-  return scriptPromise;
+  return recaptchaScriptPromise;
 }
 
+type CaptchaWidgetProps = {
+  onLoadError: (message: string) => void;
+  onTokenChange: (token: string | null) => void;
+  resetSignal: number;
+  siteKey: string;
+};
+
 export default function CaptchaWidget({
-  onMockToggle,
+  onLoadError,
   onTokenChange,
-  provider,
-  recaptchaSiteKey,
-  token,
+  resetSignal,
+  siteKey,
 }: CaptchaWidgetProps) {
-  const widgetContainerRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const widgetIdRef = useRef<number | null>(null);
+  const handleLoadError = useEffectEvent((message: string) => {
+    onLoadError(message);
+  });
+  const handleTokenChange = useEffectEvent((token: string | null) => {
+    onTokenChange(token);
+  });
 
   useEffect(() => {
-    if (provider !== 'googleRecaptchaEnterprise') {
-      return;
-    }
+    let isMounted = true;
 
-    const container = widgetContainerRef.current;
+    async function renderCaptcha() {
+      if (!containerRef.current) {
+        return;
+      }
 
-    if (!container || !recaptchaSiteKey) {
-      return;
-    }
+      try {
+        const grecaptcha = await loadRecaptchaScript();
 
-    container.innerHTML = '';
-
-    loadEnterpriseScript()
-      .then(() => {
-        const enterprise = window.grecaptcha?.enterprise;
-
-        if (!enterprise) {
-          onTokenChange(null);
+        if (!isMounted || !containerRef.current) {
           return;
         }
 
-        enterprise.ready(() => {
-          enterprise.render(container, {
-            callback: (nextToken) => {
-              onTokenChange(nextToken);
-            },
+        grecaptcha.ready(() => {
+          if (!isMounted || !containerRef.current || widgetIdRef.current !== null) {
+            return;
+          }
+
+          widgetIdRef.current = grecaptcha.render(containerRef.current, {
+            callback: (token: string) => handleTokenChange(token),
             'error-callback': () => {
-              onTokenChange(null);
+              handleTokenChange(null);
+              handleLoadError('캡차 위젯에서 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
             },
-            'expired-callback': () => {
-              onTokenChange(null);
-            },
-            sitekey: recaptchaSiteKey,
+            'expired-callback': () => handleTokenChange(null),
+            sitekey: siteKey,
             theme: 'light',
           });
         });
-      })
-      .catch(() => {
-        onTokenChange(null);
-      });
-  }, [onTokenChange, provider, recaptchaSiteKey]);
+      } catch {
+        handleLoadError('Google reCAPTCHA 스크립트를 불러오지 못했습니다.');
+      }
+    }
 
-  if (provider === 'googleRecaptchaEnterprise') {
-    return (
-      <div className={styles.enterpriseBox}>
-        <div ref={widgetContainerRef} />
-      </div>
-    );
-  }
+    void renderCaptcha();
 
-  return (
-    <label className={styles.mockCheckbox}>
-      <input
-        checked={token !== null}
-        className={styles.mockCheckboxInput}
-        onChange={(event) => {
-          onMockToggle(event.currentTarget.checked);
-        }}
-        type="checkbox"
-      />
-      <span className={styles.mockCheckboxIndicator} />
-      <span className={styles.mockCheckboxText}>I&apos;m not a robot (Mock)</span>
-    </label>
-  );
+    return () => {
+      isMounted = false;
+      widgetIdRef.current = null;
+    };
+  }, [handleLoadError, handleTokenChange, siteKey]);
+
+  useEffect(() => {
+    if (widgetIdRef.current === null || !window.grecaptcha) {
+      return;
+    }
+
+    window.grecaptcha.reset(widgetIdRef.current);
+  }, [resetSignal]);
+
+  return <div ref={containerRef} />;
 }
