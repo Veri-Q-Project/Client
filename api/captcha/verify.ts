@@ -1,4 +1,4 @@
-﻿type CaptchaRequestBody = {
+type CaptchaRequestBody = {
   token?: string;
 };
 
@@ -31,6 +31,7 @@ type CaptchaResponseBody = {
 };
 
 const CAPTCHA_VERIFY_TIMEOUT_MS = 8_000;
+const LOCALHOST_ORIGIN_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
 
 function getOriginHeader(headers: ApiRequest['headers']): string | null {
   const originHeader = headers.origin;
@@ -62,14 +63,20 @@ function getRemoteIp(headers: ApiRequest['headers']): string | null {
 function setCorsHeaders(request: ApiRequest, response: ApiResponse) {
   const configuredOrigin = process.env.CAPTCHA_ALLOWED_ORIGIN?.trim();
   const requestOrigin = getOriginHeader(request.headers);
+  const allowLocalhostOrigins = /^(1|true)$/i.test(
+    process.env.ALLOW_LOCALHOST_ORIGINS?.trim() ?? '',
+  );
+  const isConfiguredOrigin = !!configuredOrigin && requestOrigin === configuredOrigin;
+  const isAllowedLocalhostOrigin =
+    allowLocalhostOrigins && !!requestOrigin && LOCALHOST_ORIGIN_PATTERN.test(requestOrigin);
 
-  if (!configuredOrigin || !requestOrigin || configuredOrigin !== requestOrigin) {
+  if (!requestOrigin || (!isConfiguredOrigin && !isAllowedLocalhostOrigin)) {
     return;
   }
 
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  response.setHeader('Access-Control-Allow-Origin', configuredOrigin);
+  response.setHeader('Access-Control-Allow-Origin', requestOrigin);
   response.setHeader('Vary', 'Origin');
 }
 
@@ -188,25 +195,22 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     clearTimeout(timeoutId);
   }
 
+  if (!verifyResponse.ok) {
+    response
+      .status(502)
+      .json(
+        buildFailureResponse(`reCAPTCHA 검증 요청이 실패했습니다. (HTTP ${verifyResponse.status})`),
+      );
+
+    return;
+  }
+
   let verifyData: CaptchaSiteVerifyResponse;
 
   try {
     verifyData = (await verifyResponse.json()) as CaptchaSiteVerifyResponse;
   } catch {
     response.status(502).json(buildFailureResponse('reCAPTCHA 검증 응답을 해석하지 못했습니다.'));
-
-    return;
-  }
-
-  if (!verifyResponse.ok) {
-    response
-      .status(502)
-      .json(
-        buildFailureResponse(
-          'reCAPTCHA 검증 요청이 실패했습니다.',
-          verifyData['error-codes'] ?? [],
-        ),
-      );
 
     return;
   }

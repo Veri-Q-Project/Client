@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   CaptchaVerificationResponse,
   SubmitCaptchaVerificationParams,
 } from '../types/captcha.types';
@@ -47,10 +47,14 @@ export async function submitCaptchaVerification({
       };
     }
 
+    const isSuccess = responseData?.success === true;
+
     return {
       errorCodes: responseData?.errorCodes ?? [],
-      message: responseData?.message ?? '캡차 검증에 성공했습니다.',
-      success: responseData?.success === true,
+      message:
+        responseData?.message ??
+        (isSuccess ? '캡차 검증에 성공했습니다.' : '캡차 검증에 실패했습니다.'),
+      success: isSuccess,
     };
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {

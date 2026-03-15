@@ -1,4 +1,4 @@
-﻿import { style } from '@vanilla-extract/css';
+import { style } from '@vanilla-extract/css';
 
 import { vars } from '@/vars.css';
 
@@ -12,7 +12,9 @@ const palette = {
   panelBackground: '#434A59',
   panelText: '#F9FAFB',
   statusError: '#F20D0D',
+  statusErrorDark: '#9B1C1C',
   statusSuccess: '#11D483',
+  statusSuccessDark: '#0F6B4B',
 };
 
 export const page = style({
@@ -141,11 +143,11 @@ export const feedback = style({
 });
 
 export const feedbackSuccess = style({
-  color: palette.statusSuccess,
+  color: palette.statusSuccessDark,
 });
 
 export const feedbackError = style({
-  color: palette.statusError,
+  color: palette.statusErrorDark,
 });
 
 export const guideCard = style({

@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
 
 const RECAPTCHA_SCRIPT_ID = 'google-recaptcha-v2-script';
 const RECAPTCHA_SCRIPT_SOURCE = 'https://www.google.com/recaptcha/api.js?render=explicit';
@@ -77,16 +77,12 @@ export default function CaptchaWidget({
 }: CaptchaWidgetProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<number | null>(null);
-  const loadErrorCallbackRef = useRef(onLoadError);
-  const tokenCallbackRef = useRef(onTokenChange);
-
-  useEffect(() => {
-    loadErrorCallbackRef.current = onLoadError;
-  }, [onLoadError]);
-
-  useEffect(() => {
-    tokenCallbackRef.current = onTokenChange;
-  }, [onTokenChange]);
+  const handleLoadError = useEffectEvent((message: string) => {
+    onLoadError(message);
+  });
+  const handleTokenChange = useEffectEvent((token: string | null) => {
+    onTokenChange(token);
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -109,20 +105,18 @@ export default function CaptchaWidget({
           }
 
           widgetIdRef.current = grecaptcha.render(containerRef.current, {
-            callback: (token: string) => tokenCallbackRef.current(token),
+            callback: (token: string) => handleTokenChange(token),
             'error-callback': () => {
-              tokenCallbackRef.current(null);
-              loadErrorCallbackRef.current(
-                '캡차 위젯에서 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
-              );
+              handleTokenChange(null);
+              handleLoadError('캡차 위젯에서 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
             },
-            'expired-callback': () => tokenCallbackRef.current(null),
+            'expired-callback': () => handleTokenChange(null),
             sitekey: siteKey,
             theme: 'light',
           });
         });
       } catch {
-        loadErrorCallbackRef.current('Google reCAPTCHA 스크립트를 불러오지 못했습니다.');
+        handleLoadError('Google reCAPTCHA 스크립트를 불러오지 못했습니다.');
       }
     }
 
@@ -130,8 +124,9 @@ export default function CaptchaWidget({
 
     return () => {
       isMounted = false;
+      widgetIdRef.current = null;
     };
-  }, [siteKey]);
+  }, [handleLoadError, handleTokenChange, siteKey]);
 
   useEffect(() => {
     if (widgetIdRef.current === null || !window.grecaptcha) {
