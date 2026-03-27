@@ -3,14 +3,8 @@ import { Link } from '@tanstack/react-router';
 import { qrIconByTone } from '@/shared/icon/resultIcons';
 import AppHeader from '@/shared/ui/app-header';
 
+import { useQRScanPage } from './hooks/useQRScanPage';
 import * as styles from './styles/qrScanPage.css';
-
-const recentScanRecord = {
-  scannedAt: '2023.10.27 14:32',
-  statusLabel: 'SAFE',
-  summary: '위험 요소가 발견되지 않았습니다.',
-  url: 'https://www.naver.com/',
-};
 
 function ScanGlyphIcon() {
   return (
@@ -56,40 +50,91 @@ function ViewGlyphIcon() {
 }
 
 export default function QRScanPage() {
+  const {
+    cameraStatus,
+    cameraStatusText,
+    captureRecord,
+    fileInputRef,
+    handleCapturePhoto,
+    handleGalleryFileChange,
+    handleOpenGallery,
+    isCapturing,
+    isFlashVisible,
+    videoRef,
+  } = useQRScanPage();
+
+  const recentActivity = captureRecord ?? {
+    badgeLabel: 'LIVE',
+    capturedAt:
+      cameraStatus === 'ready' ? '실시간 프리뷰 활성화됨' : '카메라 연결을 확인해 주세요.',
+    headline:
+      cameraStatus === 'ready'
+        ? '후면 카메라 화면이 실시간으로 표시되고 있습니다.'
+        : '후면 카메라 연결 후 현재 화면을 촬영할 수 있습니다.',
+    photoUrl: null,
+    summary:
+      cameraStatus === 'ready'
+        ? '초록색 버튼을 누르면 현재 후면 카메라 프레임이 촬영됩니다.'
+        : cameraStatusText,
+  };
+
   return (
     <main className={styles.page}>
       <AppHeader iconSrc={qrIconByTone.safe} />
 
       <div className={styles.shell}>
         <section className={styles.heroSection}>
-          <div aria-hidden className={styles.scanStage}>
+          <div className={styles.scanStage}>
+            <video
+              aria-label="후면 카메라 미리보기"
+              autoPlay
+              className={styles.cameraPreview}
+              muted
+              playsInline
+              ref={videoRef}
+            />
             <div className={styles.scanBackdrop} />
 
-            <div className={styles.handSilhouette}>
-              <div className={styles.handPalm} />
-              <div className={styles.handThumb} />
+            <div
+              className={`${styles.cameraLiveBadge} ${styles.cameraLiveBadgeTone[cameraStatus]}`}
+            >
+              <span className={styles.cameraLiveDot} />
+              {cameraStatus === 'ready'
+                ? 'REAR CAMERA'
+                : cameraStatus === 'loading'
+                  ? 'CONNECTING'
+                  : 'CAMERA ERROR'}
             </div>
 
-            <div className={styles.device}>
-              <div className={styles.deviceSpeaker} />
-
-              <div className={styles.deviceScreen}>
-                <div className={styles.deviceQrGhost} />
-                <div className={styles.deviceTextLine} />
-                <div className={styles.deviceTextLineShort} />
+            {cameraStatus !== 'ready' ? (
+              <div
+                className={`${styles.cameraFallback} ${styles.cameraFallbackTone[cameraStatus]}`}
+              >
+                <p className={styles.cameraFallbackTitle}>
+                  {cameraStatus === 'loading' ? '후면 카메라 연결 중' : '카메라 연결 필요'}
+                </p>
+                <p className={styles.cameraFallbackDescription}>{cameraStatusText}</p>
               </div>
+            ) : null}
 
-              <div className={styles.deviceFooter}>
-                <span className={styles.deviceFooterDot} />
-                <span className={styles.deviceFooterDot} />
-                <span className={styles.deviceFooterDot} />
-              </div>
-            </div>
+            <div
+              className={
+                cameraStatus === 'ready'
+                  ? styles.scanLine
+                  : `${styles.scanLine} ${styles.scanLineHidden}`
+              }
+            />
 
-            <div className={styles.scanLine} />
+            <div
+              className={
+                isFlashVisible
+                  ? `${styles.captureFlash} ${styles.captureFlashVisible}`
+                  : styles.captureFlash
+              }
+            />
 
             <div className={styles.centerBadge}>
-              <span className={styles.buttonIcon}>
+              <span aria-hidden className={styles.buttonIcon}>
                 <ScanGlyphIcon />
               </span>
             </div>
@@ -103,23 +148,48 @@ export default function QRScanPage() {
           <header className={styles.intro}>
             <h1 className={styles.title}>QR 스캔하기</h1>
             <p className={styles.description}>안전한 스캔을 위해 QR을 프레임 안에 맞춰 주세요</p>
+            <p className={`${styles.cameraStatusText} ${styles.cameraStatusTone[cameraStatus]}`}>
+              {cameraStatusText}
+            </p>
           </header>
         </section>
 
         <section aria-label="QR 스캔 시작" className={styles.actionSection}>
-          <button className={styles.primaryButton} type="button">
+          <button
+            aria-label={
+              cameraStatus === 'ready' ? '현재 카메라 화면 촬영하기' : '후면 카메라 연결하기'
+            }
+            className={styles.primaryButton}
+            disabled={isCapturing || cameraStatus === 'loading'}
+            onClick={() => {
+              void handleCapturePhoto();
+            }}
+            type="button"
+          >
             <span aria-hidden className={styles.buttonIcon}>
               <ScanGlyphIcon />
             </span>
-            QR 스캔하기
+            {isCapturing ? '촬영 중...' : 'QR 스캔하기'}
           </button>
 
-          <button className={styles.secondaryButton} type="button">
+          <button className={styles.secondaryButton} onClick={handleOpenGallery} type="button">
             <span aria-hidden className={styles.buttonIcon}>
               <UploadGlyphIcon />
             </span>
             갤러리에서 업로드
           </button>
+
+          <input
+            accept="image/*"
+            hidden
+            onChange={handleGalleryFileChange}
+            ref={fileInputRef}
+            type="file"
+          />
+
+          <p className={styles.helperText}>
+            라이브 카메라 프리뷰가 준비되면 초록색 버튼으로 현재 화면을 바로 촬영할 수 있습니다.
+          </p>
         </section>
 
         <section aria-labelledby="recent-scan-title" className={styles.historySection}>
@@ -137,12 +207,22 @@ export default function QRScanPage() {
               <span aria-hidden className={styles.historyBadgeIcon}>
                 <ViewGlyphIcon />
               </span>
-              {recentScanRecord.statusLabel}
+              {recentActivity.badgeLabel}
             </span>
 
-            <p className={styles.historyDate}>{recentScanRecord.scannedAt}</p>
-            <p className={styles.historyUrl}>{recentScanRecord.url}</p>
-            <p className={styles.historyStatus}>{recentScanRecord.summary}</p>
+            <p className={styles.historyDate}>{recentActivity.capturedAt}</p>
+            <p className={styles.historyHeadline}>{recentActivity.headline}</p>
+            <p className={styles.historyStatus}>{recentActivity.summary}</p>
+
+            {recentActivity.photoUrl ? (
+              <div className={styles.historyThumbnail}>
+                <img
+                  alt="최근 촬영 또는 업로드한 이미지 미리보기"
+                  className={styles.historyThumbnailImage}
+                  src={recentActivity.photoUrl}
+                />
+              </div>
+            ) : null}
           </article>
         </section>
       </div>

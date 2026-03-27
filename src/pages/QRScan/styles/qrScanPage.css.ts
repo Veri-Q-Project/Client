@@ -1,4 +1,4 @@
-import { keyframes, style } from '@vanilla-extract/css';
+import { keyframes, style, styleVariants } from '@vanilla-extract/css';
 
 import { vars } from '@/vars.css';
 
@@ -6,16 +6,16 @@ const bpTablet = 'screen and (min-width: 768px)';
 
 const scanLineMotion = keyframes({
   '0%': {
-    opacity: 0.6,
-    transform: 'translateY(-54px)',
+    opacity: 0.45,
+    transform: 'translateY(-62px)',
   },
   '50%': {
     opacity: 1,
-    transform: 'translateY(28px)',
+    transform: 'translateY(32px)',
   },
   '100%': {
-    opacity: 0.6,
-    transform: 'translateY(-54px)',
+    opacity: 0.45,
+    transform: 'translateY(-62px)',
   },
 });
 
@@ -51,133 +51,105 @@ export const scanStage = style({
   minHeight: '246px',
   borderRadius: '28px',
   overflow: 'hidden',
-  background:
-    'linear-gradient(180deg, rgba(250, 251, 253, 0.98) 0%, rgba(239, 242, 246, 0.98) 100%)',
-  boxShadow: 'inset 0 0 0 1px rgba(15, 23, 42, 0.04)',
+  backgroundColor: '#09131a',
+  boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.06)',
   isolation: 'isolate',
+});
+
+export const cameraPreview = style({
+  position: 'absolute',
+  inset: 0,
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  backgroundColor: '#0b1220',
 });
 
 export const scanBackdrop = style({
   position: 'absolute',
   inset: 0,
   background: `
-    radial-gradient(circle at 50% 28%, rgba(17, 212, 131, 0.14), transparent 26%),
-    radial-gradient(circle at 26% 84%, rgba(255, 255, 255, 0.85), transparent 36%),
-    radial-gradient(circle at 88% 78%, rgba(232, 236, 242, 0.9), transparent 22%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(242, 245, 249, 0.82))
+    radial-gradient(circle at 50% 24%, rgba(17, 212, 131, 0.18), transparent 26%),
+    linear-gradient(180deg, rgba(6, 11, 15, 0.16) 0%, rgba(6, 11, 15, 0.28) 100%)
   `,
 });
 
-export const handSilhouette = style({
+export const cameraLiveBadge = style({
   position: 'absolute',
-  inset: '58px 22px 18px 22px',
-  opacity: 0.3,
-  filter: 'blur(0.4px)',
-});
-
-export const handPalm = style({
-  position: 'absolute',
-  left: '12%',
-  right: '12%',
-  bottom: '8%',
-  height: '56%',
-  borderRadius: '40% 42% 26% 30%',
-  background:
-    'linear-gradient(135deg, rgba(229, 214, 201, 0.72) 0%, rgba(240, 227, 214, 0.42) 100%)',
-  transform: 'rotate(-10deg)',
-});
-
-export const handThumb = style({
-  position: 'absolute',
-  left: '10%',
-  bottom: '28%',
-  width: '34%',
-  height: '18%',
-  borderRadius: '999px',
-  background: 'linear-gradient(90deg, rgba(231, 216, 204, 0.66), rgba(245, 236, 226, 0.28))',
-  transform: 'rotate(-28deg)',
-});
-
-export const device = style({
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  width: '92px',
-  height: '160px',
-  borderRadius: '18px',
-  transform: 'translate(-50%, -50%)',
-  background: 'linear-gradient(180deg, #dbe6f2 0%, #c3d1df 100%)',
-  boxShadow: '0 18px 36px rgba(58, 77, 98, 0.2)',
-  overflow: 'hidden',
-});
-
-export const deviceSpeaker = style({
-  position: 'absolute',
-  top: '10px',
-  left: '50%',
-  width: '32px',
-  height: '5px',
-  borderRadius: '999px',
-  backgroundColor: 'rgba(59, 69, 82, 0.35)',
-  transform: 'translateX(-50%)',
-});
-
-export const deviceScreen = style({
-  position: 'absolute',
-  top: '22px',
-  left: '8px',
-  right: '8px',
-  bottom: '24px',
-  borderRadius: '8px',
-  padding: '14px 10px',
-  display: 'grid',
-  alignContent: 'start',
-  justifyItems: 'center',
-  gap: '10px',
-  background: 'linear-gradient(180deg, #f9fbff 0%, #eef4fb 100%)',
-  boxShadow: 'inset 0 0 0 1px rgba(189, 204, 221, 0.6)',
-});
-
-export const deviceQrGhost = style({
-  width: '42px',
-  height: '42px',
-  borderRadius: vars.radius.md,
-  background: `
-    linear-gradient(90deg, rgba(163, 180, 198, 0.55) 0 22%, transparent 22% 28%, rgba(163, 180, 198, 0.55) 28% 50%, transparent 50% 56%, rgba(163, 180, 198, 0.55) 56% 78%, transparent 78% 100%),
-    linear-gradient(rgba(163, 180, 198, 0.55) 0 22%, transparent 22% 28%, rgba(163, 180, 198, 0.55) 28% 50%, transparent 50% 56%, rgba(163, 180, 198, 0.55) 56% 78%, transparent 78% 100%)
-  `,
-  opacity: 0.8,
-});
-
-export const deviceTextLine = style({
-  width: '100%',
-  height: '10px',
-  borderRadius: '999px',
-  backgroundColor: 'rgba(189, 204, 221, 0.76)',
-});
-
-export const deviceTextLineShort = style([
-  deviceTextLine,
-  {
-    width: '70%',
-    justifySelf: 'start',
-  },
-]);
-
-export const deviceFooter = style({
-  position: 'absolute',
-  left: '50%',
-  bottom: '10px',
+  top: '16px',
+  left: '16px',
+  zIndex: 1,
   display: 'inline-flex',
-  gap: '10px',
-  transform: 'translateX(-50%)',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '8px 12px',
+  borderRadius: '999px',
+  fontSize: '11px',
+  fontWeight: vars.font.weight.bold,
+  letterSpacing: '0.12em',
+  backdropFilter: 'blur(12px)',
 });
 
-export const deviceFooterDot = style({
-  width: '4px',
-  height: '4px',
+export const cameraLiveBadgeTone = styleVariants({
+  error: {
+    backgroundColor: 'rgba(239, 68, 68, 0.18)',
+    color: '#fee2e2',
+  },
+  loading: {
+    backgroundColor: 'rgba(15, 23, 42, 0.42)',
+    color: '#f8fafc',
+  },
+  ready: {
+    backgroundColor: 'rgba(17, 212, 131, 0.18)',
+    color: '#dcfce7',
+  },
+});
+
+export const cameraLiveDot = style({
+  width: '8px',
+  height: '8px',
   borderRadius: '999px',
-  backgroundColor: 'rgba(246, 248, 251, 0.76)',
+  backgroundColor: 'currentColor',
+  boxShadow: '0 0 10px currentColor',
+});
+
+export const cameraFallback = style({
+  position: 'absolute',
+  inset: 0,
+  zIndex: 1,
+  display: 'grid',
+  alignContent: 'center',
+  justifyItems: 'center',
+  gap: vars.spacing.sm,
+  padding: '40px 24px',
+  textAlign: 'center',
+  backdropFilter: 'blur(8px)',
+});
+
+export const cameraFallbackTone = styleVariants({
+  error: {
+    backgroundColor: 'rgba(15, 23, 42, 0.58)',
+  },
+  loading: {
+    backgroundColor: 'rgba(15, 23, 42, 0.42)',
+  },
+  ready: {
+    backgroundColor: 'transparent',
+  },
+});
+
+export const cameraFallbackTitle = style({
+  margin: 0,
+  color: vars.colors.white,
+  fontSize: vars.font.size.lg,
+  fontWeight: vars.font.weight.bold,
+});
+
+export const cameraFallbackDescription = style({
+  margin: 0,
+  color: 'rgba(255, 255, 255, 0.82)',
+  fontSize: vars.font.size.sm,
+  lineHeight: 1.6,
 });
 
 export const scanLine = style({
@@ -185,35 +157,59 @@ export const scanLine = style({
   left: '14%',
   right: '14%',
   top: '50%',
+  zIndex: 1,
   height: '4px',
   borderRadius: '999px',
   background:
     'linear-gradient(90deg, rgba(17, 212, 131, 0) 0%, rgba(17, 212, 131, 0.9) 24%, rgba(17, 212, 131, 1) 50%, rgba(17, 212, 131, 0.9) 76%, rgba(17, 212, 131, 0) 100%)',
   boxShadow: '0 0 18px rgba(17, 212, 131, 0.55)',
   animation: `${scanLineMotion} 3s ease-in-out infinite`,
+  transition: 'opacity 160ms ease',
+});
+
+export const scanLineHidden = style({
+  opacity: 0,
+});
+
+export const captureFlash = style({
+  position: 'absolute',
+  inset: 0,
+  zIndex: 2,
+  opacity: 0,
+  pointerEvents: 'none',
+  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  transition: 'opacity 140ms ease',
+});
+
+export const captureFlashVisible = style({
+  opacity: 1,
 });
 
 export const centerBadge = style({
   position: 'absolute',
   top: '50%',
   left: '50%',
+  zIndex: 1,
   width: '76px',
   height: '76px',
   display: 'grid',
   placeItems: 'center',
   borderRadius: '999px',
   backgroundColor: 'rgba(255, 255, 255, 0.9)',
-  boxShadow: '0 14px 30px rgba(105, 124, 147, 0.22)',
+  color: vars.colors.success,
+  boxShadow: '0 14px 30px rgba(9, 19, 26, 0.28)',
   transform: 'translate(-50%, -50%)',
 });
 
 export const scanCorner = style({
   position: 'absolute',
+  zIndex: 1,
   width: '28px',
   height: '28px',
   borderColor: vars.colors.success,
   borderStyle: 'solid',
   borderWidth: '0',
+  boxShadow: '0 0 12px rgba(17, 212, 131, 0.2)',
 });
 
 export const scanCornerTopLeft = style({
@@ -270,6 +266,25 @@ export const description = style({
   lineHeight: 1.5,
 });
 
+export const cameraStatusText = style({
+  margin: 0,
+  fontSize: vars.font.size.sm,
+  fontWeight: vars.font.weight.medium,
+  lineHeight: 1.5,
+});
+
+export const cameraStatusTone = styleVariants({
+  error: {
+    color: vars.colors.error,
+  },
+  loading: {
+    color: vars.colors.subDark,
+  },
+  ready: {
+    color: vars.colors.success,
+  },
+});
+
 export const actionSection = style({
   display: 'grid',
   gap: vars.spacing.sm,
@@ -295,6 +310,11 @@ export const actionButton = style({
     '&:focus-visible': {
       outline: `3px solid ${vars.colors.mainLightHover}`,
       outlineOffset: '2px',
+    },
+    '&:disabled': {
+      transform: 'none',
+      opacity: 0.7,
+      cursor: 'wait',
     },
   },
 });
@@ -343,6 +363,14 @@ export const buttonIcon = style({
   height: '18px',
   display: 'inline-flex',
   flexShrink: 0,
+});
+
+export const helperText = style({
+  margin: 0,
+  color: vars.colors.subDark,
+  fontSize: vars.font.size.xs,
+  lineHeight: 1.6,
+  textAlign: 'center',
 });
 
 export const historySection = style({
@@ -423,13 +451,13 @@ export const historyDate = style({
   fontWeight: vars.font.weight.medium,
 });
 
-export const historyUrl = style({
+export const historyHeadline = style({
   margin: 0,
   color: vars.colors.black,
   fontSize: vars.font.size.md,
   fontWeight: vars.font.weight.bold,
   lineHeight: 1.45,
-  wordBreak: 'break-all',
+  wordBreak: 'keep-all',
 });
 
 export const historyStatus = style({
@@ -438,4 +466,18 @@ export const historyStatus = style({
   fontSize: '12px',
   fontWeight: vars.font.weight.medium,
   lineHeight: 1.4,
+});
+
+export const historyThumbnail = style({
+  overflow: 'hidden',
+  borderRadius: '12px',
+  backgroundColor: '#dbe4ec',
+  aspectRatio: '16 / 9',
+});
+
+export const historyThumbnailImage = style({
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  display: 'block',
 });
