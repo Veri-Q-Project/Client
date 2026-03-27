@@ -5,6 +5,7 @@ const routeLinks = [
   { to: '/', label: '/' },
   { to: '/captcha', label: '/captcha' },
   { to: '/loading', label: '/loading' },
+  { to: '/qr-scan', label: '/qr-scan' },
   { to: '/report', label: '/report' },
   { to: '/scan-history', label: '/scan-history' },
   { to: '/result/critical', label: '/result/critical' },

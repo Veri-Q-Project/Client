@@ -3,6 +3,7 @@ import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/re
 import CaptchaPage from '@/pages/Captcha';
 import HomePage from '@/pages/Home';
 import LoadingPage from '@/pages/Loading';
+import QRScanPage from '@/pages/QRScan';
 import ReportPage from '@/pages/Report';
 import ResultCriticalPage from '@/pages/ResultCritical';
 import ResultNonUrlPage from '@/pages/ResultNonUrl';
@@ -34,6 +35,12 @@ const loadingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/loading',
   component: LoadingPage,
+});
+
+const qrScanRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/qr-scan',
+  component: QRScanPage,
 });
 
 const reportRoute = createRoute({
@@ -76,6 +83,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   captchaRoute,
   loadingRoute,
+  qrScanRoute,
   reportRoute,
   scanHistoryRoute,
   resultCriticalRoute,
