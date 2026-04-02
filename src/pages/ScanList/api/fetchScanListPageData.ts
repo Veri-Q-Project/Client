@@ -1,6 +1,34 @@
 import type { ScanListPageData } from '../types/scanListPage.types';
 
 export const defaultScanListUuid = '550e8400-e29b-41d4-a716-446655440000';
+const maxRecentScanListItemCount = 5;
+
+function resolveScannedAtTimestamp(scannedAt: string) {
+  const normalizedScannedAt = scannedAt.replace(/\./g, '-');
+  const parsedTimestamp = Date.parse(normalizedScannedAt);
+
+  if (Number.isNaN(parsedTimestamp)) {
+    return 0;
+  }
+
+  return parsedTimestamp;
+}
+
+function buildRecentScanListPageData(pageData: ScanListPageData): ScanListPageData {
+  const recentItems = [...pageData.items]
+    .sort((previousItem, nextItem) => {
+      return (
+        resolveScannedAtTimestamp(nextItem.scannedAt) -
+        resolveScannedAtTimestamp(previousItem.scannedAt)
+      );
+    })
+    .slice(0, maxRecentScanListItemCount);
+
+  return {
+    ...pageData,
+    items: recentItems,
+  };
+}
 
 const mockScanListPageDataByUuid: Record<string, ScanListPageData> = {
   '550e8400-e29b-41d4-a716-446655440000': {
@@ -36,6 +64,12 @@ const mockScanListPageDataByUuid: Record<string, ScanListPageData> = {
         status: 'warning',
         url: 'https://www.apple.com',
       },
+      {
+        id: '20d9c8f4-b94d-4878-8bc8-6d0a7df65b4c',
+        scannedAt: '2025.09.18',
+        status: 'safe',
+        url: 'https://www.microsoft.com',
+      },
     ],
   },
   '17b8a3a8-4ae1-4b2c-8a61-9f5f3fce3d77': {
@@ -67,7 +101,7 @@ export async function fetchScanListPageData(uuid: string): Promise<ScanListPageD
   const pageData = mockScanListPageDataByUuid[uuid];
 
   if (pageData) {
-    return Promise.resolve(pageData);
+    return Promise.resolve(buildRecentScanListPageData(pageData));
   }
 
   return Promise.resolve({
@@ -77,10 +111,10 @@ export async function fetchScanListPageData(uuid: string): Promise<ScanListPageD
 }
 
 export function getInitialScanListPageData(uuid: string): ScanListPageData {
-  return (
+  return buildRecentScanListPageData(
     mockScanListPageDataByUuid[uuid] ?? {
       items: [],
       uuid,
-    }
+    },
   );
 }
