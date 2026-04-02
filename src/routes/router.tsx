@@ -10,6 +10,7 @@ import ResultNonUrlPage from '@/pages/ResultNonUrl';
 import ResultSafePage from '@/pages/ResultSafe';
 import ResultWarningPage from '@/pages/ResultWarning';
 import ScanHistoryPage from '@/pages/ScanHistory';
+import ScanListPage from '@/pages/ScanList';
 
 function RootLayout() {
   return <Outlet />;
@@ -55,6 +56,12 @@ const scanHistoryRoute = createRoute({
   component: ScanHistoryPage,
 });
 
+const scanListRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/scan-list',
+  component: ScanListPage,
+});
+
 const resultCriticalRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/result/critical',
@@ -86,6 +93,7 @@ const routeTree = rootRoute.addChildren([
   qrScanRoute,
   reportRoute,
   scanHistoryRoute,
+  scanListRoute,
   resultCriticalRoute,
   resultNonUrlRoute,
   resultSafeRoute,

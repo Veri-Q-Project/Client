@@ -8,6 +8,7 @@ const routeLinks = [
   { to: '/qr-scan', label: '/qr-scan' },
   { to: '/report', label: '/report' },
   { to: '/scan-history', label: '/scan-history' },
+  { to: '/scan-list', label: '/scan-list' },
   { to: '/result/critical', label: '/result/critical' },
   { to: '/result/non-url', label: '/result/non-url' },
   { to: '/result/safe', label: '/result/safe' },
