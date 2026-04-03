@@ -129,9 +129,12 @@ export const cardUrl = style({
   fontSize: 'clamp(16px, 4vw, 20px)',
   fontWeight: vars.font.weight.bold,
   lineHeight: 1.35,
+  display: '-webkit-box',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
+  overflowWrap: 'anywhere',
+  WebkitBoxOrient: 'vertical',
+  WebkitLineClamp: 2,
 });
 
 export const cardMeta = style({

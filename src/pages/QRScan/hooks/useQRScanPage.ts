@@ -198,6 +198,7 @@ export function useQRScanPage(): UseQRScanPageReturn {
   }, []);
 
   useEffect(() => {
+    isMountedRef.current = true;
     void startCamera();
 
     return () => {

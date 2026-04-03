@@ -31,8 +31,8 @@ function buildRecentScanListPageData(pageData: ScanListPageData): ScanListPageDa
 }
 
 const mockScanListPageDataByUuid: Record<string, ScanListPageData> = {
-  '550e8400-e29b-41d4-a716-446655440000': {
-    uuid: '550e8400-e29b-41d4-a716-446655440000',
+  [defaultScanListUuid]: {
+    uuid: defaultScanListUuid,
     items: [
       {
         id: '0d6db9a1-4a87-4a62-bc54-8f8af98eb6c1',

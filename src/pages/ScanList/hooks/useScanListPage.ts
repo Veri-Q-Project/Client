@@ -50,7 +50,7 @@ function updateUuidSearchParam(uuid: string) {
 export function useScanListPage(): UseScanListPageReturn {
   const [scanListUuid] = useState(resolveInitialScanListUuid);
   const [scanListPageData, setScanListPageData] = useState<ScanListPageData>(() =>
-    getInitialScanListPageData(resolveInitialScanListUuid()),
+    getInitialScanListPageData(scanListUuid),
   );
 
   useEffect(() => {
@@ -59,10 +59,18 @@ export function useScanListPage(): UseScanListPageReturn {
     let isMounted = true;
 
     const loadScanListPageData = async () => {
-      const response = await fetchScanListPageData(scanListUuid);
+      try {
+        const response = await fetchScanListPageData(scanListUuid);
 
-      if (isMounted) {
-        setScanListPageData(response);
+        if (isMounted) {
+          setScanListPageData(response);
+        }
+      } catch (error) {
+        console.error('Failed to load scan list page data.', error);
+
+        if (isMounted) {
+          setScanListPageData(getInitialScanListPageData(scanListUuid));
+        }
       }
     };
 
