@@ -3,6 +3,17 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@10.13.1",
+  "pnpm": {
+    "overrides": {
+      "brace-expansion@^1.1.7": "^1.1.13",
+      "brace-expansion@^5.0.2": "^5.0.5",
+      "flatted": "^3.4.2",
+      "lodash": "^4.18.1",
+      "picomatch@^2.3.1": "^2.3.2",
+      "picomatch@^4.0.3": "^4.0.4",
+      "yaml": "^2.8.3"
+    }
+  },
   "scripts": {
     "postinstall": "node scripts/setupEnv.mjs",
     "dev:captcha-server": "node scripts/captchaVerifyServer.mjs",
@@ -54,7 +65,7 @@
     "@vanilla-extract/css": "^1.18.0",
     "antd": "^6.3.2",
     "html2canvas": "^1.4.1",
-    "jspdf": "^4.2.0",
+    "jspdf": "^4.2.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   }
