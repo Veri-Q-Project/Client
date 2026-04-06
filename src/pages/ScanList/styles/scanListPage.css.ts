@@ -77,6 +77,20 @@ export const card = style({
   borderRadius: '30px',
   boxShadow: '0 12px 30px rgba(15, 23, 42, 0.07)',
   border: '1px solid rgba(15, 23, 42, 0.04)',
+  color: 'inherit',
+  cursor: 'pointer',
+  textDecoration: 'none',
+  transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+  selectors: {
+    '&:hover': {
+      boxShadow: '0 16px 34px rgba(15, 23, 42, 0.1)',
+      transform: 'translateY(-2px)',
+    },
+    '&:focus-visible': {
+      outline: '3px solid rgba(59, 130, 246, 0.28)',
+      outlineOffset: '4px',
+    },
+  },
 });
 
 export const cardTone = styleVariants({
