@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 
 import { qrIconByTone } from '@/shared/icon/resultIcons';
 import AppHeader from '@/shared/ui/app-header';
@@ -51,6 +51,43 @@ function ViewGlyphIcon() {
   );
 }
 
+function HistoryPrevIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" viewBox="0 0 20 20">
+      <path
+        d="m11.75 4.5-5 5 5 5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function HistoryNextIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" viewBox="0 0 20 20">
+      <path
+        d="m8.25 4.5 5 5-5 5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+const resultRouteByStatus: Record<
+  ScanListStatus,
+  '/result/safe' | '/result/warning' | '/result/critical'
+> = {
+  safe: '/result/safe',
+  warning: '/result/warning',
+  critical: '/result/critical',
+};
+
 const statusLabelByTone: Record<ScanListStatus, string> = {
   safe: '안전',
   warning: '주의',
@@ -58,24 +95,36 @@ const statusLabelByTone: Record<ScanListStatus, string> = {
 };
 
 const statusSummaryByTone: Record<ScanListStatus, string> = {
-  safe: '안전으로 판정된 최신 스캔 이력입니다.',
-  warning: '주의가 필요한 최신 스캔 이력입니다.',
-  critical: '위험으로 분류된 최신 스캔 이력입니다.',
+  safe: '안전으로 판정된 스캔 이력입니다.',
+  warning: '주의가 필요한 스캔 이력입니다.',
+  critical: '위험으로 분류된 스캔 이력입니다.',
 };
 
 export default function QRScanPage() {
+  const navigate = useNavigate();
   const {
     cameraStatus,
     cameraStatusText,
+    canNavigateHistory,
     fileInputRef,
     handleCapturePhoto,
     handleGalleryFileChange,
     handleOpenGallery,
+    handleShowNextHistoryItem,
+    handleShowPreviousHistoryItem,
     isCapturing,
     isFlashVisible,
     recentScanItem,
     videoRef,
   } = useQRScanPage();
+
+  const handleOpenRecentScanResult = () => {
+    if (!recentScanItem) {
+      return;
+    }
+
+    void navigate({ to: resultRouteByStatus[recentScanItem.status] });
+  };
 
   return (
     <main className={styles.page}>
@@ -203,35 +252,99 @@ export default function QRScanPage() {
             </Link>
           </div>
 
-          <article className={styles.historyCard}>
-            {recentScanItem ? (
-              <>
-                <span
-                  className={`${styles.historyBadge} ${styles.historyBadgeTone[recentScanItem.status]}`}
-                >
-                  <span aria-hidden className={styles.historyBadgeIcon}>
-                    <ViewGlyphIcon />
-                  </span>
-                  {statusLabelByTone[recentScanItem.status]}
-                </span>
+          <article
+            aria-label={
+              recentScanItem
+                ? `${statusLabelByTone[recentScanItem.status]} 결과 페이지로 이동`
+                : undefined
+            }
+            className={
+              recentScanItem
+                ? `${styles.historyCard} ${styles.historyCardInteractive}`
+                : styles.historyCard
+            }
+            onClick={recentScanItem ? handleOpenRecentScanResult : undefined}
+            onKeyDown={
+              recentScanItem
+                ? (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      handleOpenRecentScanResult();
+                    }
+                  }
+                : undefined
+            }
+            role={recentScanItem ? 'button' : undefined}
+            tabIndex={recentScanItem ? 0 : undefined}
+          >
+            <button
+              aria-label="이전 스캔 이력 보기"
+              className={`${styles.historyNavButton} ${styles.historyNavButtonLeft}`}
+              disabled={!canNavigateHistory}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleShowPreviousHistoryItem();
+              }}
+              onKeyDown={(event) => {
+                event.stopPropagation();
+              }}
+              type="button"
+            >
+              <span aria-hidden className={styles.historyNavIcon}>
+                <HistoryPrevIcon />
+              </span>
+            </button>
 
-                <p className={styles.historyDate}>{recentScanItem.scannedAt}</p>
-                <p className={styles.historyHeadline}>{recentScanItem.url}</p>
-                <p
-                  className={`${styles.historyStatus} ${styles.historyStatusTone[recentScanItem.status]}`}
-                >
-                  {statusSummaryByTone[recentScanItem.status]}
-                </p>
-              </>
-            ) : (
-              <>
-                <p className={styles.historyDate}>스캔 이력이 없습니다.</p>
-                <p className={styles.historyHeadline}>
-                  최근 스캔 이력이 생기면 이곳에 가장 최신 항목이 표시됩니다.
-                </p>
-                <p className={styles.historyStatus}>전체보기에서 스캔 목록을 확인할 수 있습니다.</p>
-              </>
-            )}
+            <div className={styles.historyContent}>
+              {recentScanItem ? (
+                <>
+                  <span
+                    className={`${styles.historyBadge} ${styles.historyBadgeTone[recentScanItem.status]}`}
+                  >
+                    <span aria-hidden className={styles.historyBadgeIcon}>
+                      <ViewGlyphIcon />
+                    </span>
+                    {statusLabelByTone[recentScanItem.status]}
+                  </span>
+
+                  <p className={styles.historyDate}>{recentScanItem.scannedAt}</p>
+                  <p className={styles.historyHeadline}>{recentScanItem.url}</p>
+                  <p
+                    className={`${styles.historyStatus} ${styles.historyStatusTone[recentScanItem.status]}`}
+                  >
+                    {statusSummaryByTone[recentScanItem.status]}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className={styles.historyDate}>스캔 이력이 없습니다.</p>
+                  <p className={styles.historyHeadline}>
+                    최근 스캔 이력이 생기면 이곳에 가장 최신 항목이 표시됩니다.
+                  </p>
+                  <p className={styles.historyStatus}>
+                    전체보기에서 스캔 목록을 확인할 수 있습니다.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <button
+              aria-label="다음 스캔 이력 보기"
+              className={`${styles.historyNavButton} ${styles.historyNavButtonRight}`}
+              disabled={!canNavigateHistory}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleShowNextHistoryItem();
+              }}
+              onKeyDown={(event) => {
+                event.stopPropagation();
+              }}
+              type="button"
+            >
+              <span aria-hidden className={styles.historyNavIcon}>
+                <HistoryNextIcon />
+              </span>
+            </button>
           </article>
         </section>
       </div>

@@ -24,10 +24,13 @@ type UseQRScanPageReturn = {
   cameraStatus: CameraStatus;
   cameraStatusText: string;
   captureRecord: CaptureRecord | null;
+  canNavigateHistory: boolean;
   fileInputRef: RefObject<HTMLInputElement | null>;
   handleCapturePhoto: () => Promise<void>;
   handleGalleryFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  handleShowNextHistoryItem: () => void;
   handleOpenGallery: () => void;
+  handleShowPreviousHistoryItem: () => void;
   isCapturing: boolean;
   isFlashVisible: boolean;
   recentScanItem: ScanListItem | null;
@@ -126,9 +129,12 @@ export function useQRScanPage(): UseQRScanPageReturn {
   const [captureRecord, setCaptureRecord] = useState<CaptureRecord | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isFlashVisible, setIsFlashVisible] = useState(false);
-  const [recentScanItem, setRecentScanItem] = useState<ScanListItem | null>(() => {
-    return getInitialScanListPageData(defaultScanListUuid).items[0] ?? null;
+  const [scanHistoryItems, setScanHistoryItems] = useState<ScanListItem[]>(() => {
+    return getInitialScanListPageData(defaultScanListUuid).items;
   });
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
+  const recentScanItem = scanHistoryItems[currentHistoryIndex] ?? null;
+  const canNavigateHistory = scanHistoryItems.length > 1;
 
   const triggerCaptureFlash = useCallback(() => {
     if (flashTimerRef.current) {
@@ -227,28 +233,64 @@ export function useQRScanPage(): UseQRScanPageReturn {
   useEffect(() => {
     let isMounted = true;
 
-    const loadRecentScanItem = async () => {
+    const loadRecentScanItems = async () => {
       try {
         const response = await fetchScanListPageData(defaultScanListUuid);
 
         if (isMounted) {
-          setRecentScanItem(response.items[0] ?? null);
+          setScanHistoryItems(response.items);
+          setCurrentHistoryIndex((previousIndex) => {
+            if (response.items.length === 0) {
+              return 0;
+            }
+
+            return Math.min(previousIndex, response.items.length - 1);
+          });
         }
       } catch (error) {
-        console.error('Failed to load latest scan list item.', error);
+        console.error('Failed to load latest scan list items.', error);
 
         if (isMounted) {
-          setRecentScanItem(getInitialScanListPageData(defaultScanListUuid).items[0] ?? null);
+          const fallbackItems = getInitialScanListPageData(defaultScanListUuid).items;
+
+          setScanHistoryItems(fallbackItems);
+          setCurrentHistoryIndex((previousIndex) => {
+            if (fallbackItems.length === 0) {
+              return 0;
+            }
+
+            return Math.min(previousIndex, fallbackItems.length - 1);
+          });
         }
       }
     };
 
-    void loadRecentScanItem();
+    void loadRecentScanItems();
 
     return () => {
       isMounted = false;
     };
   }, []);
+
+  const handleShowPreviousHistoryItem = useCallback(() => {
+    if (scanHistoryItems.length <= 1) {
+      return;
+    }
+
+    setCurrentHistoryIndex((previousIndex) => {
+      return (previousIndex - 1 + scanHistoryItems.length) % scanHistoryItems.length;
+    });
+  }, [scanHistoryItems.length]);
+
+  const handleShowNextHistoryItem = useCallback(() => {
+    if (scanHistoryItems.length <= 1) {
+      return;
+    }
+
+    setCurrentHistoryIndex((previousIndex) => {
+      return (previousIndex + 1) % scanHistoryItems.length;
+    });
+  }, [scanHistoryItems.length]);
 
   const handleCapturePhoto = useCallback(async () => {
     if (cameraStatus !== 'ready') {
@@ -338,10 +380,13 @@ export function useQRScanPage(): UseQRScanPageReturn {
     cameraStatus,
     cameraStatusText,
     captureRecord,
+    canNavigateHistory,
     fileInputRef,
     handleCapturePhoto,
     handleGalleryFileChange,
+    handleShowNextHistoryItem,
     handleOpenGallery,
+    handleShowPreviousHistoryItem,
     isCapturing,
     isFlashVisible,
     recentScanItem,

@@ -412,11 +412,83 @@ export const viewAllLink = style({
 export const historyCard = style({
   position: 'relative',
   display: 'grid',
-  gap: vars.spacing.sm,
-  padding: '18px 16px 16px',
+  gridTemplateColumns: '40px minmax(0, 1fr) 40px',
+  alignItems: 'center',
+  gap: vars.spacing.xs,
+  padding: '18px 10px 16px',
   borderRadius: '16px',
   backgroundColor: '#eef2f6',
   boxShadow: 'inset 0 0 0 1px rgba(148, 163, 184, 0.08)',
+});
+
+export const historyCardInteractive = style({
+  cursor: 'pointer',
+  transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+  selectors: {
+    '&:hover': {
+      transform: 'translateY(-1px)',
+      boxShadow: 'inset 0 0 0 1px rgba(148, 163, 184, 0.08), 0 12px 24px rgba(15, 23, 42, 0.08)',
+    },
+    '&:focus-visible': {
+      outline: `3px solid ${vars.colors.mainLightHover}`,
+      outlineOffset: '3px',
+    },
+  },
+});
+
+export const historyNavButton = style({
+  width: '34px',
+  height: '34px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  border: 'none',
+  borderRadius: '999px',
+  backgroundColor: 'rgba(255, 255, 255, 0.92)',
+  color: '#475569',
+  boxShadow: '0 8px 18px rgba(15, 23, 42, 0.08)',
+  cursor: 'pointer',
+  transition:
+    'transform 160ms ease, background-color 160ms ease, color 160ms ease, opacity 160ms ease',
+  selectors: {
+    '&:hover': {
+      transform: 'translateY(-1px)',
+      backgroundColor: vars.colors.white,
+      color: vars.colors.black,
+    },
+    '&:focus-visible': {
+      outline: `2px solid ${vars.colors.mainLightHover}`,
+      outlineOffset: '2px',
+    },
+    '&:disabled': {
+      opacity: 0.45,
+      cursor: 'not-allowed',
+      transform: 'none',
+    },
+  },
+});
+
+export const historyNavButtonLeft = style({
+  justifySelf: 'start',
+});
+
+export const historyNavButtonRight = style({
+  justifySelf: 'end',
+});
+
+export const historyNavIcon = style({
+  width: '16px',
+  height: '16px',
+  display: 'inline-flex',
+  flexShrink: 0,
+});
+
+export const historyContent = style({
+  minWidth: 0,
+  display: 'grid',
+  gap: vars.spacing.sm,
+  paddingTop: '4px',
+  paddingRight: '70px',
 });
 
 export const historyBadge = style({
