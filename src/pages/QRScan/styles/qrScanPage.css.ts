@@ -438,6 +438,21 @@ export const historyBadge = style({
   letterSpacing: '0.18em',
 });
 
+export const historyBadgeTone = styleVariants({
+  critical: {
+    backgroundColor: '#ff6b65',
+    color: vars.colors.white,
+  },
+  safe: {
+    backgroundColor: vars.colors.success,
+    color: vars.colors.white,
+  },
+  warning: {
+    backgroundColor: '#ffd84b',
+    color: '#3f3500',
+  },
+});
+
 export const historyBadgeIcon = style({
   width: '12px',
   height: '12px',
@@ -466,6 +481,18 @@ export const historyStatus = style({
   fontSize: '12px',
   fontWeight: vars.font.weight.medium,
   lineHeight: 1.4,
+});
+
+export const historyStatusTone = styleVariants({
+  critical: {
+    color: vars.colors.error,
+  },
+  safe: {
+    color: vars.colors.success,
+  },
+  warning: {
+    color: '#8a6a00',
+  },
 });
 
 export const historyThumbnail = style({

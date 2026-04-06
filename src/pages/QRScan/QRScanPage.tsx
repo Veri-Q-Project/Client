@@ -3,6 +3,8 @@ import { Link } from '@tanstack/react-router';
 import { qrIconByTone } from '@/shared/icon/resultIcons';
 import AppHeader from '@/shared/ui/app-header';
 
+import type { ScanListStatus } from '@/pages/ScanList/types/scanListPage.types';
+
 import { useQRScanPage } from './hooks/useQRScanPage';
 import * as styles from './styles/qrScanPage.css';
 
@@ -49,34 +51,31 @@ function ViewGlyphIcon() {
   );
 }
 
+const statusLabelByTone: Record<ScanListStatus, string> = {
+  safe: '안전',
+  warning: '주의',
+  critical: '위험',
+};
+
+const statusSummaryByTone: Record<ScanListStatus, string> = {
+  safe: '안전으로 판정된 최신 스캔 이력입니다.',
+  warning: '주의가 필요한 최신 스캔 이력입니다.',
+  critical: '위험으로 분류된 최신 스캔 이력입니다.',
+};
+
 export default function QRScanPage() {
   const {
     cameraStatus,
     cameraStatusText,
-    captureRecord,
     fileInputRef,
     handleCapturePhoto,
     handleGalleryFileChange,
     handleOpenGallery,
     isCapturing,
     isFlashVisible,
+    recentScanItem,
     videoRef,
   } = useQRScanPage();
-
-  const recentActivity = captureRecord ?? {
-    badgeLabel: 'LIVE',
-    capturedAt:
-      cameraStatus === 'ready' ? '실시간 프리뷰 활성화됨' : '카메라 연결을 확인해 주세요.',
-    headline:
-      cameraStatus === 'ready'
-        ? '후면 카메라 화면이 실시간으로 표시되고 있습니다.'
-        : '후면 카메라 연결 후 현재 화면을 촬영할 수 있습니다.',
-    photoUrl: null,
-    summary:
-      cameraStatus === 'ready'
-        ? '초록색 버튼을 누르면 현재 후면 카메라 프레임이 촬영됩니다.'
-        : cameraStatusText,
-  };
 
   return (
     <main className={styles.page}>
@@ -147,7 +146,9 @@ export default function QRScanPage() {
 
           <header className={styles.intro}>
             <h1 className={styles.title}>QR 스캔하기</h1>
-            <p className={styles.description}>안전한 스캔을 위해 QR을 프레임 안에 맞춰 주세요</p>
+            <p className={styles.description}>
+              안전한 스캔을 위해 QR 코드를 프레임 안에 맞춰 주세요.
+            </p>
             <p className={`${styles.cameraStatusText} ${styles.cameraStatusTone[cameraStatus]}`}>
               {cameraStatusText}
             </p>
@@ -188,7 +189,7 @@ export default function QRScanPage() {
           />
 
           <p className={styles.helperText}>
-            라이브 카메라 프리뷰가 준비되면 초록색 버튼으로 현재 화면을 바로 촬영할 수 있습니다.
+            라이브 카메라 미리보기가 준비되면 초록색 버튼으로 현재 화면을 바로 촬영할 수 있습니다.
           </p>
         </section>
 
@@ -197,32 +198,40 @@ export default function QRScanPage() {
             <h2 className={styles.sectionTitle} id="recent-scan-title">
               최근 스캔 기록
             </h2>
-            <Link className={styles.viewAllLink} to="/scan-history">
+            <Link className={styles.viewAllLink} to="/scan-list">
               전체보기
             </Link>
           </div>
 
           <article className={styles.historyCard}>
-            <span className={styles.historyBadge}>
-              <span aria-hidden className={styles.historyBadgeIcon}>
-                <ViewGlyphIcon />
-              </span>
-              {recentActivity.badgeLabel}
-            </span>
+            {recentScanItem ? (
+              <>
+                <span
+                  className={`${styles.historyBadge} ${styles.historyBadgeTone[recentScanItem.status]}`}
+                >
+                  <span aria-hidden className={styles.historyBadgeIcon}>
+                    <ViewGlyphIcon />
+                  </span>
+                  {statusLabelByTone[recentScanItem.status]}
+                </span>
 
-            <p className={styles.historyDate}>{recentActivity.capturedAt}</p>
-            <p className={styles.historyHeadline}>{recentActivity.headline}</p>
-            <p className={styles.historyStatus}>{recentActivity.summary}</p>
-
-            {recentActivity.photoUrl ? (
-              <div className={styles.historyThumbnail}>
-                <img
-                  alt="최근 촬영 또는 업로드한 이미지 미리보기"
-                  className={styles.historyThumbnailImage}
-                  src={recentActivity.photoUrl}
-                />
-              </div>
-            ) : null}
+                <p className={styles.historyDate}>{recentScanItem.scannedAt}</p>
+                <p className={styles.historyHeadline}>{recentScanItem.url}</p>
+                <p
+                  className={`${styles.historyStatus} ${styles.historyStatusTone[recentScanItem.status]}`}
+                >
+                  {statusSummaryByTone[recentScanItem.status]}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className={styles.historyDate}>스캔 이력이 없습니다.</p>
+                <p className={styles.historyHeadline}>
+                  최근 스캔 이력이 생기면 이곳에 가장 최신 항목이 표시됩니다.
+                </p>
+                <p className={styles.historyStatus}>전체보기에서 스캔 목록을 확인할 수 있습니다.</p>
+              </>
+            )}
           </article>
         </section>
       </div>

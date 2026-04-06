@@ -3,6 +3,13 @@ import type { ChangeEvent, RefObject } from 'react';
 import { App } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import {
+  defaultScanListUuid,
+  fetchScanListPageData,
+  getInitialScanListPageData,
+} from '@/pages/ScanList/api/fetchScanListPageData';
+import type { ScanListItem } from '@/pages/ScanList/types/scanListPage.types';
+
 type CameraStatus = 'loading' | 'ready' | 'error';
 
 type CaptureRecord = {
@@ -23,6 +30,7 @@ type UseQRScanPageReturn = {
   handleOpenGallery: () => void;
   isCapturing: boolean;
   isFlashVisible: boolean;
+  recentScanItem: ScanListItem | null;
   videoRef: RefObject<HTMLVideoElement | null>;
 };
 
@@ -118,6 +126,9 @@ export function useQRScanPage(): UseQRScanPageReturn {
   const [captureRecord, setCaptureRecord] = useState<CaptureRecord | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isFlashVisible, setIsFlashVisible] = useState(false);
+  const [recentScanItem, setRecentScanItem] = useState<ScanListItem | null>(() => {
+    return getInitialScanListPageData(defaultScanListUuid).items[0] ?? null;
+  });
 
   const triggerCaptureFlash = useCallback(() => {
     if (flashTimerRef.current) {
@@ -213,6 +224,32 @@ export function useQRScanPage(): UseQRScanPageReturn {
     };
   }, [startCamera]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadRecentScanItem = async () => {
+      try {
+        const response = await fetchScanListPageData(defaultScanListUuid);
+
+        if (isMounted) {
+          setRecentScanItem(response.items[0] ?? null);
+        }
+      } catch (error) {
+        console.error('Failed to load latest scan list item.', error);
+
+        if (isMounted) {
+          setRecentScanItem(getInitialScanListPageData(defaultScanListUuid).items[0] ?? null);
+        }
+      }
+    };
+
+    void loadRecentScanItem();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleCapturePhoto = useCallback(async () => {
     if (cameraStatus !== 'ready') {
       await startCamera();
@@ -307,6 +344,7 @@ export function useQRScanPage(): UseQRScanPageReturn {
     handleOpenGallery,
     isCapturing,
     isFlashVisible,
+    recentScanItem,
     videoRef,
   };
 }
