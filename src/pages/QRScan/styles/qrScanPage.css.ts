@@ -3,6 +3,7 @@ import { keyframes, style, styleVariants } from '@vanilla-extract/css';
 import { vars } from '@/vars.css';
 
 const bpTablet = 'screen and (min-width: 768px)';
+const historyBadgeMinWidth = '86px';
 
 const scanLineMotion = keyframes({
   '0%': {
@@ -473,8 +474,10 @@ export const historyNavButton = style({
       outline: `2px solid ${vars.colors.mainLightHover}`,
       outlineOffset: '2px',
     },
-    '&:disabled': {
+    '&:disabled, &:disabled:hover': {
       opacity: 0.45,
+      backgroundColor: vars.colors.sub,
+      color: vars.colors.subDark,
       cursor: 'not-allowed',
       transform: 'none',
     },
@@ -503,14 +506,14 @@ export const historyContent = style({
   overflow: 'hidden',
   paddingTop: '4px',
   paddingLeft: '12px',
-  paddingRight: '70px',
+  paddingRight: historyBadgeMinWidth,
 });
 
 export const historyBadge = style({
   position: 'absolute',
   top: 0,
   right: 0,
-  minWidth: '86px',
+  minWidth: historyBadgeMinWidth,
   height: '28px',
   display: 'inline-flex',
   alignItems: 'center',
