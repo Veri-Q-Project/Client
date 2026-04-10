@@ -500,6 +500,7 @@ export const historyContent = style({
   minWidth: 0,
   display: 'grid',
   gap: vars.spacing.sm,
+  overflow: 'hidden',
   paddingTop: '4px',
   paddingLeft: '12px',
   paddingRight: '70px',
@@ -558,6 +559,9 @@ export const historyHeadline = style({
   fontSize: vars.font.size.md,
   fontWeight: vars.font.weight.bold,
   lineHeight: 1.45,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
   wordBreak: 'keep-all',
 });
 
