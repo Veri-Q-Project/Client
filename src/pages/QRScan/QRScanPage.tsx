@@ -252,42 +252,12 @@ export default function QRScanPage() {
             </Link>
           </div>
 
-          <article
-            aria-label={
-              recentScanItem
-                ? `${statusLabelByTone[recentScanItem.status]} 결과 페이지로 이동`
-                : undefined
-            }
-            className={
-              recentScanItem
-                ? `${styles.historyCard} ${styles.historyCardInteractive}`
-                : styles.historyCard
-            }
-            onClick={recentScanItem ? handleOpenRecentScanResult : undefined}
-            onKeyDown={
-              recentScanItem
-                ? (event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      handleOpenRecentScanResult();
-                    }
-                  }
-                : undefined
-            }
-            role={recentScanItem ? 'button' : undefined}
-            tabIndex={recentScanItem ? 0 : undefined}
-          >
+          <article className={styles.historyCard}>
             <button
               aria-label="이전 스캔 이력 보기"
               className={`${styles.historyNavButton} ${styles.historyNavButtonLeft}`}
               disabled={!canNavigateHistory}
-              onClick={(event) => {
-                event.stopPropagation();
-                handleShowPreviousHistoryItem();
-              }}
-              onKeyDown={(event) => {
-                event.stopPropagation();
-              }}
+              onClick={handleShowPreviousHistoryItem}
               type="button"
             >
               <span aria-hidden className={styles.historyNavIcon}>
@@ -295,9 +265,14 @@ export default function QRScanPage() {
               </span>
             </button>
 
-            <div className={styles.historyContent}>
-              {recentScanItem ? (
-                <>
+            {recentScanItem ? (
+              <button
+                aria-label={`${statusLabelByTone[recentScanItem.status]} 결과 페이지로 이동`}
+                className={`${styles.historyOpenButton} ${styles.historyCardInteractive}`}
+                onClick={handleOpenRecentScanResult}
+                type="button"
+              >
+                <div className={styles.historyContent}>
                   <span
                     className={`${styles.historyBadge} ${styles.historyBadgeTone[recentScanItem.status]}`}
                   >
@@ -314,31 +289,23 @@ export default function QRScanPage() {
                   >
                     {statusSummaryByTone[recentScanItem.status]}
                   </p>
-                </>
-              ) : (
-                <>
-                  <p className={styles.historyDate}>스캔 이력이 없습니다.</p>
-                  <p className={styles.historyHeadline}>
-                    최근 스캔 이력이 생기면 이곳에 가장 최신 항목이 표시됩니다.
-                  </p>
-                  <p className={styles.historyStatus}>
-                    전체보기에서 스캔 목록을 확인할 수 있습니다.
-                  </p>
-                </>
-              )}
-            </div>
+                </div>
+              </button>
+            ) : (
+              <div className={styles.historyContent}>
+                <p className={styles.historyDate}>스캔 이력이 없습니다.</p>
+                <p className={styles.historyHeadline}>
+                  최근 스캔 이력이 생기면 이곳에 가장 최신 항목이 표시됩니다.
+                </p>
+                <p className={styles.historyStatus}>전체보기에서 스캔 목록을 확인할 수 있습니다.</p>
+              </div>
+            )}
 
             <button
               aria-label="다음 스캔 이력 보기"
               className={`${styles.historyNavButton} ${styles.historyNavButtonRight}`}
               disabled={!canNavigateHistory}
-              onClick={(event) => {
-                event.stopPropagation();
-                handleShowNextHistoryItem();
-              }}
-              onKeyDown={(event) => {
-                event.stopPropagation();
-              }}
+              onClick={handleShowNextHistoryItem}
               type="button"
             >
               <span aria-hidden className={styles.historyNavIcon}>

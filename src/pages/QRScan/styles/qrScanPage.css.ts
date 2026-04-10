@@ -436,6 +436,19 @@ export const historyCardInteractive = style({
   },
 });
 
+export const historyOpenButton = style({
+  position: 'relative',
+  width: '100%',
+  minWidth: 0,
+  display: 'block',
+  alignSelf: 'stretch',
+  padding: 0,
+  border: 'none',
+  borderRadius: '12px',
+  background: 'transparent',
+  textAlign: 'left',
+});
+
 export const historyNavButton = style({
   width: '34px',
   height: '34px',
@@ -488,6 +501,7 @@ export const historyContent = style({
   display: 'grid',
   gap: vars.spacing.sm,
   paddingTop: '4px',
+  paddingLeft: '12px',
   paddingRight: '70px',
 });
 
