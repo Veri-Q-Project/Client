@@ -97,7 +97,7 @@ export const officialTone = styleVariants({
   },
   warning: {
     backgroundColor: 'rgba(242, 223, 13, 0.2)',
-    color: '#8A7800',
+    color: 'var.colors.warning',
   },
   critical: {
     backgroundColor: 'rgba(242, 13, 13, 0.12)',

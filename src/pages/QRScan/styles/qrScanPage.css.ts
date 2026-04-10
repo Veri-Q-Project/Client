@@ -577,7 +577,7 @@ export const historyStatusTone = styleVariants({
     color: vars.colors.success,
   },
   warning: {
-    color: '#8a6a00',
+    color: vars.colors.warning,
   },
 });
 
