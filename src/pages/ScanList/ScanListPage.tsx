@@ -1,3 +1,5 @@
+import { Link } from '@tanstack/react-router';
+
 import { qrIconByTone } from '@/shared/icon/resultIcons';
 import AppHeader from '@/shared/ui/app-header';
 
@@ -5,6 +7,15 @@ import { useScanListPage } from './hooks/useScanListPage';
 import * as styles from './styles/scanListPage.css';
 
 import type { ScanListStatus } from './types/scanListPage.types';
+
+const resultRouteByStatus: Record<
+  ScanListStatus,
+  '/result/safe' | '/result/warning' | '/result/critical'
+> = {
+  safe: '/result/safe',
+  warning: '/result/warning',
+  critical: '/result/critical',
+};
 
 const statusLabelByTone: Record<ScanListStatus, string> = {
   safe: '안전',
@@ -99,32 +110,39 @@ export default function ScanListPage() {
           ) : (
             <ul className={styles.list}>
               {scanListPageData.items.map((item) => (
-                <li className={`${styles.card} ${styles.cardTone[item.status]}`} key={item.id}>
-                  <span className={`${styles.badge} ${styles.badgeTone[item.status]}`}>
-                    <span aria-hidden="true" className={styles.badgeIcon}>
-                      <StatusBadgeIcon tone={item.status} />
-                    </span>
-                    {statusLabelByTone[item.status]}
-                  </span>
-
-                  <div className={`${styles.cardIconWrap} ${styles.cardIconWrapTone[item.status]}`}>
-                    <img
-                      alt=""
-                      aria-hidden="true"
-                      className={styles.cardIcon}
-                      src={qrIconByTone[item.status]}
-                    />
-                  </div>
-
-                  <article className={styles.cardContent}>
-                    <p className={styles.cardUrl}>{item.url}</p>
-                    <p className={styles.cardMeta}>
-                      <span aria-hidden="true" className={styles.metaIcon}>
-                        <CalendarIcon />
+                <li key={item.id}>
+                  <Link
+                    className={`${styles.card} ${styles.cardTone[item.status]}`}
+                    to={resultRouteByStatus[item.status]}
+                  >
+                    <span className={`${styles.badge} ${styles.badgeTone[item.status]}`}>
+                      <span aria-hidden="true" className={styles.badgeIcon}>
+                        <StatusBadgeIcon tone={item.status} />
                       </span>
-                      {item.scannedAt}
-                    </p>
-                  </article>
+                      {statusLabelByTone[item.status]}
+                    </span>
+
+                    <div
+                      className={`${styles.cardIconWrap} ${styles.cardIconWrapTone[item.status]}`}
+                    >
+                      <img
+                        alt=""
+                        aria-hidden="true"
+                        className={styles.cardIcon}
+                        src={qrIconByTone[item.status]}
+                      />
+                    </div>
+
+                    <article className={styles.cardContent}>
+                      <p className={styles.cardUrl}>{item.url}</p>
+                      <p className={styles.cardMeta}>
+                        <span aria-hidden="true" className={styles.metaIcon}>
+                          <CalendarIcon />
+                        </span>
+                        {item.scannedAt}
+                      </p>
+                    </article>
+                  </Link>
                 </li>
               ))}
             </ul>

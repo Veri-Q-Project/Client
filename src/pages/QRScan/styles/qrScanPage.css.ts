@@ -3,6 +3,7 @@ import { keyframes, style, styleVariants } from '@vanilla-extract/css';
 import { vars } from '@/vars.css';
 
 const bpTablet = 'screen and (min-width: 768px)';
+const historyBadgeMinWidth = '86px';
 
 const scanLineMotion = keyframes({
   '0%': {
@@ -412,18 +413,107 @@ export const viewAllLink = style({
 export const historyCard = style({
   position: 'relative',
   display: 'grid',
-  gap: vars.spacing.sm,
-  padding: '18px 16px 16px',
+  gridTemplateColumns: '40px minmax(0, 1fr) 40px',
+  alignItems: 'center',
+  gap: vars.spacing.xs,
+  padding: '18px 10px 16px',
   borderRadius: '16px',
   backgroundColor: '#eef2f6',
   boxShadow: 'inset 0 0 0 1px rgba(148, 163, 184, 0.08)',
+});
+
+export const historyCardInteractive = style({
+  cursor: 'pointer',
+  transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+  selectors: {
+    '&:hover': {
+      transform: 'translateY(-1px)',
+      boxShadow: 'inset 0 0 0 1px rgba(148, 163, 184, 0.08), 0 12px 24px rgba(15, 23, 42, 0.08)',
+    },
+    '&:focus-visible': {
+      outline: `3px solid ${vars.colors.mainLightHover}`,
+      outlineOffset: '3px',
+    },
+  },
+});
+
+export const historyOpenButton = style({
+  position: 'relative',
+  width: '100%',
+  minWidth: 0,
+  display: 'block',
+  alignSelf: 'stretch',
+  padding: 0,
+  border: 'none',
+  borderRadius: '12px',
+  background: 'transparent',
+  textAlign: 'left',
+});
+
+export const historyNavButton = style({
+  width: '34px',
+  height: '34px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  border: 'none',
+  borderRadius: '999px',
+  backgroundColor: 'rgba(255, 255, 255, 0.92)',
+  color: '#475569',
+  boxShadow: '0 8px 18px rgba(15, 23, 42, 0.08)',
+  cursor: 'pointer',
+  transition:
+    'transform 160ms ease, background-color 160ms ease, color 160ms ease, opacity 160ms ease',
+  selectors: {
+    '&:hover': {
+      transform: 'translateY(-1px)',
+      backgroundColor: vars.colors.white,
+      color: vars.colors.black,
+    },
+    '&:focus-visible': {
+      outline: `2px solid ${vars.colors.mainLightHover}`,
+      outlineOffset: '2px',
+    },
+    '&:disabled, &:disabled:hover': {
+      opacity: 0.45,
+      backgroundColor: vars.colors.sub,
+      color: vars.colors.subDark,
+      cursor: 'not-allowed',
+      transform: 'none',
+    },
+  },
+});
+
+export const historyNavButtonLeft = style({
+  justifySelf: 'start',
+});
+
+export const historyNavButtonRight = style({
+  justifySelf: 'end',
+});
+
+export const historyNavIcon = style({
+  width: '16px',
+  height: '16px',
+  display: 'inline-flex',
+  flexShrink: 0,
+});
+
+export const historyContent = style({
+  minWidth: 0,
+  display: 'grid',
+  gap: vars.spacing.sm,
+  overflow: 'hidden',
+  paddingTop: '4px',
+  paddingLeft: '12px',
+  paddingRight: historyBadgeMinWidth,
 });
 
 export const historyBadge = style({
   position: 'absolute',
   top: 0,
   right: 0,
-  minWidth: '86px',
+  minWidth: historyBadgeMinWidth,
   height: '28px',
   display: 'inline-flex',
   alignItems: 'center',
@@ -436,6 +526,21 @@ export const historyBadge = style({
   fontSize: '11px',
   fontWeight: vars.font.weight.bold,
   letterSpacing: '0.18em',
+});
+
+export const historyBadgeTone = styleVariants({
+  critical: {
+    backgroundColor: '#ff6b65',
+    color: vars.colors.white,
+  },
+  safe: {
+    backgroundColor: vars.colors.success,
+    color: vars.colors.white,
+  },
+  warning: {
+    backgroundColor: '#ffd84b',
+    color: '#3f3500',
+  },
 });
 
 export const historyBadgeIcon = style({
@@ -457,6 +562,9 @@ export const historyHeadline = style({
   fontSize: vars.font.size.md,
   fontWeight: vars.font.weight.bold,
   lineHeight: 1.45,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
   wordBreak: 'keep-all',
 });
 
@@ -466,6 +574,18 @@ export const historyStatus = style({
   fontSize: '12px',
   fontWeight: vars.font.weight.medium,
   lineHeight: 1.4,
+});
+
+export const historyStatusTone = styleVariants({
+  critical: {
+    color: vars.colors.error,
+  },
+  safe: {
+    color: vars.colors.success,
+  },
+  warning: {
+    color: vars.colors.warning,
+  },
 });
 
 export const historyThumbnail = style({
