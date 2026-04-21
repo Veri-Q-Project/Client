@@ -109,8 +109,8 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
     }
 
     if (effectiveProvider === 'mock') {
-      setFeedbackMessage('Mock 캡차 검증이 완료되었습니다. 로딩 화면으로 이동합니다.');
-      void navigate({ to: '/loading' });
+      setFeedbackMessage('Mock 캡차 검증이 완료되었습니다. 스캔 화면으로 이동합니다.');
+      void navigate({ to: '/qr-scan' });
       return;
     }
 
@@ -124,8 +124,8 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
         return;
       }
 
-      setFeedbackMessage('캡차 검증이 완료되었습니다. 로딩 화면으로 이동합니다.');
-      void navigate({ to: '/loading' });
+      setFeedbackMessage('캡차 검증이 완료되었습니다. 스캔 화면으로 이동합니다.');
+      void navigate({ to: '/qr-scan' });
     } finally {
       setIsVerifying(false);
     }

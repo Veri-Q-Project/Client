@@ -291,7 +291,7 @@ export const actionSection = style({
   gap: vars.spacing.sm,
 });
 
-export const actionButton = style({
+const actionButton = style({
   width: '100%',
   minHeight: '56px',
   borderRadius: '999px',
@@ -586,18 +586,4 @@ export const historyStatusTone = styleVariants({
   warning: {
     color: vars.colors.warning,
   },
-});
-
-export const historyThumbnail = style({
-  overflow: 'hidden',
-  borderRadius: '12px',
-  backgroundColor: '#dbe4ec',
-  aspectRatio: '16 / 9',
-});
-
-export const historyThumbnailImage = style({
-  width: '100%',
-  height: '100%',
-  objectFit: 'cover',
-  display: 'block',
 });
