@@ -1,7 +1,11 @@
 import { useNavigate } from '@tanstack/react-router';
+import { App } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 
 import { shareCurrentPage } from '@/shared/lib/browser/shareCurrentPage';
+import { showApiError } from '@/shared/lib/feedback/showApiError';
+import { useScanProgressStore } from '@/shared/store/scanProgressStore';
+import { useScanSessionStore } from '@/shared/store/scanSessionStore';
 
 import {
   fetchResultNonUrlPageData,
@@ -13,12 +17,15 @@ import type { ResultNonUrlPageData } from '../types/resultNonUrlPage.types';
 type UseResultNonUrlPageReturn = {
   handleRescan: () => void;
   handleShareResult: () => Promise<void>;
-  resultNonUrlPageData: ResultNonUrlPageData;
+  resultNonUrlPageData: ResultNonUrlPageData | null;
 };
 
 export function useResultNonUrlPage(): UseResultNonUrlPageReturn {
+  const { message } = App.useApp();
   const navigate = useNavigate();
-  const [resultNonUrlPageData, setResultNonUrlPageData] = useState<ResultNonUrlPageData>(
+  const clearScanSession = useScanSessionStore((state) => state.clearSession);
+  const resetScanProgress = useScanProgressStore((state) => state.reset);
+  const [resultNonUrlPageData, setResultNonUrlPageData] = useState<ResultNonUrlPageData | null>(
     getInitialResultNonUrlPageData,
   );
 
@@ -34,6 +41,14 @@ export function useResultNonUrlPage(): UseResultNonUrlPageReturn {
         }
       } catch (error) {
         console.error('[ResultNonUrlPage] failed to load page data', error);
+
+        if (error instanceof Error && error.message === 'SCAN_SESSION_REQUIRED') {
+          void navigate({ to: '/' });
+          return;
+        }
+
+        showApiError(message, error, '비 URL 결과를 불러오지 못했습니다.');
+        void navigate({ to: '/' });
       }
     };
 
@@ -42,11 +57,13 @@ export function useResultNonUrlPage(): UseResultNonUrlPageReturn {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [message, navigate]);
 
   const handleRescan = useCallback(() => {
+    clearScanSession();
+    resetScanProgress();
     void navigate({ to: '/' });
-  }, [navigate]);
+  }, [clearScanSession, navigate, resetScanProgress]);
 
   const handleShareResult = useCallback(async () => {
     await shareCurrentPage({

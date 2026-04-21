@@ -1,66 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import {
-  defaultScanListUuid,
-  fetchScanListPageData,
-  getInitialScanListPageData,
-} from '../api/fetchScanListPageData';
+import { useGuestStore } from '@/shared/store/guestStore';
+import { useScanSessionStore } from '@/shared/store/scanSessionStore';
 
-import type { ScanListPageData } from '../types/scanListPage.types';
+import { fetchScanListPageData, getInitialScanListPageData } from '../api/fetchScanListPageData';
+
+import type { ScanListItem, ScanListPageData } from '../types/scanListPage.types';
 
 type UseScanListPageReturn = {
+  handleSelectScanResult: (item: ScanListItem) => void;
   scanListPageData: ScanListPageData;
   scanListUuid: string;
 };
 
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
-
-function resolveInitialScanListUuid() {
-  if (typeof window === 'undefined') {
-    return defaultScanListUuid;
-  }
-
-  const uuidParam = new URLSearchParams(window.location.search).get('uuid')?.trim();
-
-  if (uuidParam && isUuid(uuidParam)) {
-    return uuidParam;
-  }
-
-  return defaultScanListUuid;
-}
-
-function updateUuidSearchParam(uuid: string) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  const searchParams = new URLSearchParams(window.location.search);
-  searchParams.set('uuid', uuid);
-
-  const nextSearch = searchParams.toString();
-  const nextUrl = nextSearch
-    ? `${window.location.pathname}?${nextSearch}`
-    : window.location.pathname;
-
-  window.history.replaceState(null, '', nextUrl);
-}
-
 export function useScanListPage(): UseScanListPageReturn {
-  const [scanListUuid] = useState(resolveInitialScanListUuid);
+  const guestUuid =
+    useGuestStore((state) => state.guestUuid) ?? useGuestStore.getState().ensureGuestUuid();
+  const setHistorySelection = useScanSessionStore((state) => state.setHistorySelection);
   const [scanListPageData, setScanListPageData] = useState<ScanListPageData>(() =>
-    getInitialScanListPageData(scanListUuid),
+    getInitialScanListPageData(guestUuid),
   );
 
   useEffect(() => {
-    updateUuidSearchParam(scanListUuid);
-
     let isMounted = true;
 
     const loadScanListPageData = async () => {
       try {
-        const response = await fetchScanListPageData(scanListUuid);
+        const response = await fetchScanListPageData();
 
         if (isMounted) {
           setScanListPageData(response);
@@ -69,7 +35,7 @@ export function useScanListPage(): UseScanListPageReturn {
         console.error('Failed to load scan list page data.', error);
 
         if (isMounted) {
-          setScanListPageData(getInitialScanListPageData(scanListUuid));
+          setScanListPageData(getInitialScanListPageData(guestUuid));
         }
       }
     };
@@ -79,10 +45,22 @@ export function useScanListPage(): UseScanListPageReturn {
     return () => {
       isMounted = false;
     };
-  }, [scanListUuid]);
+  }, [guestUuid]);
+
+  const handleSelectScanResult = useCallback(
+    (item: ScanListItem) => {
+      setHistorySelection({
+        riskLevel: item.status,
+        scannedAt: item.scannedAt,
+        url: item.url,
+      });
+    },
+    [setHistorySelection],
+  );
 
   return {
+    handleSelectScanResult,
     scanListPageData,
-    scanListUuid,
+    scanListUuid: guestUuid,
   };
 }

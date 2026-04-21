@@ -1,6 +1,6 @@
 import type { NonUrlActionType } from '../types/resultNonUrlPage.types';
 
-export type NonUrlActionExecutionPlan =
+type NonUrlActionExecutionPlan =
   | {
       href: string;
       kind: 'navigate';

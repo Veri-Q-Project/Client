@@ -5,24 +5,22 @@ type NonUrlActionCatalogItem = {
   caution: string;
   englishLabel: string;
   previewLabel: string;
-  sampleTargetValue?: string;
   title: string;
 };
 
-export type NonUrlActionPreviewItem = {
+type NonUrlActionPreviewItem = {
   actionType: NonUrlActionType;
   label: string;
-  sampleTargetValue?: string;
 };
 
-export type ResolvedNonUrlActionContent = {
+type ResolvedNonUrlActionContent = {
   caution: string;
   description: string;
   englishLabel: string;
   title: string;
 };
 
-const nonUrlActionCatalog: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
+const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
   appLaunch: {
     buildDescription: (targetValue) =>
       targetValue
@@ -32,7 +30,6 @@ const nonUrlActionCatalog: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
       '예상하지 못한 앱 실행은 금융 앱 이동, 인증 화면 호출, 악성 앱 연계 등으로 이어질 수 있으므로 사용자가 의도한 동작인지 먼저 확인해야 합니다.',
     englishLabel: 'APP LAUNCH INTENT',
     previewLabel: '앱 실행',
-    sampleTargetValue: 'KakaoTalk',
     title: '앱 실행 감지',
   },
   appStore: {
@@ -44,7 +41,6 @@ const nonUrlActionCatalog: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
       '출처가 불명확한 설치 유도는 가짜 앱, 악성 앱, 과도한 권한 요청으로 이어질 수 있으므로 앱 이름과 개발사를 반드시 대조해야 합니다.',
     englishLabel: 'APP STORE INTENT',
     previewLabel: '앱 스토어',
-    sampleTargetValue: 'Veri-Q Secure',
     title: '앱 스토어 이동 감지',
   },
   bitcoin: {
@@ -56,7 +52,6 @@ const nonUrlActionCatalog: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
       '코인 지갑 주소는 한번 송금하면 되돌리기 어렵습니다. 주소 위변조나 사기 결제 유도 가능성이 있으므로 발신자와 결제 맥락을 먼저 검증해야 합니다.',
     englishLabel: 'BITCOIN WALLET',
     previewLabel: '비트코인',
-    sampleTargetValue: 'bc1q8s7examplewallet9xy2k',
     title: '비트코인 지갑 감지',
   },
   telSms: {
@@ -68,7 +63,6 @@ const nonUrlActionCatalog: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
       '의도하지 않은 통화나 문자 발신은 프리미엄 요금 번호 연결, 스미싱 링크 응답, 개인정보 노출로 이어질 수 있으므로 번호를 먼저 확인해야 합니다.',
     englishLabel: 'TEL / SMS ACTION',
     previewLabel: '전화/문자',
-    sampleTargetValue: '010-1234-5678',
     title: '전화·문자 실행 감지',
   },
   unknown: {
@@ -89,24 +83,22 @@ const nonUrlActionCatalog: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
       '낯선 Wi-Fi 연결은 트래픽 가로채기, 피싱 포털, 악성 설정 유도로 이어질 수 있습니다. 네트워크 이름과 제공 주체를 먼저 확인해야 합니다.',
     englishLabel: 'WIFI CONFIGURATION',
     previewLabel: 'Wi-Fi',
-    sampleTargetValue: 'Veri-Q Guest',
     title: 'Wi-Fi 연결 감지',
   },
 };
 
 export const nonUrlActionPreviewItems: NonUrlActionPreviewItem[] = Object.entries(
-  nonUrlActionCatalog,
+  nonUrlActionTextMap,
 ).map(([actionType, catalogItem]) => ({
   actionType: actionType as NonUrlActionType,
   label: catalogItem.previewLabel,
-  sampleTargetValue: catalogItem.sampleTargetValue,
 }));
 
 export function resolveNonUrlActionContent(
   actionType: NonUrlActionType,
   targetValue?: string,
 ): ResolvedNonUrlActionContent {
-  const catalogItem = nonUrlActionCatalog[actionType];
+  const catalogItem = nonUrlActionTextMap[actionType];
 
   return {
     caution: catalogItem.caution,
