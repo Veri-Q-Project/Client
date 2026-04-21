@@ -1,9 +1,6 @@
-import { useRef, useState } from 'react';
-
 import { RiskLevelCard, TrustScoreCard } from '@/shared/component';
 import googleSafeBrowsingIcon from '@/shared/icon/Google Safe Browsing.svg';
 import { qrIconByTone, statusMarkIconByTone } from '@/shared/icon/resultIcons';
-import { exportElementToPdf } from '@/shared/lib/pdf/exportElementToPdf';
 import AppHeader from '@/shared/ui/app-header';
 
 import { resolveRiskDetectionContent } from './constants/riskDetectionCatalog';
@@ -56,12 +53,14 @@ const certificateStatusClassNameByTone: Record<ReportStatusTone, string> = {
 
 export default function ReportPage() {
   const { handleRescan, reportPageData } = useReportPage();
-  const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const reportContentRef = useRef<HTMLElement | null>(null);
 
   if (!reportPageData) {
     return null;
   }
+
+  const handlePrintPdf = () => {
+    window.print();
+  };
 
   const totalReputationCount =
     reportPageData.reputation.summary.phishingCount +
@@ -84,39 +83,14 @@ export default function ReportPage() {
 
   const toneKey = reportPageData.riskLevel;
 
-  const handleExportPdf = async () => {
-    if (isExportingPdf || !reportContentRef.current) {
-      return;
-    }
-
-    setIsExportingPdf(true);
-
-    try {
-      await exportElementToPdf({
-        element: reportContentRef.current,
-        fileName: '상세 보고서.pdf',
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
-
-      console.error('PDF 내보내기 실패', {
-        error,
-        reportContentElement: reportContentRef.current,
-      });
-
-      window.alert(`PDF 내보내기 실패: ${errorMessage}`);
-    } finally {
-      setIsExportingPdf(false);
-    }
-  };
-
   return (
     <main className={styles.page}>
-      <AppHeader iconSrc={qrIconByTone[reportPageData.riskLevel]} />
+      <div className={styles.printHidden}>
+        <AppHeader iconSrc={qrIconByTone[reportPageData.riskLevel]} />
+      </div>
 
       <div className={styles.shell}>
-        <section className={styles.content} ref={reportContentRef}>
+        <section className={styles.content}>
           <header
             className={`${styles.toneHeader} ${styles.toneHeaderTone[reportPageData.riskLevel]}`}
           >
@@ -442,19 +416,12 @@ export default function ReportPage() {
 
         <div className={styles.exportActionWrap}>
           <button
-            aria-label="상세 보고서 PDF 내보내기"
-            className={`${styles.exportPdfButton} ${styles.exportPdfButtonTone[toneKey]}`}
-            disabled={isExportingPdf}
-            onClick={handleExportPdf}
+            aria-label="PDF 출력"
+            className={`${styles.printButton} ${styles.printButtonTone[toneKey]}`}
+            onClick={handlePrintPdf}
             type="button"
           >
-            <span
-              aria-hidden
-              className={`${styles.exportPdfButtonBadge} ${styles.exportPdfButtonBadgeTone[toneKey]}`}
-            >
-              PDF
-            </span>
-            {isExportingPdf ? 'PDF 생성 중...' : '상세 보고서.pdf 내보내기'}
+            PDF 출력
           </button>
 
           <button

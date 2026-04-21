@@ -8,6 +8,20 @@ const bpDesktop = 'screen and (min-width: 1200px)';
 export const page = style({
   minHeight: '100vh',
   backgroundColor: vars.colors.white,
+  '@media': {
+    print: {
+      minHeight: 'auto',
+      backgroundColor: vars.colors.white,
+    },
+  },
+});
+
+export const printHidden = style({
+  '@media': {
+    print: {
+      display: 'none',
+    },
+  },
 });
 
 export const shell = style({
@@ -19,6 +33,10 @@ export const shell = style({
   '@media': {
     [bpTablet]: {
       padding: `0 ${vars.spacing.lg} 48px`,
+    },
+    print: {
+      maxWidth: 'none',
+      padding: 0,
     },
   },
 });
@@ -35,6 +53,12 @@ export const content = style({
     [bpDesktop]: {
       gap: vars.spacing.xl,
     },
+    print: {
+      maxWidth: 'none',
+      gap: vars.spacing.md,
+      paddingTop: 0,
+      paddingBottom: 0,
+    },
   },
 });
 
@@ -46,6 +70,12 @@ export const toneHeader = style({
   display: 'grid',
   gap: vars.spacing.md,
   boxShadow: '0 8px 20px rgba(17, 29, 48, 0.06)',
+  '@media': {
+    print: {
+      breakInside: 'avoid',
+      boxShadow: 'none',
+    },
+  },
 });
 
 export const toneHeaderTone = styleVariants({
@@ -201,6 +231,12 @@ export const sectionCard = style({
   display: 'grid',
   gap: vars.spacing.md,
   boxShadow: '0 6px 16px rgba(138, 113, 0, 0.08)',
+  '@media': {
+    print: {
+      breakInside: 'avoid',
+      boxShadow: 'none',
+    },
+  },
 });
 
 export const sectionCardTone = styleVariants({
@@ -516,6 +552,12 @@ export const riskDetectionCard = style({
   backgroundColor: '#FFFEFA',
   boxShadow: '0 8px 18px rgba(138, 113, 0, 0.08)',
   overflow: 'hidden',
+  '@media': {
+    print: {
+      breakInside: 'avoid',
+      boxShadow: 'none',
+    },
+  },
 });
 
 export const riskDetectionCardTone = styleVariants({
@@ -953,9 +995,74 @@ export const exportActionWrap = style({
   maxWidth: '860px',
   margin: '0 auto',
   display: 'flex',
-  flexDirection: 'column',
   alignItems: 'center',
+  justifyContent: 'center',
   gap: vars.spacing.sm,
+  flexWrap: 'wrap',
+  '@media': {
+    print: {
+      display: 'none',
+    },
+  },
+});
+
+export const printButton = style({
+  minWidth: '160px',
+  minHeight: '44px',
+  borderRadius: vars.radius.md,
+  border: '1px solid transparent',
+  color: vars.colors.white,
+  fontSize: vars.font.size.md,
+  fontWeight: vars.font.weight.semibold,
+  lineHeight: 1,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: vars.spacing.xs,
+  padding: `0 ${vars.spacing.md}`,
+  cursor: 'pointer',
+  transition: 'background-color 160ms ease, box-shadow 160ms ease, transform 120ms ease',
+  boxShadow: '0 6px 14px rgba(17, 29, 48, 0.12)',
+  selectors: {
+    '&:hover:not(:disabled)': {
+      boxShadow: '0 8px 16px rgba(17, 29, 48, 0.16)',
+      transform: 'translateY(-1px)',
+    },
+    '&:active:not(:disabled)': {
+      transform: 'translateY(0)',
+    },
+    '&:focus-visible': {
+      outline: `2px solid ${vars.colors.main}`,
+      outlineOffset: '2px',
+    },
+  },
+});
+
+export const printButtonTone = styleVariants({
+  critical: {
+    backgroundColor: '#D94848',
+    selectors: {
+      '&:hover:not(:disabled)': {
+        backgroundColor: '#C83434',
+      },
+    },
+  },
+  safe: {
+    backgroundColor: vars.colors.success,
+    selectors: {
+      '&:hover:not(:disabled)': {
+        backgroundColor: '#0FBD75',
+      },
+    },
+  },
+  warning: {
+    backgroundColor: '#B49A00',
+    selectors: {
+      '&:hover:not(:disabled)': {
+        backgroundColor: '#967F00',
+      },
+    },
+  },
 });
 
 export const rescanButton = style({
@@ -989,126 +1096,5 @@ export const rescanButton = style({
       outline: `2px solid ${vars.colors.subText}`,
       outlineOffset: '2px',
     },
-  },
-});
-
-export const exportPdfButton = style({
-  minWidth: '220px',
-  minHeight: '44px',
-  borderRadius: vars.radius.md,
-  border: '1px solid #E6C85D',
-  backgroundColor: '#FFF6CF',
-  color: '#6D5800',
-  fontSize: vars.font.size.md,
-  fontWeight: vars.font.weight.semibold,
-  lineHeight: 1,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: vars.spacing.xs,
-  padding: `0 ${vars.spacing.md}`,
-  cursor: 'pointer',
-  transition: 'background-color 160ms ease, box-shadow 160ms ease, transform 120ms ease',
-  boxShadow: '0 4px 12px rgba(138, 113, 0, 0.15)',
-  selectors: {
-    '&:hover:not(:disabled)': {
-      backgroundColor: '#FDEFB6',
-      boxShadow: '0 6px 14px rgba(138, 113, 0, 0.2)',
-      transform: 'translateY(-1px)',
-    },
-    '&:active:not(:disabled)': {
-      transform: 'translateY(0)',
-    },
-    '&:focus-visible': {
-      outline: '2px solid #D9B300',
-      outlineOffset: '2px',
-    },
-    '&:disabled': {
-      opacity: 0.7,
-      cursor: 'default',
-      transform: 'none',
-      boxShadow: 'none',
-    },
-  },
-});
-
-export const exportPdfButtonTone = styleVariants({
-  critical: {
-    borderColor: '#F0A8A8',
-    backgroundColor: '#FFE5E5',
-    color: '#A91212',
-    boxShadow: '0 4px 12px rgba(193, 39, 39, 0.15)',
-    selectors: {
-      '&:hover:not(:disabled)': {
-        backgroundColor: '#FFCFCF',
-        boxShadow: '0 6px 14px rgba(193, 39, 39, 0.2)',
-        transform: 'translateY(-1px)',
-      },
-      '&:focus-visible': {
-        outline: '2px solid #D14E4E',
-        outlineOffset: '2px',
-      },
-    },
-  },
-  safe: {
-    borderColor: '#9DDDBA',
-    backgroundColor: '#E2F5EC',
-    color: '#0F8B61',
-    boxShadow: '0 4px 12px rgba(13, 138, 89, 0.15)',
-    selectors: {
-      '&:hover:not(:disabled)': {
-        backgroundColor: '#CFEEDF',
-        boxShadow: '0 6px 14px rgba(13, 138, 89, 0.2)',
-        transform: 'translateY(-1px)',
-      },
-      '&:focus-visible': {
-        outline: '2px solid #128E63',
-        outlineOffset: '2px',
-      },
-    },
-  },
-  warning: {
-    borderColor: '#E6C85D',
-    backgroundColor: '#FFF6CF',
-    color: '#6D5800',
-    boxShadow: '0 4px 12px rgba(138, 113, 0, 0.15)',
-    selectors: {
-      '&:hover:not(:disabled)': {
-        backgroundColor: '#FDEFB6',
-        boxShadow: '0 6px 14px rgba(138, 113, 0, 0.2)',
-        transform: 'translateY(-1px)',
-      },
-      '&:focus-visible': {
-        outline: '2px solid #D9B300',
-        outlineOffset: '2px',
-      },
-    },
-  },
-});
-
-export const exportPdfButtonBadge = style({
-  minWidth: '34px',
-  height: '22px',
-  padding: '0 8px',
-  borderRadius: '999px',
-  backgroundColor: '#6D5800',
-  color: '#FFFFFF',
-  fontSize: vars.font.size.xs,
-  fontWeight: vars.font.weight.bold,
-  lineHeight: 1,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-});
-
-export const exportPdfButtonBadgeTone = styleVariants({
-  critical: {
-    backgroundColor: '#A91212',
-  },
-  safe: {
-    backgroundColor: '#0F8B61',
-  },
-  warning: {
-    backgroundColor: '#6D5800',
   },
 });
