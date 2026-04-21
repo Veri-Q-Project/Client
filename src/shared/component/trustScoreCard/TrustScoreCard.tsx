@@ -14,7 +14,7 @@ export default function TrustScoreCard({ score, tone = 'safe' }: TrustScoreCardP
   return (
     <article className={styles.card}>
       <div className={styles.header}>
-        <span className={styles.label}>신뢰 점수</span>
+        <span className={styles.label}>위험 점수</span>
         <span aria-hidden className={styles.iconWrap}>
           <img alt="" className={styles.iconImage} src={shieldIconByTone[tone]} />
         </span>

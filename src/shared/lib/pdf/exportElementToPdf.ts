@@ -1,5 +1,6 @@
-﻿type ExportElementToPdfOptions = {
+type ExportElementToPdfOptions = {
   backgroundColor?: string;
+  blockGapMm?: number;
   element: HTMLElement;
   fileName?: string;
   marginMm?: number;
@@ -8,10 +9,12 @@
 const DEFAULT_FILE_NAME = 'report.pdf';
 const DEFAULT_BACKGROUND_COLOR = '#FFFFFF';
 const DEFAULT_MARGIN_MM = 8;
+const DEFAULT_BLOCK_GAP_MM = 4;
 
 export async function exportElementToPdf(options: ExportElementToPdfOptions): Promise<void> {
   const {
     backgroundColor = DEFAULT_BACKGROUND_COLOR,
+    blockGapMm = DEFAULT_BLOCK_GAP_MM,
     element,
     fileName = DEFAULT_FILE_NAME,
     marginMm = DEFAULT_MARGIN_MM,
@@ -26,13 +29,10 @@ export async function exportElementToPdf(options: ExportElementToPdfOptions): Pr
     import('jspdf'),
   ]);
 
-  const canvas = await html2canvas(element, {
-    backgroundColor,
-    scale: Math.min(window.devicePixelRatio || 1, 2),
-    useCORS: true,
-    windowHeight: element.scrollHeight,
-    windowWidth: element.scrollWidth,
-  });
+  const blocks = Array.from(element.children).filter(
+    (child): child is HTMLElement => child instanceof HTMLElement,
+  );
+  const renderTargets = blocks.length > 0 ? blocks : [element];
 
   const pdf = new jsPDF({
     compress: true,
@@ -45,39 +45,79 @@ export async function exportElementToPdf(options: ExportElementToPdfOptions): Pr
   const pageHeight = pdf.internal.pageSize.getHeight();
   const printableWidth = pageWidth - marginMm * 2;
   const printableHeight = pageHeight - marginMm * 2;
+  const renderScale = Math.min(window.devicePixelRatio || 1, 2);
 
-  const renderedHeight = (canvas.height * printableWidth) / canvas.width;
-  const imageData = canvas.toDataURL('image/png');
+  let cursorY = marginMm;
+  let isFirstBlock = true;
 
-  let remainingHeight = renderedHeight;
-  let offsetY = marginMm;
+  for (const target of renderTargets) {
+    const canvas = await html2canvas(target, {
+      backgroundColor,
+      scale: renderScale,
+      useCORS: true,
+      windowHeight: target.scrollHeight,
+      windowWidth: target.scrollWidth,
+    });
+    const blockHeightMm = (canvas.height * printableWidth) / canvas.width;
+    const imageData = canvas.toDataURL('image/png');
 
-  pdf.addImage(
-    imageData,
-    'PNG',
-    marginMm,
-    offsetY,
-    printableWidth,
-    renderedHeight,
-    undefined,
-    'FAST',
-  );
-  remainingHeight -= printableHeight;
+    if (blockHeightMm > printableHeight) {
+      if (!isFirstBlock) {
+        pdf.addPage();
+      }
+      cursorY = marginMm;
 
-  while (remainingHeight > 0) {
-    pdf.addPage();
-    offsetY = marginMm - (renderedHeight - remainingHeight);
+      let remaining = blockHeightMm;
+      pdf.addImage(
+        imageData,
+        'PNG',
+        marginMm,
+        cursorY,
+        printableWidth,
+        blockHeightMm,
+        undefined,
+        'FAST',
+      );
+      remaining -= printableHeight;
+
+      while (remaining > 0) {
+        pdf.addPage();
+        const offset = marginMm - (blockHeightMm - remaining);
+        pdf.addImage(
+          imageData,
+          'PNG',
+          marginMm,
+          offset,
+          printableWidth,
+          blockHeightMm,
+          undefined,
+          'FAST',
+        );
+        remaining -= printableHeight;
+      }
+
+      cursorY = marginMm + (printableHeight - Math.abs(remaining)) + blockGapMm;
+      isFirstBlock = false;
+      continue;
+    }
+
+    if (!isFirstBlock && cursorY + blockHeightMm > pageHeight - marginMm) {
+      pdf.addPage();
+      cursorY = marginMm;
+    }
+
     pdf.addImage(
       imageData,
       'PNG',
       marginMm,
-      offsetY,
+      cursorY,
       printableWidth,
-      renderedHeight,
+      blockHeightMm,
       undefined,
       'FAST',
     );
-    remainingHeight -= printableHeight;
+    cursorY += blockHeightMm + blockGapMm;
+    isFirstBlock = false;
   }
 
   pdf.save(fileName);

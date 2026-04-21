@@ -203,6 +203,24 @@ export const sectionCard = style({
   boxShadow: '0 6px 16px rgba(138, 113, 0, 0.08)',
 });
 
+export const sectionCardTone = styleVariants({
+  critical: {
+    borderColor: '#F1CECE',
+    backgroundColor: '#FFF6F6',
+    boxShadow: '0 6px 16px rgba(193, 39, 39, 0.08)',
+  },
+  safe: {
+    borderColor: '#CBEFDE',
+    backgroundColor: '#F3FBF7',
+    boxShadow: '0 6px 16px rgba(13, 138, 89, 0.08)',
+  },
+  warning: {
+    borderColor: '#F0E4BE',
+    backgroundColor: '#FFFEFA',
+    boxShadow: '0 6px 16px rgba(138, 113, 0, 0.08)',
+  },
+});
+
 export const sectionHeader = style({
   display: 'flex',
   alignItems: 'center',
@@ -231,6 +249,24 @@ export const sectionNumber = style({
   alignItems: 'center',
   justifyContent: 'center',
   flexShrink: 0,
+});
+
+export const sectionNumberTone = styleVariants({
+  critical: {
+    backgroundColor: '#FFD9D9',
+    color: '#A91212',
+    borderColor: '#F0A8A8',
+  },
+  safe: {
+    backgroundColor: '#CFEEDF',
+    color: '#0F8B61',
+    borderColor: '#9DDDBA',
+  },
+  warning: {
+    backgroundColor: '#FFE9A8',
+    color: '#7A6400',
+    borderColor: '#F2D86A',
+  },
 });
 
 export const sectionTitle = style({
@@ -272,6 +308,24 @@ export const riskBadge = style({
       display: 'inline-block',
       opacity: 0.8,
     },
+  },
+});
+
+export const riskBadgeTone = styleVariants({
+  critical: {
+    borderColor: '#F0A8A8',
+    backgroundColor: '#FFE5E5',
+    color: '#A91212',
+  },
+  safe: {
+    borderColor: '#9DDDBA',
+    backgroundColor: '#E2F5EC',
+    color: '#0F8B61',
+  },
+  warning: {
+    borderColor: '#E9D77A',
+    backgroundColor: '#FFF8D8',
+    color: '#6F5A00',
   },
 });
 
@@ -404,6 +458,21 @@ export const domainCompareRow = style({
   gap: vars.spacing.xs,
 });
 
+export const domainCompareRowTone = styleVariants({
+  critical: {
+    borderColor: 'rgba(242, 13, 13, 0.32)',
+    backgroundColor: '#FFF6F6',
+  },
+  safe: {
+    borderColor: 'rgba(17, 212, 131, 0.32)',
+    backgroundColor: '#F3FBF7',
+  },
+  warning: {
+    borderColor: 'rgba(242, 223, 13, 0.32)',
+    backgroundColor: '#FFFDF3',
+  },
+});
+
 export const domainCompareLabel = style({
   margin: 0,
   color: vars.colors.subText,
@@ -449,6 +518,24 @@ export const riskDetectionCard = style({
   overflow: 'hidden',
 });
 
+export const riskDetectionCardTone = styleVariants({
+  critical: {
+    borderColor: '#F1CECE',
+    backgroundColor: '#FFF6F6',
+    boxShadow: '0 8px 18px rgba(193, 39, 39, 0.08)',
+  },
+  safe: {
+    borderColor: '#CBEFDE',
+    backgroundColor: '#F3FBF7',
+    boxShadow: '0 8px 18px rgba(13, 138, 89, 0.08)',
+  },
+  warning: {
+    borderColor: '#F0E5BF',
+    backgroundColor: '#FFFEFA',
+    boxShadow: '0 8px 18px rgba(138, 113, 0, 0.08)',
+  },
+});
+
 export const riskDetectionCardHeader = style({
   display: 'flex',
   alignItems: 'flex-start',
@@ -456,22 +543,23 @@ export const riskDetectionCardHeader = style({
   padding: `${vars.spacing.lg} ${vars.spacing.lg} ${vars.spacing.md}`,
 });
 
-export const riskDetectionIcon = style({
-  width: '48px',
-  height: '48px',
-  borderRadius: '999px',
-  display: 'inline-flex',
-  flexShrink: 0,
-  background:
-    'radial-gradient(circle at 30% 30%, rgba(255, 92, 128, 0.34) 0%, rgba(255, 59, 104, 0.2) 62%, rgba(255, 59, 104, 0.12) 100%)',
-  border: '1px solid rgba(255, 59, 104, 0.3)',
-});
-
 export const riskDetectionHeaderTextBlock = style({
   display: 'grid',
   gap: '2px',
   borderLeft: '4px solid #F2DF0D',
   paddingLeft: vars.spacing.sm,
+});
+
+export const riskDetectionHeaderTextBlockTone = styleVariants({
+  critical: {
+    borderLeftColor: '#E15050',
+  },
+  safe: {
+    borderLeftColor: '#11D483',
+  },
+  warning: {
+    borderLeftColor: '#F2DF0D',
+  },
 });
 
 export const riskDetectionTitle = style({
@@ -500,6 +588,21 @@ export const riskDetectionBody = style({
   gap: vars.spacing.md,
 });
 
+export const riskDetectionBodyTone = styleVariants({
+  critical: {
+    borderColor: '#F1CECE',
+    backgroundColor: '#FFF1F1',
+  },
+  safe: {
+    borderColor: '#CBEFDE',
+    backgroundColor: '#EFFAF4',
+  },
+  warning: {
+    borderColor: '#F3E8BE',
+    backgroundColor: '#FFFBF0',
+  },
+});
+
 export const riskDetectionBodyLabel = style({
   margin: 0,
   color: '#7B6700',
@@ -517,6 +620,36 @@ export const riskDetectionBodyLabel = style({
       backgroundColor: '#D3B600',
       display: 'inline-block',
       boxShadow: '0 0 0 3px rgba(242, 223, 13, 0.24)',
+    },
+  },
+});
+
+export const riskDetectionBodyLabelTone = styleVariants({
+  critical: {
+    color: '#A92E2E',
+    selectors: {
+      '&::before': {
+        backgroundColor: '#E15050',
+        boxShadow: '0 0 0 3px rgba(225, 80, 80, 0.24)',
+      },
+    },
+  },
+  safe: {
+    color: '#0F7A55',
+    selectors: {
+      '&::before': {
+        backgroundColor: '#11D483',
+        boxShadow: '0 0 0 3px rgba(17, 212, 131, 0.24)',
+      },
+    },
+  },
+  warning: {
+    color: '#7B6700',
+    selectors: {
+      '&::before': {
+        backgroundColor: '#D3B600',
+        boxShadow: '0 0 0 3px rgba(242, 223, 13, 0.24)',
+      },
     },
   },
 });
@@ -541,6 +674,33 @@ export const riskDetectionRisk = style({
       content: '"위험성: "',
       color: '#9B7200',
       fontWeight: vars.font.weight.semibold,
+    },
+  },
+});
+
+export const riskDetectionRiskTone = styleVariants({
+  critical: {
+    borderTopColor: '#F1CECE',
+    selectors: {
+      '&::before': {
+        color: '#A91212',
+      },
+    },
+  },
+  safe: {
+    borderTopColor: '#CBEFDE',
+    selectors: {
+      '&::before': {
+        color: '#0F8B61',
+      },
+    },
+  },
+  warning: {
+    borderTopColor: '#EFE2B9',
+    selectors: {
+      '&::before': {
+        color: '#9B7200',
+      },
     },
   },
 });
@@ -793,7 +953,43 @@ export const exportActionWrap = style({
   maxWidth: '860px',
   margin: '0 auto',
   display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: vars.spacing.sm,
+});
+
+export const rescanButton = style({
+  minWidth: '220px',
+  minHeight: '44px',
+  borderRadius: vars.radius.md,
+  border: `1px solid ${vars.colors.border}`,
+  backgroundColor: vars.colors.white,
+  color: vars.colors.subDark,
+  fontSize: vars.font.size.md,
+  fontWeight: vars.font.weight.semibold,
+  lineHeight: 1,
+  display: 'inline-flex',
+  alignItems: 'center',
   justifyContent: 'center',
+  gap: vars.spacing.xs,
+  padding: `0 ${vars.spacing.md}`,
+  cursor: 'pointer',
+  transition: 'background-color 160ms ease, box-shadow 160ms ease, transform 120ms ease',
+  boxShadow: '0 4px 10px rgba(17, 29, 48, 0.06)',
+  selectors: {
+    '&:hover:not(:disabled)': {
+      backgroundColor: '#F4F6FA',
+      boxShadow: '0 6px 12px rgba(17, 29, 48, 0.08)',
+      transform: 'translateY(-1px)',
+    },
+    '&:active:not(:disabled)': {
+      transform: 'translateY(0)',
+    },
+    '&:focus-visible': {
+      outline: `2px solid ${vars.colors.subText}`,
+      outlineOffset: '2px',
+    },
+  },
 });
 
 export const exportPdfButton = style({
@@ -836,6 +1032,60 @@ export const exportPdfButton = style({
   },
 });
 
+export const exportPdfButtonTone = styleVariants({
+  critical: {
+    borderColor: '#F0A8A8',
+    backgroundColor: '#FFE5E5',
+    color: '#A91212',
+    boxShadow: '0 4px 12px rgba(193, 39, 39, 0.15)',
+    selectors: {
+      '&:hover:not(:disabled)': {
+        backgroundColor: '#FFCFCF',
+        boxShadow: '0 6px 14px rgba(193, 39, 39, 0.2)',
+        transform: 'translateY(-1px)',
+      },
+      '&:focus-visible': {
+        outline: '2px solid #D14E4E',
+        outlineOffset: '2px',
+      },
+    },
+  },
+  safe: {
+    borderColor: '#9DDDBA',
+    backgroundColor: '#E2F5EC',
+    color: '#0F8B61',
+    boxShadow: '0 4px 12px rgba(13, 138, 89, 0.15)',
+    selectors: {
+      '&:hover:not(:disabled)': {
+        backgroundColor: '#CFEEDF',
+        boxShadow: '0 6px 14px rgba(13, 138, 89, 0.2)',
+        transform: 'translateY(-1px)',
+      },
+      '&:focus-visible': {
+        outline: '2px solid #128E63',
+        outlineOffset: '2px',
+      },
+    },
+  },
+  warning: {
+    borderColor: '#E6C85D',
+    backgroundColor: '#FFF6CF',
+    color: '#6D5800',
+    boxShadow: '0 4px 12px rgba(138, 113, 0, 0.15)',
+    selectors: {
+      '&:hover:not(:disabled)': {
+        backgroundColor: '#FDEFB6',
+        boxShadow: '0 6px 14px rgba(138, 113, 0, 0.2)',
+        transform: 'translateY(-1px)',
+      },
+      '&:focus-visible': {
+        outline: '2px solid #D9B300',
+        outlineOffset: '2px',
+      },
+    },
+  },
+});
+
 export const exportPdfButtonBadge = style({
   minWidth: '34px',
   height: '22px',
@@ -849,4 +1099,16 @@ export const exportPdfButtonBadge = style({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
+});
+
+export const exportPdfButtonBadgeTone = styleVariants({
+  critical: {
+    backgroundColor: '#A91212',
+  },
+  safe: {
+    backgroundColor: '#0F8B61',
+  },
+  warning: {
+    backgroundColor: '#6D5800',
+  },
 });
