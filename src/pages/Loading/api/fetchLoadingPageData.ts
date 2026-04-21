@@ -21,7 +21,7 @@ function buildLoadingPageData(
   };
 }
 
-export const mockLoadingPageDataByCase: Record<LoadingCaseNumber, LoadingPageData> = {
+const mockLoadingPageDataByCase: Record<LoadingCaseNumber, LoadingPageData> = {
   1: buildLoadingPageData(1, 'full'),
   2: buildLoadingPageData(2, 'full'),
   3: buildLoadingPageData(3, 'full'),
@@ -32,7 +32,7 @@ export const mockLoadingPageDataByCase: Record<LoadingCaseNumber, LoadingPageDat
   8: buildLoadingPageData(8, 'full'),
 };
 
-export const mockSequentialLoadingPageDataByCase: Record<LoadingCaseNumber, LoadingPageData> = {
+const mockSequentialLoadingPageDataByCase: Record<LoadingCaseNumber, LoadingPageData> = {
   1: buildLoadingPageData(1, 'sequential'),
   2: buildLoadingPageData(2, 'sequential'),
   3: buildLoadingPageData(3, 'sequential'),

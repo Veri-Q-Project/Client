@@ -3,9 +3,11 @@ export type LoadingCaseNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type LoadingStepId =
   | 'decode'
   | 'shortUrlCheck'
+  | 'urlNormalize'
   | 'redirect'
   | 'internalDb'
   | 'externalApi'
+  | 'ruleAnalysis'
   | 'aiAnalysis'
   | 'riskScore'
   | 'report'

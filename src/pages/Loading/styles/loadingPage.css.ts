@@ -90,6 +90,15 @@ export const percentText = style({
   lineHeight: 1,
 });
 
+export const progressMetaText = style({
+  margin: 0,
+  color: vars.colors.subText,
+  fontSize: vars.font.size.sm,
+  fontWeight: vars.font.weight.medium,
+  lineHeight: 1.3,
+  textAlign: 'center',
+});
+
 export const title = style({
   margin: 0,
   color: vars.colors.black,
