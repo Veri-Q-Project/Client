@@ -11,3 +11,5 @@ out
 .env.*.local
 
 docs/local/
+.claude/
+.devserver.*.log
