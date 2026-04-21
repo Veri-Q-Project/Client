@@ -17,7 +17,7 @@ type SafeSiteCardProps = {
 export default function SafeSiteCard({
   badgeLabel = 'OK',
   onVisitClick,
-  siteMeta = 'SSL 인증서 유효함 · 도메인 생성일 2018.05.12',
+  siteMeta = 'SSL 인증서 정보 없음',
   siteName,
   siteUrl,
   statusLabel = 'OFFICIAL',
@@ -34,7 +34,7 @@ export default function SafeSiteCard({
           </span>
         </div>
 
-        <div>
+        <div className={styles.textBlock}>
           <div className={styles.titleRow}>
             <h2 className={styles.title}>{siteName}</h2>
             <span className={`${styles.official} ${styles.officialTone[tone]}`}>{statusLabel}</span>
