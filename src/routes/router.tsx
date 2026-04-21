@@ -1,19 +1,23 @@
 import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
+import { Suspense, lazy } from 'react';
 
-import CaptchaPage from '@/pages/Captcha';
-import HomePage from '@/pages/Home';
-import LoadingPage from '@/pages/Loading';
-import QRScanPage from '@/pages/QRScan';
-import ReportPage from '@/pages/Report';
-import ResultCriticalPage from '@/pages/ResultCritical';
-import ResultNonUrlPage from '@/pages/ResultNonUrl';
-import ResultSafePage from '@/pages/ResultSafe';
-import ResultWarningPage from '@/pages/ResultWarning';
-import ScanHistoryPage from '@/pages/ScanHistory';
-import ScanListPage from '@/pages/ScanList';
+const CaptchaPage = lazy(() => import('@/pages/Captcha'));
+const LoadingPage = lazy(() => import('@/pages/Loading'));
+const QRScanPage = lazy(() => import('@/pages/QRScan'));
+const ReportPage = lazy(() => import('@/pages/Report'));
+const ResultCriticalPage = lazy(() => import('@/pages/ResultCritical'));
+const ResultNonUrlPage = lazy(() => import('@/pages/ResultNonUrl'));
+const ResultSafePage = lazy(() => import('@/pages/ResultSafe'));
+const ResultWarningPage = lazy(() => import('@/pages/ResultWarning'));
+const ScanHistoryPage = lazy(() => import('@/pages/ScanHistory'));
+const ScanListPage = lazy(() => import('@/pages/ScanList'));
 
 function RootLayout() {
-  return <Outlet />;
+  return (
+    <Suspense fallback={null}>
+      <Outlet />
+    </Suspense>
+  );
 }
 
 const rootRoute = createRootRoute({
@@ -23,7 +27,7 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: HomePage,
+  component: QRScanPage,
 });
 
 const captchaRoute = createRoute({
