@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
 
 import { toReportPageData } from './toReportPageData';
+import { toResultCardData } from './toResultCardData';
 import { toResultNonUrlData } from './toResultNonUrlData';
 
 describe('session mappers', () => {
@@ -106,11 +107,40 @@ describe('session mappers', () => {
 
     expect(reportPageData.riskLevel).toBe('critical');
     expect(reportPageData.trustScore).toBe(61);
+    expect(reportPageData.scannedAt).toBe('2026-04-18 11:00');
     expect(reportPageData.scannedUrl).toBe('https://malware.testing.google/');
     expect(reportPageData.urlAnalysis.destinationUrl).toBe('https://malware.testing.google/');
     expect(reportPageData.detectedRiskTypes).toContain('dummy_ml_threat');
     expect(reportPageData.reputation.providerName).toBe('Google Safe Browsing');
     expect(reportPageData.serverInfo.certificateStatusTone).toBe('error');
+  });
+
+  it('maps certificate metadata into result card site meta', () => {
+    const session: ScanSessionSnapshot = {
+      analysisDetail: {
+        originalUrl: 'https://qr.generatorqr.com/1SpwYoKyl',
+        score: 23,
+        serverInfo: {
+          certificate: {
+            issuer: null,
+            valid: false,
+            validFrom: null,
+            validTo: null,
+          },
+        },
+      },
+      decodedUrl: null,
+      finalResult: null,
+      historySelection: null,
+      isUrl: true,
+      riskLevel: null,
+      scanResponse: null,
+      schemeType: 'WEB',
+    };
+
+    const resultCardData = toResultCardData(session, 'safe');
+
+    expect(resultCardData.siteMeta).toBe('SSL 인증서 유효하지 않음 · 발급자 정보 없음');
   });
 
   it('maps non-web scan payload into non-url result data', () => {

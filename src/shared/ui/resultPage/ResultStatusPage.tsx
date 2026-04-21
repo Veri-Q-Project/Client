@@ -65,6 +65,7 @@ export default function ResultStatusPage({
           <SafeSiteCard
             {...siteCard}
             onVisitClick={onVisitClick}
+            siteMeta={siteCard?.siteMeta ?? resultData.siteMeta}
             siteName={resultData.siteName}
             siteUrl={resultData.siteUrl}
             tone={siteCard?.tone ?? tone}

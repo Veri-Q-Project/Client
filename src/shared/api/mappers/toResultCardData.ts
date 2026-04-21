@@ -1,4 +1,5 @@
 import {
+  pickBoolean,
   pickSourceNumber,
   pickSourceRecord,
   pickSourceString,
@@ -14,8 +15,84 @@ const trustScoreFallbackByTone: Record<ResultTone, number> = {
   warning: 45,
 };
 
+const missingCertificateLabel = 'SSL 인증서 정보 없음';
+
 function clampTrustScore(score: number): number {
   return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function formatDateOnlyLabel(rawDate: string | null): string | null {
+  if (!rawDate) {
+    return null;
+  }
+
+  const parsedDate = new Date(rawDate);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return rawDate;
+  }
+
+  const year = parsedDate.getFullYear();
+  const month = `${parsedDate.getMonth() + 1}`.padStart(2, '0');
+  const day = `${parsedDate.getDate()}`.padStart(2, '0');
+
+  return `${year}.${month}.${day}`;
+}
+
+function resolveCertificateRecord(sources: unknown[]): Record<string, unknown> | null {
+  const serverInfoRecord = pickSourceRecord(sources, ['serverInfo', 'server_info']);
+
+  return pickSourceRecord([serverInfoRecord, ...sources], ['certificate']);
+}
+
+function resolveCertificateStatusText(certificateRecord: Record<string, unknown> | null): string {
+  const isValid = pickBoolean(certificateRecord, ['valid', 'isValid', 'is_valid']);
+
+  if (isValid === null) {
+    return missingCertificateLabel;
+  }
+
+  return isValid ? 'SSL 인증서 유효함' : 'SSL 인증서 유효하지 않음';
+}
+
+function resolveCertificateIssuerText(
+  certificateRecord: Record<string, unknown> | null,
+): string | null {
+  if (!certificateRecord) {
+    return null;
+  }
+
+  const issuer = pickSourceString([certificateRecord], ['issuer', 'certificateIssuer']);
+
+  return issuer ? `발급자 ${issuer}` : '발급자 정보 없음';
+}
+
+function resolveCertificateValidityText(
+  certificateRecord: Record<string, unknown> | null,
+): string | null {
+  const validFrom = formatDateOnlyLabel(
+    pickSourceString([certificateRecord], ['validFrom', 'valid_from']),
+  );
+  const validTo = formatDateOnlyLabel(
+    pickSourceString([certificateRecord], ['validTo', 'valid_to']),
+  );
+
+  if (!validFrom && !validTo) {
+    return null;
+  }
+
+  return `유효 기간 ${validFrom ?? '정보 없음'} - ${validTo ?? '정보 없음'}`;
+}
+
+function buildSiteMeta(sources: unknown[]): string {
+  const certificateRecord = resolveCertificateRecord(sources);
+  const metaParts = [
+    resolveCertificateStatusText(certificateRecord),
+    resolveCertificateIssuerText(certificateRecord),
+    resolveCertificateValidityText(certificateRecord),
+  ].filter((metaPart): metaPart is string => Boolean(metaPart));
+
+  return metaParts.join(' · ');
 }
 
 export function toResultCardData(
@@ -67,6 +144,7 @@ export function toResultCardData(
 
   return {
     previewUrl: resolvedPreviewUrl,
+    siteMeta: buildSiteMeta(sources),
     siteName: resolvedOriginalUrl,
     siteUrl: resolvedFinalUrl,
     trustScore: clampTrustScore(resolvedTrustScore),

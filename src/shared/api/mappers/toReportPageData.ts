@@ -181,7 +181,14 @@ function resolveReportUrls(session: ScanSessionSnapshot, sources: unknown[]): Re
     scannedUrl;
   const destinationUrl = pickSourceString(sources, destinationUrlKeys) ?? scannedUrl;
   const scannedAt =
-    pickSourceString(sources, ['scannedAt', 'scanned_at', 'createdAt', 'created_at']) ??
+    pickSourceString(sources, [
+      'analysisTime',
+      'analysis_time',
+      'scannedAt',
+      'scanned_at',
+      'createdAt',
+      'created_at',
+    ]) ??
     session.historySelection?.scannedAt ??
     null;
 
