@@ -1,4 +1,3 @@
-import { isMockApiEnabled } from '@/shared/api/apiConfig';
 import { axiosBe1 } from '@/shared/api/axios';
 import { apiEndpoints } from '@/shared/api/endpoints';
 import { toApiError } from '@/shared/api/errors/apiError';
@@ -18,13 +17,6 @@ export async function submitCaptchaVerification({
     return {
       message: 'Captcha token is empty.',
       success: false,
-    };
-  }
-
-  if (isMockApiEnabled()) {
-    return {
-      message: 'Mock verification succeeded.',
-      success: true,
     };
   }
 

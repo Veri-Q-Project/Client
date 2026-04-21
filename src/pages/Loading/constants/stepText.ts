@@ -1,7 +1,5 @@
 import type { LoadingDetailStep, LoadingStep, LoadingStepId } from '../types/loadingPage.types';
 
-type LoadingStepCopyOverride = Partial<Omit<LoadingStep, 'id'>>;
-
 const analysisDetailSteps: LoadingDetailStep[] = [
   {
     title: '도메인 신뢰도 확인',
@@ -110,45 +108,5 @@ export const stepTextMap: Record<LoadingStepId, LoadingStep> = {
     pendingDescription: 'URL 정규화를 준비하고 있습니다.',
     title: 'URL 정규화',
     weight: 8,
-  },
-};
-
-export const stepTextOverridesByCase: Record<
-  number,
-  Partial<Record<LoadingStepId, LoadingStepCopyOverride>>
-> = {
-  1: {
-    internalDb: {
-      doneDescription: '기존 분석 이력이 확인되어 저장된 결과를 사용합니다.',
-    },
-  },
-  2: {
-    shortUrlCheck: {
-      doneDescription: '단축 URL로 확인되어 리다이렉트 추적을 진행합니다.',
-    },
-  },
-  3: {
-    shortUrlCheck: {
-      doneDescription: '단축 URL로 확인되어 리다이렉트 경로를 먼저 추적합니다.',
-    },
-  },
-  4: {
-    internalDb: {
-      doneDescription: '기존 분석 이력이 확인되어 저장된 결과를 사용합니다.',
-    },
-  },
-  7: {
-    externalApi: {
-      doneDescription: '외부 위협 정보에서 위험 신호가 확인되어 추가 분석 없이 결과를 정리합니다.',
-    },
-  },
-  8: {
-    completed: {
-      activeDescription: 'URL 형식이 아닌 QR 코드로 확인되어 결과 페이지로 이동합니다.',
-      doneDescription: 'URL 형식이 아닌 QR 코드 분석이 완료되었습니다.',
-    },
-    decode: {
-      doneDescription: 'QR 코드 내용이 URL 형식이 아닌 것으로 확인되었습니다.',
-    },
   },
 };

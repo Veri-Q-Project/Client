@@ -53,29 +53,6 @@ export const card = style({
   padding: vars.spacing.lg,
 });
 
-export const modeSwitch = style({
-  display: 'grid',
-  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: vars.spacing.sm,
-});
-
-export const modeButton = style({
-  border: '1px solid rgba(255, 255, 255, 0.35)',
-  borderRadius: vars.radius.md,
-  backgroundColor: 'transparent',
-  color: vars.colors.white,
-  padding: `${vars.spacing.sm} ${vars.spacing.md}`,
-  fontSize: vars.font.size.sm,
-  fontWeight: vars.font.weight.medium,
-  cursor: 'pointer',
-});
-
-export const modeButtonActive = style({
-  backgroundColor: vars.colors.white,
-  color: vars.colors.black,
-  borderColor: vars.colors.white,
-});
-
 export const providerLabel = style({
   margin: 0,
   color: vars.colors.white,
@@ -96,53 +73,6 @@ export const enterpriseBox = style({
   justifyContent: 'center',
   alignItems: 'center',
   minHeight: '78px',
-});
-
-export const mockCheckbox = style({
-  display: 'grid',
-  gridTemplateColumns: '24px 1fr',
-  alignItems: 'center',
-  columnGap: vars.spacing.sm,
-  cursor: 'pointer',
-});
-
-export const mockCheckboxInput = style({
-  position: 'absolute',
-  opacity: 0,
-  pointerEvents: 'none',
-});
-
-export const mockCheckboxIndicator = style({
-  width: '24px',
-  height: '24px',
-  borderRadius: vars.radius.sm,
-  border: `1px solid ${vars.colors.border}`,
-  backgroundColor: vars.colors.white,
-  selectors: {
-    [`${mockCheckboxInput}:checked + &`]: {
-      backgroundColor: vars.colors.success,
-      borderColor: vars.colors.success,
-      boxShadow: `inset 0 0 0 3px ${vars.colors.white}`,
-    },
-    [`${mockCheckboxInput}:focus-visible + &`]: {
-      outline: `2px solid ${vars.colors.main}`,
-      outlineOffset: '2px',
-    },
-  },
-});
-
-export const mockCheckboxText = style({
-  color: vars.colors.black,
-  fontSize: vars.font.size.lg,
-  fontWeight: vars.font.weight.medium,
-  lineHeight: 1.3,
-});
-
-export const fallbackMessage = style({
-  margin: 0,
-  color: vars.colors.warning,
-  fontSize: vars.font.size.sm,
-  lineHeight: 1.4,
 });
 
 export const captchaHint = style({
@@ -180,12 +110,4 @@ export const feedback = style({
   color: vars.colors.subText,
   fontSize: vars.font.size.sm,
   lineHeight: 1.4,
-});
-
-export const envHint = style({
-  margin: 0,
-  color: vars.colors.subDark,
-  fontSize: vars.font.size.xs,
-  lineHeight: 1.5,
-  textAlign: 'center',
 });

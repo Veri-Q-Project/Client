@@ -1,8 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import { App } from 'antd';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
-import { isMockApiEnabled } from '@/shared/api/apiConfig';
 import { ensureScanDetail } from '@/shared/api/ensureScanDetail';
 import { isApiError } from '@/shared/api/errors/apiError';
 import { pickNumber, pickString } from '@/shared/api/mappers/payloadAccess';
@@ -13,61 +12,20 @@ import { useGuestStore } from '@/shared/store/guestStore';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 import { getScanSessionSnapshot, useScanSessionStore } from '@/shared/store/scanSessionStore';
 
-import { fetchLoadingPageData, getInitialLoadingPageData } from '../api/fetchLoadingPageData';
-import { isLoadingCaseNumber } from '../loadingScenario';
+import { getLoadingSteps } from '../loadingScenario';
 
-import type {
-  LoadingCaseNumber,
-  LoadingPageData,
-  LoadingRevealMode,
-} from '../types/loadingPage.types';
+import type { LoadingPageData } from '../types/loadingPage.types';
 
 type UseLoadingPageReturn = {
-  handleCaseChange: (caseNumber: LoadingCaseNumber) => void;
-  handleRandomCaseChange: () => void;
-  handleSequentialDemoStart: () => void;
-  isSequentialDemoMode: boolean;
-  loadingCaseNumber: LoadingCaseNumber;
   loadingPageData: LoadingPageData;
-  showCaseControls: boolean;
-  useMockProgressDemo: boolean;
 };
 
-const DEFAULT_LOADING_CASE: LoadingCaseNumber = 6;
-const AVAILABLE_LOADING_CASES: LoadingCaseNumber[] = [1, 2, 3, 4, 5, 6, 7, 8];
 const DETAIL_RETRY_DELAY_MS = 2_000;
 const DETAIL_RETRY_MAX = 60;
 const DETAIL_POLL_START_DELAY_MS = 5_000;
-
-function resolveInitialLoadingCaseNumber() {
-  if (typeof window === 'undefined') {
-    return DEFAULT_LOADING_CASE;
-  }
-
-  const caseParam = Number(new URLSearchParams(window.location.search).get('case'));
-
-  if (isLoadingCaseNumber(caseParam)) {
-    return caseParam;
-  }
-
-  return DEFAULT_LOADING_CASE;
-}
-
-function updateCaseSearchParam(caseNumber: LoadingCaseNumber) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  const searchParams = new URLSearchParams(window.location.search);
-  searchParams.set('case', String(caseNumber));
-
-  const nextSearch = searchParams.toString();
-  const nextUrl = nextSearch
-    ? `${window.location.pathname}?${nextSearch}`
-    : window.location.pathname;
-
-  window.history.replaceState(null, '', nextUrl);
-}
+const DEFAULT_LOADING_PAGE_DATA: LoadingPageData = {
+  steps: getLoadingSteps(),
+};
 
 function openResultRouteForCurrentSession() {
   const session = getScanSessionSnapshot();
@@ -103,7 +61,6 @@ function openResultRouteForCurrentSession() {
 export function useLoadingPage(): UseLoadingPageReturn {
   const { message } = App.useApp();
   const navigate = useNavigate();
-  const useMockProgressDemo = isMockApiEnabled();
   const guestUuid = useGuestStore((state) => state.guestUuid);
   const finalResult = useScanSessionStore((state) => state.finalResult);
   const scanResponse = useScanSessionStore((state) => state.scanResponse);
@@ -115,16 +72,6 @@ export function useLoadingPage(): UseLoadingPageReturn {
   const updateFromProgressEvent = useScanProgressStore((state) => state.updateFromProgressEvent);
   const detailResolutionStartedRef = useRef(false);
   const isMountedRef = useRef(true);
-  const [loadingCaseNumber, setLoadingCaseNumber] = useState<LoadingCaseNumber>(
-    resolveInitialLoadingCaseNumber,
-  );
-  const [revealMode, setRevealMode] = useState<LoadingRevealMode>('full');
-  const [scenarioVersion, setScenarioVersion] = useState(0);
-  const [loadingPageData, setLoadingPageData] = useState<LoadingPageData>(() =>
-    useMockProgressDemo
-      ? getInitialLoadingPageData(resolveInitialLoadingCaseNumber(), 'full')
-      : getInitialLoadingPageData(DEFAULT_LOADING_CASE, 'sequential'),
-  );
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -135,45 +82,6 @@ export function useLoadingPage(): UseLoadingPageReturn {
   }, []);
 
   useEffect(() => {
-    if (!useMockProgressDemo) {
-      setLoadingPageData(getInitialLoadingPageData(DEFAULT_LOADING_CASE, 'sequential'));
-      return;
-    }
-
-    const fallbackData = getInitialLoadingPageData(loadingCaseNumber, revealMode);
-
-    setLoadingPageData(fallbackData);
-
-    let isMounted = true;
-
-    const loadLoadingPageData = async () => {
-      try {
-        const response = await fetchLoadingPageData(loadingCaseNumber, revealMode);
-
-        if (isMounted) {
-          setLoadingPageData(response);
-        }
-      } catch (error) {
-        console.error('Failed to load loading page data.', error);
-
-        if (isMounted) {
-          setLoadingPageData(fallbackData);
-        }
-      }
-    };
-
-    void loadLoadingPageData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [loadingCaseNumber, revealMode, scenarioVersion, useMockProgressDemo]);
-
-  useEffect(() => {
-    if (useMockProgressDemo) {
-      return;
-    }
-
     if (!scanResponse && !finalResult) {
       void navigate({ to: '/' });
       return;
@@ -182,7 +90,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
     resetProgress();
     detailResolutionStartedRef.current = false;
     setConnecting();
-  }, [finalResult, navigate, resetProgress, scanResponse, setConnecting, useMockProgressDemo]);
+  }, [finalResult, navigate, resetProgress, scanResponse, setConnecting]);
 
   const resolveDetailAndOpenResult = useCallback(async () => {
     if (detailResolutionStartedRef.current) {
@@ -251,7 +159,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
   );
 
   useEffect(() => {
-    if (useMockProgressDemo || finalResult || !scanResponse) {
+    if (finalResult || !scanResponse) {
       return;
     }
 
@@ -291,10 +199,10 @@ export function useLoadingPage(): UseLoadingPageReturn {
         window.clearTimeout(pollTimerId);
       }
     };
-  }, [finalResult, resolveDetailAndOpenResult, scanResponse, useMockProgressDemo]);
+  }, [finalResult, resolveDetailAndOpenResult, scanResponse]);
 
   useScanSubscription({
-    enabled: !useMockProgressDemo && Boolean(guestUuid) && Boolean(scanResponse || finalResult),
+    enabled: Boolean(guestUuid) && Boolean(scanResponse || finalResult),
     guestUuid,
     onError: (errorMessage) => {
       setError(errorMessage);
@@ -325,50 +233,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
     },
   });
 
-  const handleCaseChange = useCallback(
-    (caseNumber: LoadingCaseNumber) => {
-      if (!useMockProgressDemo) {
-        return;
-      }
-
-      setLoadingCaseNumber(caseNumber);
-      setRevealMode('full');
-      setScenarioVersion((prev) => prev + 1);
-      updateCaseSearchParam(caseNumber);
-    },
-    [useMockProgressDemo],
-  );
-
-  const handleRandomCaseChange = useCallback(() => {
-    if (!useMockProgressDemo) {
-      return;
-    }
-
-    const randomIndex = Math.floor(Math.random() * AVAILABLE_LOADING_CASES.length);
-    const randomCase = AVAILABLE_LOADING_CASES[randomIndex];
-
-    handleCaseChange(randomCase);
-  }, [handleCaseChange, useMockProgressDemo]);
-
-  const handleSequentialDemoStart = useCallback(() => {
-    if (!useMockProgressDemo) {
-      return;
-    }
-
-    setRevealMode('sequential');
-    setScenarioVersion((prev) => prev + 1);
-  }, [useMockProgressDemo]);
-
-  const isSequentialDemoMode = useMockProgressDemo ? revealMode === 'sequential' : true;
-
   return {
-    handleCaseChange,
-    handleRandomCaseChange,
-    handleSequentialDemoStart,
-    isSequentialDemoMode,
-    loadingCaseNumber: useMockProgressDemo ? loadingCaseNumber : DEFAULT_LOADING_CASE,
-    loadingPageData,
-    showCaseControls: useMockProgressDemo,
-    useMockProgressDemo,
+    loadingPageData: DEFAULT_LOADING_PAGE_DATA,
   };
 }

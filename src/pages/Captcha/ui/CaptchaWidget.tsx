@@ -1,15 +1,10 @@
-﻿import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import * as styles from '../styles/captchaPage.css';
 
-import type { CaptchaProvider } from '../types/captcha.types';
-
 type CaptchaWidgetProps = {
-  onMockToggle: (checked: boolean) => void;
   onTokenChange: (token: string | null) => void;
-  provider: CaptchaProvider;
   recaptchaSiteKey: string;
-  token: string | null;
 };
 
 type GrecaptchaEnterprise = {
@@ -112,20 +107,10 @@ function loadEnterpriseScript(): Promise<void> {
   return scriptPromise;
 }
 
-export default function CaptchaWidget({
-  onMockToggle,
-  onTokenChange,
-  provider,
-  recaptchaSiteKey,
-  token,
-}: CaptchaWidgetProps) {
+export default function CaptchaWidget({ onTokenChange, recaptchaSiteKey }: CaptchaWidgetProps) {
   const widgetContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (provider !== 'googleRecaptchaEnterprise') {
-      return;
-    }
-
     const container = widgetContainerRef.current;
 
     if (!container || !recaptchaSiteKey) {
@@ -162,28 +147,11 @@ export default function CaptchaWidget({
       .catch(() => {
         onTokenChange(null);
       });
-  }, [onTokenChange, provider, recaptchaSiteKey]);
-
-  if (provider === 'googleRecaptchaEnterprise') {
-    return (
-      <div className={styles.enterpriseBox}>
-        <div ref={widgetContainerRef} />
-      </div>
-    );
-  }
+  }, [onTokenChange, recaptchaSiteKey]);
 
   return (
-    <label className={styles.mockCheckbox}>
-      <input
-        checked={token !== null}
-        className={styles.mockCheckboxInput}
-        onChange={(event) => {
-          onMockToggle(event.currentTarget.checked);
-        }}
-        type="checkbox"
-      />
-      <span className={styles.mockCheckboxIndicator} />
-      <span className={styles.mockCheckboxText}>I&apos;m not a robot (Mock)</span>
-    </label>
+    <div className={styles.enterpriseBox}>
+      <div ref={widgetContainerRef} />
+    </div>
   );
 }

@@ -31,7 +31,6 @@ type StepIconSet = {
   pending: string;
 };
 
-const availableLoadingCases = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 const progressRadius = 100;
 const progressCircumference = 2 * Math.PI * progressRadius;
 
@@ -78,16 +77,7 @@ const stepIconMap: Record<LoadingStepId, StepIconSet> = {
 };
 
 export default function LoadingPage() {
-  const {
-    handleCaseChange,
-    handleRandomCaseChange,
-    handleSequentialDemoStart,
-    isSequentialDemoMode,
-    loadingCaseNumber,
-    loadingPageData,
-    showCaseControls,
-    useMockProgressDemo,
-  } = useLoadingPage();
+  const { loadingPageData } = useLoadingPage();
   const {
     getDetailStepState,
     getStepState,
@@ -96,11 +86,7 @@ export default function LoadingPage() {
     progressMetaText,
     statusDescription,
     visibleStepIds,
-  } = useLoadingProgress(loadingPageData.steps, {
-    progressIntervalMs: loadingPageData.progressIntervalMs,
-    revealStepsSequentially: isSequentialDemoMode,
-    useMockProgressDemo,
-  });
+  } = useLoadingProgress(loadingPageData.steps);
   const visibleSteps = useMemo(
     () => loadingPageData.steps.filter((step) => visibleStepIds.includes(step.id)),
     [loadingPageData.steps, visibleStepIds],
@@ -216,55 +202,6 @@ export default function LoadingPage() {
             })}
           </ol>
         </section>
-
-        {showCaseControls ? (
-          <section className={styles.caseControlSection}>
-            <div className={styles.caseControlHeader}>
-              <p className={styles.caseControlTitle}>테스트 케이스 선택</p>
-              <p className={styles.caseControlCurrent}>
-                현재 case {loadingCaseNumber}
-                {isSequentialDemoMode ? ' · 순차 흐름 보기' : ' · 전체 흐름 보기'}
-              </p>
-            </div>
-
-            <div className={styles.caseButtonList}>
-              {availableLoadingCases.map((caseNumber) => (
-                <button
-                  className={
-                    caseNumber === loadingCaseNumber
-                      ? `${styles.caseButton} ${styles.caseButtonActive}`
-                      : styles.caseButton
-                  }
-                  key={caseNumber}
-                  onClick={() => handleCaseChange(caseNumber)}
-                  type="button"
-                >
-                  case {caseNumber}
-                </button>
-              ))}
-
-              <button
-                className={`${styles.caseButton} ${styles.randomCaseButton}`}
-                onClick={handleRandomCaseChange}
-                type="button"
-              >
-                랜덤
-              </button>
-
-              <button
-                className={
-                  isSequentialDemoMode
-                    ? `${styles.caseButton} ${styles.branchDemoButton} ${styles.branchDemoButtonActive}`
-                    : `${styles.caseButton} ${styles.branchDemoButton}`
-                }
-                onClick={handleSequentialDemoStart}
-                type="button"
-              >
-                순차 흐름 보기
-              </button>
-            </div>
-          </section>
-        ) : null}
       </section>
     </main>
   );

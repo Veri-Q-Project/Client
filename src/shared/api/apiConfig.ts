@@ -45,7 +45,3 @@ export function getUploadTimeoutMs(): number {
 export function getSseReconnectMax(): number {
   return parsePositiveInteger(import.meta.env.VITE_SSE_RECONNECT_MAX, DEFAULT_SSE_RECONNECT_MAX);
 }
-
-export function isMockApiEnabled(): boolean {
-  return import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_API === 'true';
-}

@@ -1,18 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 
-import {
-  getProgressRanges,
-  getProgressState,
-  getThresholds,
-  resolveLocalProgress,
-} from '../loadingProgressUtils';
-
-import type { LoadingDetailStep, LoadingState, LoadingStep } from '../types/loadingPage.types';
-
-const MAX_PROGRESS = 100;
-const DEFAULT_PROGRESS_INTERVAL_MS = 90;
+import type { LoadingState, LoadingStep } from '../types/loadingPage.types';
 
 type LoadingProgressResult = {
   getDetailStepState: (stepIndex: number, detailIndex: number) => LoadingState;
@@ -24,20 +14,11 @@ type LoadingProgressResult = {
   visibleStepIds: string[];
 };
 
-type UseLoadingProgressOptions = {
-  progressIntervalMs?: number;
-  revealStepsSequentially?: boolean;
-  useMockProgressDemo?: boolean;
-};
-
 function formatBackendStepLabel(rawStep: string): string {
   return rawStep.trim().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').toUpperCase();
 }
 
-export function useLoadingProgress(
-  steps: LoadingStep[],
-  options?: UseLoadingProgressOptions,
-): LoadingProgressResult {
+export function useLoadingProgress(steps: LoadingStep[]): LoadingProgressResult {
   const backendMessage = useScanProgressStore((state) => state.backendMessage);
   const backendStatus = useScanProgressStore((state) => state.backendStatus);
   const backendStep = useScanProgressStore((state) => state.backendStep);
@@ -46,42 +27,7 @@ export function useLoadingProgress(
   const errorMessage = useScanProgressStore((state) => state.errorMessage);
   const progressFromStore = useScanProgressStore((state) => state.percent);
   const progressStatus = useScanProgressStore((state) => state.status);
-  const [mockProgress, setMockProgress] = useState(0);
-  const progressIntervalMs = options?.progressIntervalMs ?? DEFAULT_PROGRESS_INTERVAL_MS;
-  const revealStepsSequentially = options?.revealStepsSequentially ?? true;
-  const useMockProgressDemo = options?.useMockProgressDemo ?? false;
-
-  useEffect(() => {
-    if (!useMockProgressDemo) {
-      return;
-    }
-
-    setMockProgress(0);
-  }, [steps, useMockProgressDemo]);
-
-  useEffect(() => {
-    if (!useMockProgressDemo) {
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setMockProgress((prev) => {
-        if (prev >= MAX_PROGRESS) {
-          return MAX_PROGRESS;
-        }
-
-        return prev + 1;
-      });
-    }, progressIntervalMs);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [progressIntervalMs, steps, useMockProgressDemo]);
-
-  const stepThresholds = useMemo(() => getThresholds(steps), [steps]);
-  const stepRanges = useMemo(() => getProgressRanges(stepThresholds), [stepThresholds]);
-  const progress = useMockProgressDemo ? mockProgress : progressFromStore;
+  const progress = progressFromStore;
 
   const totalStepCount = useMemo(() => {
     return steps.filter((step) => step.id !== 'completed').length || steps.length;
@@ -95,22 +41,7 @@ export function useLoadingProgress(
     return currentStepId ? steps.findIndex((step) => step.id === currentStepId) : -1;
   }, [currentStepId, steps]);
 
-  const mockVisibleStepIds = useMemo(() => {
-    const activeMockStepIndex = stepThresholds.findIndex((threshold) => progress < threshold);
-    const visibleStepCount = !revealStepsSequentially
-      ? steps.length
-      : activeMockStepIndex === -1
-        ? steps.length
-        : Math.min(activeMockStepIndex + 1, steps.length);
-
-    return steps.slice(0, visibleStepCount).map((step) => step.id);
-  }, [progress, revealStepsSequentially, stepThresholds, steps]);
-
   const visibleStepIds = useMemo(() => {
-    if (useMockProgressDemo) {
-      return mockVisibleStepIds;
-    }
-
     const currentStepIndex = currentStepId
       ? steps.findIndex((step) => step.id === currentStepId)
       : -1;
@@ -126,20 +57,9 @@ export function useLoadingProgress(
         : Math.min(lastReachedStepIndex + 1, steps.length - 1);
 
     return steps.slice(0, lastVisibleStepIndex + 1).map((step) => step.id);
-  }, [
-    completedStepIds,
-    currentStepId,
-    mockVisibleStepIds,
-    progressStatus,
-    steps,
-    useMockProgressDemo,
-  ]);
+  }, [completedStepIds, currentStepId, progressStatus, steps]);
 
   const getStepState = (index: number): LoadingState => {
-    if (useMockProgressDemo) {
-      return getProgressState(progress, stepThresholds, index);
-    }
-
     const step = steps[index];
 
     if (!step) {
@@ -169,29 +89,6 @@ export function useLoadingProgress(
       return 'pending';
     }
 
-    if (useMockProgressDemo) {
-      const stepState = getStepState(stepIndex);
-
-      if (stepState === 'pending') {
-        return 'pending';
-      }
-
-      if (stepState === 'done') {
-        return 'done';
-      }
-
-      const stepRange = stepRanges[stepIndex];
-
-      if (!stepRange) {
-        return 'pending';
-      }
-
-      const localProgress = resolveLocalProgress(progress, stepRange);
-      const detailThresholds = getThresholds<LoadingDetailStep>(detailSteps);
-
-      return getProgressState(localProgress, detailThresholds, detailIndex);
-    }
-
     const stepState = getStepState(stepIndex);
 
     if (stepState === 'done') {
@@ -206,16 +103,6 @@ export function useLoadingProgress(
   };
 
   const progressLabel = useMemo(() => {
-    if (useMockProgressDemo) {
-      const activeMockStepIndex = stepThresholds.findIndex((threshold) => progress < threshold);
-
-      if (activeMockStepIndex === -1 || progress >= MAX_PROGRESS) {
-        return '완료';
-      }
-
-      return `${Math.min(activeMockStepIndex + 1, totalStepCount)} / ${totalStepCount}`;
-    }
-
     if (progressStatus === 'completed') {
       return '완료';
     }
@@ -226,21 +113,9 @@ export function useLoadingProgress(
         : Math.min(Math.max(completedStepCount + 1, 1), totalStepCount);
 
     return `${derivedStepNumber} / ${totalStepCount}`;
-  }, [
-    activeStepIndex,
-    completedStepCount,
-    progress,
-    progressStatus,
-    stepThresholds,
-    totalStepCount,
-    useMockProgressDemo,
-  ]);
+  }, [activeStepIndex, completedStepCount, progressStatus, totalStepCount]);
 
   const progressMetaText = useMemo(() => {
-    if (useMockProgressDemo) {
-      return '단계';
-    }
-
     if (progressStatus === 'completed') {
       return '분석 종료';
     }
@@ -256,19 +131,9 @@ export function useLoadingProgress(
     }
 
     return '분석 단계';
-  }, [backendStep, currentStepId, progressStatus, steps, useMockProgressDemo]);
+  }, [backendStep, currentStepId, progressStatus, steps]);
 
   const statusDescription = useMemo(() => {
-    if (useMockProgressDemo) {
-      const activeMockStepIndex = stepThresholds.findIndex((threshold) => progress < threshold);
-
-      if (activeMockStepIndex === -1) {
-        return steps[steps.length - 1]?.doneDescription ?? '분석이 완료되었습니다.';
-      }
-
-      return steps[activeMockStepIndex]?.activeDescription ?? '분석을 진행하고 있습니다.';
-    }
-
     if (progressStatus === 'error') {
       return errorMessage ?? '실시간 분석 중 문제가 발생했습니다.';
     }
@@ -322,11 +187,8 @@ export function useLoadingProgress(
     completedStepIds,
     currentStepId,
     errorMessage,
-    progress,
     progressStatus,
-    stepThresholds,
     steps,
-    useMockProgressDemo,
   ]);
 
   return {
