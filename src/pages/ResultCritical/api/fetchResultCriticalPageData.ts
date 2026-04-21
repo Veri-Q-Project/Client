@@ -1,18 +1,6 @@
-import type { ResultCriticalPageData } from '../types/resultCriticalPage.types';
+import { createResultPageFetcher } from '@/shared/api/createResultPageFetcher';
 
-export const mockResultCriticalPageData: ResultCriticalPageData = {
-  previewUrl: 'https://www.example-critical-site.com/preview',
-  siteName: 'Example Critical Site',
-  siteUrl: 'https://www.example-critical-site.com',
-  trustScore: 24,
-  visitUrl: 'https://www.example-critical-site.com',
-};
-
-export async function fetchResultCriticalPageData(): Promise<ResultCriticalPageData> {
-  // TODO: Replace this mock return with real API integration.
-  return Promise.resolve(mockResultCriticalPageData);
-}
-
-export function getInitialResultCriticalPageData(): ResultCriticalPageData {
-  return mockResultCriticalPageData;
-}
+export const {
+  fetchResultPageData: fetchResultCriticalPageData,
+  getInitialResultPageData: getInitialResultCriticalPageData,
+} = createResultPageFetcher('critical');

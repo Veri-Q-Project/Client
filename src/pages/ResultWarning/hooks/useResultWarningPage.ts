@@ -1,53 +1,36 @@
-import { useNavigate } from '@tanstack/react-router';
 import { App } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
+import type { ResultSafeData } from '@/shared/api/result-safe';
 import { openExternalLink } from '@/shared/lib/browser/openExternalLink';
-import { shareCurrentPage } from '@/shared/lib/browser/shareCurrentPage';
+import { useResultPageBase } from '@/shared/ui/resultPage';
 
 import {
   fetchResultWarningPageData,
   getInitialResultWarningPageData,
 } from '../api/fetchResultWarningPageData';
 
-import type { ResultWarningPageData } from '../types/resultWarningPage.types';
-
 type UseResultWarningPageReturn = {
   handleOpenVisitSite: () => void;
   handleRescan: () => void;
   handleShareResult: () => Promise<void>;
-  handleToggleReport: () => void;
-  isReportOpen: boolean;
-  resultWarningData: ResultWarningPageData;
+  handleViewReport: () => void;
+  resultWarningData: ResultSafeData | null;
 };
 
 export function useResultWarningPage(): UseResultWarningPageReturn {
   const { modal } = App.useApp();
-  const navigate = useNavigate();
-  const [resultWarningData, setResultWarningData] = useState<ResultWarningPageData>(
-    getInitialResultWarningPageData,
-  );
-  const [isReportOpen, setIsReportOpen] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadResultWarningData = async () => {
-      const response = await fetchResultWarningPageData();
-
-      if (isMounted) {
-        setResultWarningData(response);
-      }
-    };
-
-    void loadResultWarningData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { handleRescan, handleShareResult, handleViewReport, resultData } = useResultPageBase({
+    fetchPageData: fetchResultWarningPageData,
+    getInitialPageData: getInitialResultWarningPageData,
+    loadErrorMessage: '주의 결과를 불러오지 못했습니다.',
+  });
 
   const handleOpenVisitSite = useCallback(() => {
+    if (!resultData) {
+      return;
+    }
+
     modal.confirm({
       cancelText: '취소',
       centered: true,
@@ -55,32 +38,16 @@ export function useResultWarningPage(): UseResultWarningPageReturn {
       okText: '방문하기',
       title: '주의 사이트 방문',
       onOk: () => {
-        openExternalLink(resultWarningData.visitUrl);
+        openExternalLink(resultData.visitUrl);
       },
     });
-  }, [modal, resultWarningData.visitUrl]);
-
-  const handleShareResult = useCallback(async () => {
-    await shareCurrentPage({
-      text: 'Veri-Q 분석 결과를 확인해 보세요.',
-      title: 'Veri-Q 분석 결과',
-    });
-  }, []);
-
-  const handleRescan = useCallback(() => {
-    void navigate({ to: '/' });
-  }, [navigate]);
-
-  const handleToggleReport = useCallback(() => {
-    setIsReportOpen((prev) => !prev);
-  }, []);
+  }, [modal, resultData]);
 
   return {
     handleOpenVisitSite,
     handleRescan,
     handleShareResult,
-    handleToggleReport,
-    isReportOpen,
-    resultWarningData,
+    handleViewReport,
+    resultWarningData: resultData,
   };
 }

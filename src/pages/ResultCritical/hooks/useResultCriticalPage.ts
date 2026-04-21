@@ -1,51 +1,30 @@
-import { useNavigate } from '@tanstack/react-router';
 import { App } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
-import { shareCurrentPage } from '@/shared/lib/browser/shareCurrentPage';
+import type { ResultSafeData } from '@/shared/api/result-safe';
+import { useResultPageBase } from '@/shared/ui/resultPage';
 
 import {
   fetchResultCriticalPageData,
   getInitialResultCriticalPageData,
 } from '../api/fetchResultCriticalPageData';
 
-import type { ResultCriticalPageData } from '../types/resultCriticalPage.types';
-
 type UseResultCriticalPageReturn = {
   handleBlockAccess: () => void;
   handleReport: () => void;
   handleRescan: () => void;
   handleShareResult: () => Promise<void>;
-  handleToggleReport: () => void;
-  isReportOpen: boolean;
-  resultCriticalData: ResultCriticalPageData;
+  handleViewReport: () => void;
+  resultCriticalData: ResultSafeData | null;
 };
 
 export function useResultCriticalPage(): UseResultCriticalPageReturn {
   const { message, modal } = App.useApp();
-  const navigate = useNavigate();
-  const [resultCriticalData, setResultCriticalData] = useState<ResultCriticalPageData>(
-    getInitialResultCriticalPageData,
-  );
-  const [isReportOpen, setIsReportOpen] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadResultCriticalData = async () => {
-      const response = await fetchResultCriticalPageData();
-
-      if (isMounted) {
-        setResultCriticalData(response);
-      }
-    };
-
-    void loadResultCriticalData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { handleRescan, handleShareResult, handleViewReport, resultData } = useResultPageBase({
+    fetchPageData: fetchResultCriticalPageData,
+    getInitialPageData: getInitialResultCriticalPageData,
+    loadErrorMessage: '위험 결과를 불러오지 못했습니다.',
+  });
 
   const handleBlockAccess = useCallback(() => {
     modal.error({
@@ -70,28 +49,12 @@ export function useResultCriticalPage(): UseResultCriticalPageReturn {
     });
   }, [message, modal]);
 
-  const handleShareResult = useCallback(async () => {
-    await shareCurrentPage({
-      text: 'Veri-Q 분석 결과를 확인해 보세요.',
-      title: 'Veri-Q 분석 결과',
-    });
-  }, []);
-
-  const handleRescan = useCallback(() => {
-    void navigate({ to: '/' });
-  }, [navigate]);
-
-  const handleToggleReport = useCallback(() => {
-    setIsReportOpen((prev) => !prev);
-  }, []);
-
   return {
     handleBlockAccess,
     handleReport,
     handleRescan,
     handleShareResult,
-    handleToggleReport,
-    isReportOpen,
-    resultCriticalData,
+    handleViewReport,
+    resultCriticalData: resultData,
   };
 }
