@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { submitCaptchaVerification } from '../api/submitCaptchaVerification';
 
 type UseCaptchaPageReturn = {
+  canSubmit: boolean;
   feedbackMessage: string | null;
   handleCaptchaTokenChange: (nextToken: string | null) => void;
   handleSubmit: () => Promise<void>;
@@ -18,6 +19,7 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const recaptchaSiteKey = (import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? '').trim();
+  const canSubmit = recaptchaSiteKey.length > 0 && (token?.trim().length ?? 0) > 0;
 
   const handleCaptchaTokenChange = useCallback((nextToken: string | null) => {
     setToken(nextToken);
@@ -55,6 +57,7 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
   }, [navigate, recaptchaSiteKey, token]);
 
   return {
+    canSubmit,
     feedbackMessage,
     handleCaptchaTokenChange,
     handleSubmit,

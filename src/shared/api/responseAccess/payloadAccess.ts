@@ -59,8 +59,12 @@ function getCandidateRecords(source: unknown): UnknownRecord[] {
 
   const records: UnknownRecord[] = [rootRecord];
 
-  for (const nestedKey of nestedRecordKeys) {
-    pushUniqueRecord(records, asRecord(rootRecord[nestedKey]));
+  for (let recordIndex = 0; recordIndex < records.length; recordIndex += 1) {
+    const record = records[recordIndex];
+
+    for (const nestedKey of nestedRecordKeys) {
+      pushUniqueRecord(records, asRecord(record[nestedKey]));
+    }
   }
 
   return records;
@@ -101,7 +105,13 @@ export function pickNumber(source: unknown, keys: string[]): number | null {
   }
 
   if (typeof value === 'string') {
-    const parsedValue = Number.parseFloat(value);
+    const trimmedValue = value.trim();
+
+    if (!/^[+-]?\d+(?:\.\d+)?$/u.test(trimmedValue)) {
+      return null;
+    }
+
+    const parsedValue = Number(trimmedValue);
 
     if (Number.isFinite(parsedValue)) {
       return parsedValue;

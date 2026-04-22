@@ -52,7 +52,7 @@ function resolveMessageType(eventType: string | undefined, payload: unknown): Ss
     payloadRecord && typeof payloadRecord.status === 'string'
       ? payloadRecord.status.trim().toLowerCase()
       : '';
-  const candidateType = payloadType || normalizedEventType;
+  const candidateType = normalizedEventType || payloadType;
 
   if (candidateType === 'error' || candidateType === 'failed' || candidateType === 'failure') {
     return 'error';
@@ -60,6 +60,16 @@ function resolveMessageType(eventType: string | undefined, payload: unknown): Ss
 
   if (payloadStatus === 'error' || payloadStatus === 'failed' || payloadStatus === 'failure') {
     return 'error';
+  }
+
+  if (
+    candidateType === 'final' ||
+    candidateType === 'result' ||
+    candidateType === 'complete' ||
+    candidateType === 'completed' ||
+    candidateType === 'done'
+  ) {
+    return 'final';
   }
 
   if (
@@ -82,16 +92,6 @@ function resolveMessageType(eventType: string | undefined, payload: unknown): Ss
     candidateType === 'update'
   ) {
     return 'progress';
-  }
-
-  if (
-    candidateType === 'final' ||
-    candidateType === 'result' ||
-    candidateType === 'complete' ||
-    candidateType === 'completed' ||
-    candidateType === 'done'
-  ) {
-    return 'final';
   }
 
   if (

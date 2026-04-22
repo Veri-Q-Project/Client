@@ -32,19 +32,12 @@ export function toCaptchaVerifyResponse(payload: unknown): CaptchaVerifyResponse
   const errorCode = pickString(payload, ['error_code', 'errorCode', 'code']);
   const status = normalizeStatus(pickString(payload, ['status', 'result']));
 
-  let success = explicitSuccess;
-
-  if (success === null) {
-    if (errorCode) {
-      success = false;
-    } else if (failureStatuses.has(status)) {
-      success = false;
-    } else if (successStatuses.has(status)) {
-      success = true;
-    } else {
-      success = true;
-    }
-  }
+  const success =
+    Boolean(errorCode) || failureStatuses.has(status)
+      ? false
+      : explicitSuccess !== null
+        ? explicitSuccess
+        : successStatuses.has(status);
 
   const message =
     pickString(payload, ['message']) ??

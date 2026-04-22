@@ -17,6 +17,20 @@ describe('isCaptchaRequiredUploadError', () => {
     expect(isCaptchaRequiredUploadError(error)).toBe(true);
   });
 
+  it('detects captcha markers from nested payload messages', () => {
+    const error = new ApiError({
+      data: {
+        data: {
+          detail: 'captcha verification required',
+        },
+      },
+      message: 'Too many requests.',
+      statusCode: 429,
+    });
+
+    expect(isCaptchaRequiredUploadError(error)).toBe(true);
+  });
+
   it('returns false for non-captcha responses', () => {
     const error = new ApiError({
       message: 'Request failed.',

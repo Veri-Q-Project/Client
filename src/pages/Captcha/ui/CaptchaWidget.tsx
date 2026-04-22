@@ -19,6 +19,7 @@ type GrecaptchaEnterprise = {
       theme?: 'light' | 'dark';
     },
   ) => number;
+  reset?: (widgetId: number) => void;
 };
 
 declare global {
@@ -112,6 +113,8 @@ export default function CaptchaWidget({ onTokenChange, recaptchaSiteKey }: Captc
 
   useEffect(() => {
     const container = widgetContainerRef.current;
+    let cancelled = false;
+    let widgetId: number | null = null;
 
     if (!container || !recaptchaSiteKey) {
       return;
@@ -121,22 +124,46 @@ export default function CaptchaWidget({ onTokenChange, recaptchaSiteKey }: Captc
 
     loadEnterpriseScript()
       .then(() => {
+        if (cancelled || widgetContainerRef.current !== container) {
+          return;
+        }
+
         const enterprise = window.grecaptcha?.enterprise;
 
         if (!enterprise) {
+          if (cancelled) {
+            return;
+          }
+
           onTokenChange(null);
           return;
         }
 
         enterprise.ready(() => {
-          enterprise.render(container, {
+          if (cancelled || widgetContainerRef.current !== container) {
+            return;
+          }
+
+          widgetId = enterprise.render(container, {
             callback: (nextToken) => {
+              if (cancelled) {
+                return;
+              }
+
               onTokenChange(nextToken);
             },
             'error-callback': () => {
+              if (cancelled) {
+                return;
+              }
+
               onTokenChange(null);
             },
             'expired-callback': () => {
+              if (cancelled) {
+                return;
+              }
+
               onTokenChange(null);
             },
             sitekey: recaptchaSiteKey,
@@ -145,8 +172,22 @@ export default function CaptchaWidget({ onTokenChange, recaptchaSiteKey }: Captc
         });
       })
       .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
         onTokenChange(null);
       });
+
+    return () => {
+      cancelled = true;
+
+      if (widgetId !== null) {
+        window.grecaptcha?.enterprise?.reset?.(widgetId);
+      }
+
+      container.innerHTML = '';
+    };
   }, [onTokenChange, recaptchaSiteKey]);
 
   return (

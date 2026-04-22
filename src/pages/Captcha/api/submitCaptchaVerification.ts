@@ -13,7 +13,9 @@ import type {
 export async function submitCaptchaVerification({
   token,
 }: SubmitCaptchaVerificationPayload): Promise<CaptchaVerifyResponse> {
-  if (!token) {
+  const trimmedToken = token?.trim() ?? '';
+
+  if (!trimmedToken) {
     return {
       message: 'Captcha token is empty.',
       success: false,
@@ -23,7 +25,7 @@ export async function submitCaptchaVerification({
   try {
     const guestUuid = useGuestStore.getState().ensureGuestUuid();
     const response = await axiosBe1.post(apiEndpoints.captchaVerify, {
-      captchaToken: token,
+      captchaToken: trimmedToken,
       guestUuid,
     });
 

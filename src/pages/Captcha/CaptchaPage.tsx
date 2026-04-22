@@ -6,8 +6,14 @@ import * as styles from './styles/captchaPage.css';
 import CaptchaWidget from './ui/CaptchaWidget';
 
 export default function CaptchaPage() {
-  const { feedbackMessage, handleCaptchaTokenChange, handleSubmit, isVerifying, recaptchaSiteKey } =
-    useCaptchaPage();
+  const {
+    canSubmit,
+    feedbackMessage,
+    handleCaptchaTokenChange,
+    handleSubmit,
+    isVerifying,
+    recaptchaSiteKey,
+  } = useCaptchaPage();
 
   return (
     <main className={styles.page}>
@@ -37,7 +43,7 @@ export default function CaptchaPage() {
         <div className={styles.footer}>
           <button
             className={styles.verifyButton}
-            disabled={isVerifying}
+            disabled={!canSubmit || isVerifying}
             onClick={() => {
               void handleSubmit();
             }}
