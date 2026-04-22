@@ -1,9 +1,6 @@
-import { useRef, useState } from 'react';
-
 import { RiskLevelCard, TrustScoreCard } from '@/shared/component';
 import googleSafeBrowsingIcon from '@/shared/icon/Google Safe Browsing.svg';
 import { qrIconByTone, statusMarkIconByTone } from '@/shared/icon/resultIcons';
-import { exportElementToPdf } from '@/shared/lib/pdf/exportElementToPdf';
 import AppHeader from '@/shared/ui/app-header';
 
 import { resolveRiskDetectionContent } from './constants/riskDetectionCatalog';
@@ -55,9 +52,15 @@ const certificateStatusClassNameByTone: Record<ReportStatusTone, string> = {
 };
 
 export default function ReportPage() {
-  const { reportPageData } = useReportPage();
-  const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const reportContentRef = useRef<HTMLElement | null>(null);
+  const { handleRescan, reportPageData } = useReportPage();
+
+  if (!reportPageData) {
+    return null;
+  }
+
+  const handlePrintPdf = () => {
+    window.print();
+  };
 
   const totalReputationCount =
     reportPageData.reputation.summary.phishingCount +
@@ -74,43 +77,20 @@ export default function ReportPage() {
   const providerStatusTone = totalReputationCount === 0 ? 'safe' : reportPageData.riskLevel;
 
   const detectedRiskCards = reportPageData.detectedRiskTypes.map((riskType, index) => ({
-    ...resolveRiskDetectionContent(riskType),
+    ...resolveRiskDetectionContent(riskType, reportPageData.riskLevel),
     key: `${riskType}-${index}`,
   }));
 
-  const handleExportPdf = async () => {
-    if (isExportingPdf || !reportContentRef.current) {
-      return;
-    }
-
-    setIsExportingPdf(true);
-
-    try {
-      await exportElementToPdf({
-        element: reportContentRef.current,
-        fileName: '상세 보고서.pdf',
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
-
-      console.error('PDF 내보내기 실패', {
-        error,
-        reportContentElement: reportContentRef.current,
-      });
-
-      window.alert(`PDF 내보내기 실패: ${errorMessage}`);
-    } finally {
-      setIsExportingPdf(false);
-    }
-  };
+  const toneKey = reportPageData.riskLevel;
 
   return (
     <main className={styles.page}>
-      <AppHeader iconSrc={qrIconByTone[reportPageData.riskLevel]} />
+      <div className={styles.printHidden}>
+        <AppHeader iconSrc={qrIconByTone[reportPageData.riskLevel]} />
+      </div>
 
       <div className={styles.shell}>
-        <section className={styles.content} ref={reportContentRef}>
+        <section className={styles.content}>
           <header
             className={`${styles.toneHeader} ${styles.toneHeaderTone[reportPageData.riskLevel]}`}
           >
@@ -160,10 +140,12 @@ export default function ReportPage() {
             />
           </section>
 
-          <section className={styles.sectionCard}>
+          <section className={`${styles.sectionCard} ${styles.sectionCardTone[toneKey]}`}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitleGroup}>
-                <span className={styles.sectionNumber}>{sectionNumber.url}</span>
+                <span className={`${styles.sectionNumber} ${styles.sectionNumberTone[toneKey]}`}>
+                  {sectionNumber.url}
+                </span>
                 <div>
                   <h2 className={styles.sectionTitle}>URL 분석 상세</h2>
                   <p className={styles.sectionSubtitle}>원본 URL과 실제 도착 URL을 비교합니다.</p>
@@ -208,10 +190,12 @@ export default function ReportPage() {
             </p>
           </section>
 
-          <section className={styles.sectionCard}>
+          <section className={`${styles.sectionCard} ${styles.sectionCardTone[toneKey]}`}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitleGroup}>
-                <span className={styles.sectionNumber}>{sectionNumber.reputation}</span>
+                <span className={`${styles.sectionNumber} ${styles.sectionNumberTone[toneKey]}`}>
+                  {sectionNumber.reputation}
+                </span>
                 <div>
                   <h2 className={styles.sectionTitle}>평판 및 차단 기록 조회</h2>
                   <p className={styles.sectionSubtitle}>
@@ -282,10 +266,12 @@ export default function ReportPage() {
             </section>
           </section>
 
-          <section className={styles.sectionCard}>
+          <section className={`${styles.sectionCard} ${styles.sectionCardTone[toneKey]}`}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitleGroup}>
-                <span className={styles.sectionNumber}>{sectionNumber.domain}</span>
+                <span className={`${styles.sectionNumber} ${styles.sectionNumberTone[toneKey]}`}>
+                  {sectionNumber.domain}
+                </span>
                 <div>
                   <h2 className={styles.sectionTitle}>도메인 비교 분석</h2>
                   <p className={styles.sectionSubtitle}>
@@ -294,20 +280,24 @@ export default function ReportPage() {
                 </div>
               </div>
 
-              <span className={styles.riskBadge}>
+              <span className={`${styles.riskBadge} ${styles.riskBadgeTone[toneKey]}`}>
                 {reportPageData.domainComparison.riskBadgeText}
               </span>
             </div>
 
             <div className={styles.domainCompareGrid}>
-              <article className={styles.domainCompareRow}>
+              <article
+                className={`${styles.domainCompareRow} ${styles.domainCompareRowTone[toneKey]}`}
+              >
                 <p className={styles.domainCompareLabel}>접속 시도 URL</p>
                 <p className={styles.domainCompareSuspicious}>
                   {reportPageData.domainComparison.suspiciousUrl}
                 </p>
               </article>
 
-              <article className={styles.domainCompareRow}>
+              <article
+                className={`${styles.domainCompareRow} ${styles.domainCompareRowTone[toneKey]}`}
+              >
                 <p className={styles.domainCompareLabel}>실제 공식 URL</p>
                 <p className={styles.domainCompareOfficial}>
                   {reportPageData.domainComparison.officialUrl}
@@ -318,10 +308,12 @@ export default function ReportPage() {
             <p className={styles.domainCompareSummary}>{reportPageData.domainComparison.summary}</p>
           </section>
 
-          <section className={styles.sectionCard}>
+          <section className={`${styles.sectionCard} ${styles.sectionCardTone[toneKey]}`}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitleGroup}>
-                <span className={styles.sectionNumber}>{sectionNumber.server}</span>
+                <span className={`${styles.sectionNumber} ${styles.sectionNumberTone[toneKey]}`}>
+                  {sectionNumber.server}
+                </span>
                 <div>
                   <h2 className={styles.sectionTitle}>서버 정보</h2>
                   <p className={styles.sectionSubtitle}>
@@ -367,10 +359,12 @@ export default function ReportPage() {
             </div>
           </section>
 
-          <section className={styles.sectionCard}>
+          <section className={`${styles.sectionCard} ${styles.sectionCardTone[toneKey]}`}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitleGroup}>
-                <span className={styles.sectionNumber}>{sectionNumber.detection}</span>
+                <span className={`${styles.sectionNumber} ${styles.sectionNumberTone[toneKey]}`}>
+                  {sectionNumber.detection}
+                </span>
                 <div>
                   <h2 className={styles.sectionTitle}>탐지된 위험 유형 분석</h2>
                   <p className={styles.sectionSubtitle}>
@@ -382,9 +376,14 @@ export default function ReportPage() {
 
             <div className={styles.riskDetectionGrid}>
               {detectedRiskCards.map((riskDetectionCard) => (
-                <article className={styles.riskDetectionCard} key={riskDetectionCard.key}>
+                <article
+                  className={`${styles.riskDetectionCard} ${styles.riskDetectionCardTone[toneKey]}`}
+                  key={riskDetectionCard.key}
+                >
                   <div className={styles.riskDetectionCardHeader}>
-                    <div className={styles.riskDetectionHeaderTextBlock}>
+                    <div
+                      className={`${styles.riskDetectionHeaderTextBlock} ${styles.riskDetectionHeaderTextBlockTone[toneKey]}`}
+                    >
                       <h3 className={styles.riskDetectionTitle}>{riskDetectionCard.title}</h3>
                       <p className={styles.riskDetectionEnglishLabel}>
                         {riskDetectionCard.englishLabel}
@@ -392,12 +391,22 @@ export default function ReportPage() {
                     </div>
                   </div>
 
-                  <div className={styles.riskDetectionBody}>
-                    <p className={styles.riskDetectionBodyLabel}>상세 설명</p>
+                  <div
+                    className={`${styles.riskDetectionBody} ${styles.riskDetectionBodyTone[toneKey]}`}
+                  >
+                    <p
+                      className={`${styles.riskDetectionBodyLabel} ${styles.riskDetectionBodyLabelTone[toneKey]}`}
+                    >
+                      상세 설명
+                    </p>
                     <p className={styles.riskDetectionDescription}>
                       {riskDetectionCard.description}
                     </p>
-                    <p className={styles.riskDetectionRisk}>{riskDetectionCard.risk}</p>
+                    <p
+                      className={`${styles.riskDetectionRisk} ${styles.riskDetectionRiskTone[toneKey]}`}
+                    >
+                      {riskDetectionCard.risk}
+                    </p>
                   </div>
                 </article>
               ))}
@@ -407,16 +416,21 @@ export default function ReportPage() {
 
         <div className={styles.exportActionWrap}>
           <button
-            aria-label="상세 보고서 PDF 내보내기"
-            className={styles.exportPdfButton}
-            disabled={isExportingPdf}
-            onClick={handleExportPdf}
+            aria-label="PDF 출력"
+            className={`${styles.printButton} ${styles.printButtonTone[toneKey]}`}
+            onClick={handlePrintPdf}
             type="button"
           >
-            <span aria-hidden className={styles.exportPdfButtonBadge}>
-              PDF
-            </span>
-            {isExportingPdf ? 'PDF 생성 중...' : '상세 보고서.pdf 내보내기'}
+            PDF 출력
+          </button>
+
+          <button
+            aria-label="다시 스캔하기"
+            className={styles.rescanButton}
+            onClick={handleRescan}
+            type="button"
+          >
+            다시 스캔하기
           </button>
         </div>
       </div>

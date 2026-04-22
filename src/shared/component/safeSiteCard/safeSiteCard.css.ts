@@ -3,12 +3,15 @@ import { style, styleVariants } from '@vanilla-extract/css';
 import { vars } from '@/vars.css';
 
 export const card = style({
+  boxSizing: 'border-box',
   display: 'grid',
   gap: vars.spacing.md,
+  width: '100%',
   padding: vars.spacing.md,
   borderRadius: vars.radius.xl,
   border: `1px solid ${vars.colors.border}`,
   backgroundColor: vars.colors.white,
+  overflow: 'hidden',
 });
 
 export const info = style({
@@ -16,6 +19,7 @@ export const info = style({
   gridTemplateColumns: 'auto minmax(0, 1fr)',
   gap: vars.spacing.md,
   alignItems: 'center',
+  minWidth: 0,
 });
 
 export const iconFrame = style({
@@ -68,6 +72,11 @@ export const titleRow = style({
   flexWrap: 'wrap',
   gap: vars.spacing.sm,
   marginBottom: vars.spacing.xs,
+  minWidth: 0,
+});
+
+export const textBlock = style({
+  minWidth: 0,
 });
 
 export const title = style({
@@ -75,6 +84,10 @@ export const title = style({
   color: vars.colors.black,
   fontSize: vars.font.size.xl,
   fontWeight: vars.font.weight.bold,
+  lineHeight: 1.3,
+  maxWidth: '100%',
+  overflowWrap: 'anywhere',
+  wordBreak: 'break-word',
 });
 
 export const official = style({
@@ -97,7 +110,7 @@ export const officialTone = styleVariants({
   },
   warning: {
     backgroundColor: 'rgba(242, 223, 13, 0.2)',
-    color: 'var.colors.warning',
+    color: vars.colors.warning,
   },
   critical: {
     backgroundColor: 'rgba(242, 13, 13, 0.12)',
@@ -109,12 +122,17 @@ export const siteUrl = style({
   margin: `0 0 ${vars.spacing.xs}`,
   color: vars.colors.subText,
   fontSize: vars.font.size.sm,
+  lineHeight: 1.45,
+  overflowWrap: 'anywhere',
+  wordBreak: 'break-all',
 });
 
 export const siteMeta = style({
   margin: 0,
   color: vars.colors.subDark,
   fontSize: vars.font.size.xs,
+  lineHeight: 1.45,
+  overflowWrap: 'anywhere',
 });
 
 export const visitButton = style({

@@ -8,10 +8,11 @@ import * as styles from './styles/scanListPage.css';
 
 import type { ScanListStatus } from './types/scanListPage.types';
 
-const resultRouteByStatus: Record<
-  ScanListStatus,
-  '/result/safe' | '/result/warning' | '/result/critical'
-> = {
+type ResultRoute = '/result/critical' | '/result/non-url' | '/result/safe' | '/result/warning';
+
+const nonUrlResultRoute = '/result/non-url';
+
+const resultRouteByStatus: Record<ScanListStatus, ResultRoute> = {
   safe: '/result/safe',
   warning: '/result/warning',
   critical: '/result/critical',
@@ -90,8 +91,12 @@ function StatusBadgeIcon({ tone }: { tone: ScanListStatus }) {
   );
 }
 
+function isWebScanListItem(item: { isUrl: boolean | null; schemeType: string | null }): boolean {
+  return item.isUrl !== false && item.schemeType?.trim().toUpperCase() === 'WEB';
+}
+
 export default function ScanListPage() {
-  const { scanListPageData, scanListUuid } = useScanListPage();
+  const { handleSelectScanResult, scanListPageData, scanListUuid } = useScanListPage();
 
   return (
     <main className={styles.page}>
@@ -109,42 +114,52 @@ export default function ScanListPage() {
             <div className={styles.emptyState}>연결된 UUID에 대한 스캔 이력이 없습니다.</div>
           ) : (
             <ul className={styles.list}>
-              {scanListPageData.items.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    className={`${styles.card} ${styles.cardTone[item.status]}`}
-                    to={resultRouteByStatus[item.status]}
-                  >
-                    <span className={`${styles.badge} ${styles.badgeTone[item.status]}`}>
-                      <span aria-hidden="true" className={styles.badgeIcon}>
-                        <StatusBadgeIcon tone={item.status} />
-                      </span>
-                      {statusLabelByTone[item.status]}
-                    </span>
+              {scanListPageData.items.map((item) => {
+                const resultRoute = isWebScanListItem(item)
+                  ? resultRouteByStatus[item.status]
+                  : nonUrlResultRoute;
 
-                    <div
-                      className={`${styles.cardIconWrap} ${styles.cardIconWrapTone[item.status]}`}
+                return (
+                  <li key={item.id}>
+                    <Link
+                      className={`${styles.card} ${styles.cardTone[item.status]}`}
+                      onClick={() => {
+                        handleSelectScanResult(item);
+                      }}
+                      search={resultRoute === nonUrlResultRoute ? {} : { url: item.url }}
+                      to={resultRoute}
                     >
-                      <img
-                        alt=""
-                        aria-hidden="true"
-                        className={styles.cardIcon}
-                        src={qrIconByTone[item.status]}
-                      />
-                    </div>
-
-                    <article className={styles.cardContent}>
-                      <p className={styles.cardUrl}>{item.url}</p>
-                      <p className={styles.cardMeta}>
-                        <span aria-hidden="true" className={styles.metaIcon}>
-                          <CalendarIcon />
+                      <span className={`${styles.badge} ${styles.badgeTone[item.status]}`}>
+                        <span aria-hidden="true" className={styles.badgeIcon}>
+                          <StatusBadgeIcon tone={item.status} />
                         </span>
-                        {item.scannedAt}
-                      </p>
-                    </article>
-                  </Link>
-                </li>
-              ))}
+                        {statusLabelByTone[item.status]}
+                      </span>
+
+                      <div
+                        className={`${styles.cardIconWrap} ${styles.cardIconWrapTone[item.status]}`}
+                      >
+                        <img
+                          alt=""
+                          aria-hidden="true"
+                          className={styles.cardIcon}
+                          src={qrIconByTone[item.status]}
+                        />
+                      </div>
+
+                      <article className={styles.cardContent}>
+                        <p className={styles.cardUrl}>{item.url}</p>
+                        <p className={styles.cardMeta}>
+                          <span aria-hidden="true" className={styles.metaIcon}>
+                            <CalendarIcon />
+                          </span>
+                          {item.scannedAt}
+                        </p>
+                      </article>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>

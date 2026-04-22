@@ -8,6 +8,20 @@ const bpDesktop = 'screen and (min-width: 1200px)';
 export const page = style({
   minHeight: '100vh',
   backgroundColor: vars.colors.white,
+  '@media': {
+    print: {
+      minHeight: 'auto',
+      backgroundColor: vars.colors.white,
+    },
+  },
+});
+
+export const printHidden = style({
+  '@media': {
+    print: {
+      display: 'none',
+    },
+  },
 });
 
 export const shell = style({
@@ -19,6 +33,10 @@ export const shell = style({
   '@media': {
     [bpTablet]: {
       padding: `0 ${vars.spacing.lg} 48px`,
+    },
+    print: {
+      maxWidth: 'none',
+      padding: 0,
     },
   },
 });
@@ -35,6 +53,12 @@ export const content = style({
     [bpDesktop]: {
       gap: vars.spacing.xl,
     },
+    print: {
+      maxWidth: 'none',
+      gap: vars.spacing.md,
+      paddingTop: 0,
+      paddingBottom: 0,
+    },
   },
 });
 
@@ -46,6 +70,12 @@ export const toneHeader = style({
   display: 'grid',
   gap: vars.spacing.md,
   boxShadow: '0 8px 20px rgba(17, 29, 48, 0.06)',
+  '@media': {
+    print: {
+      breakInside: 'avoid',
+      boxShadow: 'none',
+    },
+  },
 });
 
 export const toneHeaderTone = styleVariants({
@@ -201,6 +231,30 @@ export const sectionCard = style({
   display: 'grid',
   gap: vars.spacing.md,
   boxShadow: '0 6px 16px rgba(138, 113, 0, 0.08)',
+  '@media': {
+    print: {
+      breakInside: 'avoid',
+      boxShadow: 'none',
+    },
+  },
+});
+
+export const sectionCardTone = styleVariants({
+  critical: {
+    borderColor: '#F1CECE',
+    backgroundColor: '#FFF6F6',
+    boxShadow: '0 6px 16px rgba(193, 39, 39, 0.08)',
+  },
+  safe: {
+    borderColor: '#CBEFDE',
+    backgroundColor: '#F3FBF7',
+    boxShadow: '0 6px 16px rgba(13, 138, 89, 0.08)',
+  },
+  warning: {
+    borderColor: '#F0E4BE',
+    backgroundColor: '#FFFEFA',
+    boxShadow: '0 6px 16px rgba(138, 113, 0, 0.08)',
+  },
 });
 
 export const sectionHeader = style({
@@ -231,6 +285,24 @@ export const sectionNumber = style({
   alignItems: 'center',
   justifyContent: 'center',
   flexShrink: 0,
+});
+
+export const sectionNumberTone = styleVariants({
+  critical: {
+    backgroundColor: '#FFD9D9',
+    color: '#A91212',
+    borderColor: '#F0A8A8',
+  },
+  safe: {
+    backgroundColor: '#CFEEDF',
+    color: '#0F8B61',
+    borderColor: '#9DDDBA',
+  },
+  warning: {
+    backgroundColor: '#FFE9A8',
+    color: '#7A6400',
+    borderColor: '#F2D86A',
+  },
 });
 
 export const sectionTitle = style({
@@ -272,6 +344,24 @@ export const riskBadge = style({
       display: 'inline-block',
       opacity: 0.8,
     },
+  },
+});
+
+export const riskBadgeTone = styleVariants({
+  critical: {
+    borderColor: '#F0A8A8',
+    backgroundColor: '#FFE5E5',
+    color: '#A91212',
+  },
+  safe: {
+    borderColor: '#9DDDBA',
+    backgroundColor: '#E2F5EC',
+    color: '#0F8B61',
+  },
+  warning: {
+    borderColor: '#E9D77A',
+    backgroundColor: '#FFF8D8',
+    color: '#6F5A00',
   },
 });
 
@@ -404,6 +494,21 @@ export const domainCompareRow = style({
   gap: vars.spacing.xs,
 });
 
+export const domainCompareRowTone = styleVariants({
+  critical: {
+    borderColor: 'rgba(242, 13, 13, 0.32)',
+    backgroundColor: '#FFF6F6',
+  },
+  safe: {
+    borderColor: 'rgba(17, 212, 131, 0.32)',
+    backgroundColor: '#F3FBF7',
+  },
+  warning: {
+    borderColor: 'rgba(242, 223, 13, 0.32)',
+    backgroundColor: '#FFFDF3',
+  },
+});
+
 export const domainCompareLabel = style({
   margin: 0,
   color: vars.colors.subText,
@@ -447,6 +552,30 @@ export const riskDetectionCard = style({
   backgroundColor: '#FFFEFA',
   boxShadow: '0 8px 18px rgba(138, 113, 0, 0.08)',
   overflow: 'hidden',
+  '@media': {
+    print: {
+      breakInside: 'avoid',
+      boxShadow: 'none',
+    },
+  },
+});
+
+export const riskDetectionCardTone = styleVariants({
+  critical: {
+    borderColor: '#F1CECE',
+    backgroundColor: '#FFF6F6',
+    boxShadow: '0 8px 18px rgba(193, 39, 39, 0.08)',
+  },
+  safe: {
+    borderColor: '#CBEFDE',
+    backgroundColor: '#F3FBF7',
+    boxShadow: '0 8px 18px rgba(13, 138, 89, 0.08)',
+  },
+  warning: {
+    borderColor: '#F0E5BF',
+    backgroundColor: '#FFFEFA',
+    boxShadow: '0 8px 18px rgba(138, 113, 0, 0.08)',
+  },
 });
 
 export const riskDetectionCardHeader = style({
@@ -456,22 +585,23 @@ export const riskDetectionCardHeader = style({
   padding: `${vars.spacing.lg} ${vars.spacing.lg} ${vars.spacing.md}`,
 });
 
-export const riskDetectionIcon = style({
-  width: '48px',
-  height: '48px',
-  borderRadius: '999px',
-  display: 'inline-flex',
-  flexShrink: 0,
-  background:
-    'radial-gradient(circle at 30% 30%, rgba(255, 92, 128, 0.34) 0%, rgba(255, 59, 104, 0.2) 62%, rgba(255, 59, 104, 0.12) 100%)',
-  border: '1px solid rgba(255, 59, 104, 0.3)',
-});
-
 export const riskDetectionHeaderTextBlock = style({
   display: 'grid',
   gap: '2px',
   borderLeft: '4px solid #F2DF0D',
   paddingLeft: vars.spacing.sm,
+});
+
+export const riskDetectionHeaderTextBlockTone = styleVariants({
+  critical: {
+    borderLeftColor: '#E15050',
+  },
+  safe: {
+    borderLeftColor: '#11D483',
+  },
+  warning: {
+    borderLeftColor: '#F2DF0D',
+  },
 });
 
 export const riskDetectionTitle = style({
@@ -500,6 +630,21 @@ export const riskDetectionBody = style({
   gap: vars.spacing.md,
 });
 
+export const riskDetectionBodyTone = styleVariants({
+  critical: {
+    borderColor: '#F1CECE',
+    backgroundColor: '#FFF1F1',
+  },
+  safe: {
+    borderColor: '#CBEFDE',
+    backgroundColor: '#EFFAF4',
+  },
+  warning: {
+    borderColor: '#F3E8BE',
+    backgroundColor: '#FFFBF0',
+  },
+});
+
 export const riskDetectionBodyLabel = style({
   margin: 0,
   color: '#7B6700',
@@ -517,6 +662,36 @@ export const riskDetectionBodyLabel = style({
       backgroundColor: '#D3B600',
       display: 'inline-block',
       boxShadow: '0 0 0 3px rgba(242, 223, 13, 0.24)',
+    },
+  },
+});
+
+export const riskDetectionBodyLabelTone = styleVariants({
+  critical: {
+    color: '#A92E2E',
+    selectors: {
+      '&::before': {
+        backgroundColor: '#E15050',
+        boxShadow: '0 0 0 3px rgba(225, 80, 80, 0.24)',
+      },
+    },
+  },
+  safe: {
+    color: '#0F7A55',
+    selectors: {
+      '&::before': {
+        backgroundColor: '#11D483',
+        boxShadow: '0 0 0 3px rgba(17, 212, 131, 0.24)',
+      },
+    },
+  },
+  warning: {
+    color: '#7B6700',
+    selectors: {
+      '&::before': {
+        backgroundColor: '#D3B600',
+        boxShadow: '0 0 0 3px rgba(242, 223, 13, 0.24)',
+      },
     },
   },
 });
@@ -541,6 +716,33 @@ export const riskDetectionRisk = style({
       content: '"위험성: "',
       color: '#9B7200',
       fontWeight: vars.font.weight.semibold,
+    },
+  },
+});
+
+export const riskDetectionRiskTone = styleVariants({
+  critical: {
+    borderTopColor: '#F1CECE',
+    selectors: {
+      '&::before': {
+        color: '#A91212',
+      },
+    },
+  },
+  safe: {
+    borderTopColor: '#CBEFDE',
+    selectors: {
+      '&::before': {
+        color: '#0F8B61',
+      },
+    },
+  },
+  warning: {
+    borderTopColor: '#EFE2B9',
+    selectors: {
+      '&::before': {
+        color: '#9B7200',
+      },
     },
   },
 });
@@ -793,16 +995,23 @@ export const exportActionWrap = style({
   maxWidth: '860px',
   margin: '0 auto',
   display: 'flex',
+  alignItems: 'center',
   justifyContent: 'center',
+  gap: vars.spacing.sm,
+  flexWrap: 'wrap',
+  '@media': {
+    print: {
+      display: 'none',
+    },
+  },
 });
 
-export const exportPdfButton = style({
-  minWidth: '220px',
+export const printButton = style({
+  minWidth: '160px',
   minHeight: '44px',
   borderRadius: vars.radius.md,
-  border: '1px solid #E6C85D',
-  backgroundColor: '#FFF6CF',
-  color: '#6D5800',
+  border: '1px solid transparent',
+  color: vars.colors.white,
   fontSize: vars.font.size.md,
   fontWeight: vars.font.weight.semibold,
   lineHeight: 1,
@@ -813,40 +1022,79 @@ export const exportPdfButton = style({
   padding: `0 ${vars.spacing.md}`,
   cursor: 'pointer',
   transition: 'background-color 160ms ease, box-shadow 160ms ease, transform 120ms ease',
-  boxShadow: '0 4px 12px rgba(138, 113, 0, 0.15)',
+  boxShadow: '0 6px 14px rgba(17, 29, 48, 0.12)',
   selectors: {
     '&:hover:not(:disabled)': {
-      backgroundColor: '#FDEFB6',
-      boxShadow: '0 6px 14px rgba(138, 113, 0, 0.2)',
+      boxShadow: '0 8px 16px rgba(17, 29, 48, 0.16)',
       transform: 'translateY(-1px)',
     },
     '&:active:not(:disabled)': {
       transform: 'translateY(0)',
     },
     '&:focus-visible': {
-      outline: '2px solid #D9B300',
+      outline: `2px solid ${vars.colors.main}`,
       outlineOffset: '2px',
-    },
-    '&:disabled': {
-      opacity: 0.7,
-      cursor: 'default',
-      transform: 'none',
-      boxShadow: 'none',
     },
   },
 });
 
-export const exportPdfButtonBadge = style({
-  minWidth: '34px',
-  height: '22px',
-  padding: '0 8px',
-  borderRadius: '999px',
-  backgroundColor: '#6D5800',
-  color: '#FFFFFF',
-  fontSize: vars.font.size.xs,
-  fontWeight: vars.font.weight.bold,
+export const printButtonTone = styleVariants({
+  critical: {
+    backgroundColor: '#D94848',
+    selectors: {
+      '&:hover:not(:disabled)': {
+        backgroundColor: '#C83434',
+      },
+    },
+  },
+  safe: {
+    backgroundColor: vars.colors.success,
+    selectors: {
+      '&:hover:not(:disabled)': {
+        backgroundColor: '#0FBD75',
+      },
+    },
+  },
+  warning: {
+    backgroundColor: '#B49A00',
+    selectors: {
+      '&:hover:not(:disabled)': {
+        backgroundColor: '#967F00',
+      },
+    },
+  },
+});
+
+export const rescanButton = style({
+  minWidth: '220px',
+  minHeight: '44px',
+  borderRadius: vars.radius.md,
+  border: `1px solid ${vars.colors.border}`,
+  backgroundColor: vars.colors.white,
+  color: vars.colors.subDark,
+  fontSize: vars.font.size.md,
+  fontWeight: vars.font.weight.semibold,
   lineHeight: 1,
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
+  gap: vars.spacing.xs,
+  padding: `0 ${vars.spacing.md}`,
+  cursor: 'pointer',
+  transition: 'background-color 160ms ease, box-shadow 160ms ease, transform 120ms ease',
+  boxShadow: '0 4px 10px rgba(17, 29, 48, 0.06)',
+  selectors: {
+    '&:hover:not(:disabled)': {
+      backgroundColor: '#F4F6FA',
+      boxShadow: '0 6px 12px rgba(17, 29, 48, 0.08)',
+      transform: 'translateY(-1px)',
+    },
+    '&:active:not(:disabled)': {
+      transform: 'translateY(0)',
+    },
+    '&:focus-visible': {
+      outline: `2px solid ${vars.colors.subText}`,
+      outlineOffset: '2px',
+    },
+  },
 });

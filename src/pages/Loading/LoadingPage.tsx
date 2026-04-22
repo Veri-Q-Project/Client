@@ -31,7 +31,6 @@ type StepIconSet = {
   pending: string;
 };
 
-const availableLoadingCases = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 const progressRadius = 100;
 const progressCircumference = 2 * Math.PI * progressRadius;
 
@@ -41,37 +40,27 @@ const stateLabel: Record<LoadingState, string> = {
   pending: '준비',
 };
 
+const analysisIconSet: StepIconSet = {
+  active: analysisReadyIcon,
+  done: analysisDoneIcon,
+  pending: analysisPendingIcon,
+};
+
 const stepIconMap: Record<LoadingStepId, StepIconSet> = {
   aiAnalysis: {
     active: aiAnalysisReadyIcon,
     done: aiAnalysisDoneIcon,
     pending: aiAnalysisReadyIcon,
   },
-  completed: {
-    active: analysisReadyIcon,
-    done: analysisDoneIcon,
-    pending: analysisPendingIcon,
-  },
+  completed: analysisIconSet,
   decode: {
     active: decodingReadyIcon,
     done: decodingDoneIcon,
     pending: decodingReadyIcon,
   },
-  externalApi: {
-    active: analysisReadyIcon,
-    done: analysisDoneIcon,
-    pending: analysisPendingIcon,
-  },
-  internalDb: {
-    active: analysisReadyIcon,
-    done: analysisDoneIcon,
-    pending: analysisPendingIcon,
-  },
-  redirect: {
-    active: analysisReadyIcon,
-    done: analysisDoneIcon,
-    pending: analysisPendingIcon,
-  },
+  externalApi: analysisIconSet,
+  internalDb: analysisIconSet,
+  redirect: analysisIconSet,
   report: {
     active: reportReadyIcon,
     done: reportDoneIcon,
@@ -82,32 +71,26 @@ const stepIconMap: Record<LoadingStepId, StepIconSet> = {
     done: riskScoreDoneIcon,
     pending: riskScoreReadyIcon,
   },
-  shortUrlCheck: {
-    active: analysisReadyIcon,
-    done: analysisDoneIcon,
-    pending: analysisPendingIcon,
-  },
+  ruleAnalysis: analysisIconSet,
+  shortUrlCheck: analysisIconSet,
+  urlNormalize: analysisIconSet,
 };
 
 export default function LoadingPage() {
+  const { loadingPageData } = useLoadingPage();
   const {
-    handleCaseChange,
-    handleRandomCaseChange,
-    handleSequentialDemoStart,
-    isSequentialDemoMode,
-    loadingCaseNumber,
-    loadingPageData,
-  } = useLoadingPage();
-  const { getDetailStepState, getStepState, progress, statusDescription, visibleStepCount } =
-    useLoadingProgress(loadingPageData.steps, {
-      progressIntervalMs: loadingPageData.progressIntervalMs,
-      revealStepsSequentially: isSequentialDemoMode,
-    });
+    getDetailStepState,
+    getStepState,
+    progress,
+    progressLabel,
+    progressMetaText,
+    statusDescription,
+    visibleStepIds,
+  } = useLoadingProgress(loadingPageData.steps);
   const visibleSteps = useMemo(
-    () => loadingPageData.steps.slice(0, visibleStepCount),
-    [loadingPageData.steps, visibleStepCount],
+    () => loadingPageData.steps.filter((step) => visibleStepIds.includes(step.id)),
+    [loadingPageData.steps, visibleStepIds],
   );
-
   const dashOffset = progressCircumference - (progress / 100) * progressCircumference;
 
   return (
@@ -136,7 +119,8 @@ export default function LoadingPage() {
                 className={progress === 100 ? styles.centerIconDone : styles.centerIconPreparing}
                 src={progress === 100 ? shieldPercentIcon : totalAnalysisReadyIcon}
               />
-              <p className={styles.percentText}>{progress}%</p>
+              <p className={styles.percentText}>{progressLabel}</p>
+              <p className={styles.progressMetaText}>{progressMetaText}</p>
             </div>
           </div>
 
@@ -217,53 +201,6 @@ export default function LoadingPage() {
               );
             })}
           </ol>
-        </section>
-
-        <section className={styles.caseControlSection}>
-          <div className={styles.caseControlHeader}>
-            <p className={styles.caseControlTitle}>테스트 케이스 선택</p>
-            <p className={styles.caseControlCurrent}>
-              현재 case {loadingCaseNumber}
-              {isSequentialDemoMode ? ' · 순차 분기 데모' : ' · 전체 흐름 보기'}
-            </p>
-          </div>
-
-          <div className={styles.caseButtonList}>
-            {availableLoadingCases.map((caseNumber) => (
-              <button
-                className={
-                  caseNumber === loadingCaseNumber
-                    ? `${styles.caseButton} ${styles.caseButtonActive}`
-                    : styles.caseButton
-                }
-                key={caseNumber}
-                onClick={() => handleCaseChange(caseNumber)}
-                type="button"
-              >
-                case {caseNumber}
-              </button>
-            ))}
-
-            <button
-              className={`${styles.caseButton} ${styles.randomCaseButton}`}
-              onClick={handleRandomCaseChange}
-              type="button"
-            >
-              랜덤
-            </button>
-
-            <button
-              className={
-                isSequentialDemoMode
-                  ? `${styles.caseButton} ${styles.branchDemoButton} ${styles.branchDemoButtonActive}`
-                  : `${styles.caseButton} ${styles.branchDemoButton}`
-              }
-              onClick={handleSequentialDemoStart}
-              type="button"
-            >
-              순차 분기 데모
-            </button>
-          </div>
         </section>
       </section>
     </main>

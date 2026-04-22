@@ -1,4 +1,4 @@
-import { resolveNonUrlActionContent } from '../constants/nonUrlActionCatalog';
+import { resolveNonUrlActionContent } from '../constants/nonUrlActionText';
 import * as styles from '../styles/resultNonUrlPage.css';
 
 import type { NonUrlActionType } from '../types/resultNonUrlPage.types';

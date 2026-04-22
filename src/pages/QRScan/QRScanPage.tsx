@@ -1,9 +1,7 @@
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 
 import { qrIconByTone } from '@/shared/icon/resultIcons';
 import AppHeader from '@/shared/ui/app-header';
-
-import type { ScanListStatus } from '@/pages/ScanList/types/scanListPage.types';
 
 import { useQRScanPage } from './hooks/useQRScanPage';
 import * as styles from './styles/qrScanPage.css';
@@ -79,29 +77,19 @@ function HistoryNextIcon() {
   );
 }
 
-const resultRouteByStatus: Record<
-  ScanListStatus,
-  '/result/safe' | '/result/warning' | '/result/critical'
-> = {
-  safe: '/result/safe',
-  warning: '/result/warning',
-  critical: '/result/critical',
-};
-
-const statusLabelByTone: Record<ScanListStatus, string> = {
+const statusLabelByTone = {
   safe: '안전',
   warning: '주의',
   critical: '위험',
-};
+} as const;
 
-const statusSummaryByTone: Record<ScanListStatus, string> = {
+const statusSummaryByTone = {
   safe: '안전으로 판정된 스캔 이력입니다.',
   warning: '주의가 필요한 스캔 이력입니다.',
   critical: '위험으로 분류된 스캔 이력입니다.',
-};
+} as const;
 
 export default function QRScanPage() {
-  const navigate = useNavigate();
   const {
     cameraStatus,
     cameraStatusText,
@@ -110,6 +98,7 @@ export default function QRScanPage() {
     handleCapturePhoto,
     handleGalleryFileChange,
     handleOpenGallery,
+    handleOpenRecentScanResult,
     handleShowNextHistoryItem,
     handleShowPreviousHistoryItem,
     isCapturing,
@@ -117,14 +106,6 @@ export default function QRScanPage() {
     recentScanItem,
     videoRef,
   } = useQRScanPage();
-
-  const handleOpenRecentScanResult = () => {
-    if (!recentScanItem) {
-      return;
-    }
-
-    void navigate({ to: resultRouteByStatus[recentScanItem.status] });
-  };
 
   return (
     <main className={styles.page}>

@@ -9,3 +9,7 @@ out
 .env.server
 .env.local
 .env.*.local
+
+docs/local/
+.claude/
+.devserver.*.log

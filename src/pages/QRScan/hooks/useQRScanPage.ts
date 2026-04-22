@@ -1,14 +1,23 @@
 import type { ChangeEvent, RefObject } from 'react';
 
+import { useNavigate } from '@tanstack/react-router';
 import { App } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { showApiError } from '@/shared/lib/feedback/showApiError';
+import { useScanProgressStore } from '@/shared/store/scanProgressStore';
+import { useScanSessionStore } from '@/shared/store/scanSessionStore';
+
 import {
-  defaultScanListUuid,
-  fetchScanListPageData,
-  getInitialScanListPageData,
-} from '@/pages/ScanList/api/fetchScanListPageData';
-import type { ScanListItem } from '@/pages/ScanList/types/scanListPage.types';
+  fetchRecentScanHistoryData,
+  getInitialScanHistoryData,
+} from '@/features/scan-history/api/fetchScanHistoryData';
+import type {
+  ScanHistoryItem,
+  ScanHistoryStatus,
+} from '@/features/scan-history/types/scanHistory.types';
+import { submitQrImage } from '@/features/scan-url/api/submitQrImage';
+import { isCaptchaRequiredUploadError } from '@/features/scan-url/api/uploadErrors';
 
 type CameraStatus = 'loading' | 'ready' | 'error';
 
@@ -28,13 +37,24 @@ type UseQRScanPageReturn = {
   fileInputRef: RefObject<HTMLInputElement | null>;
   handleCapturePhoto: () => Promise<void>;
   handleGalleryFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  handleShowNextHistoryItem: () => void;
   handleOpenGallery: () => void;
+  handleOpenRecentScanResult: () => void;
+  handleShowNextHistoryItem: () => void;
   handleShowPreviousHistoryItem: () => void;
   isCapturing: boolean;
   isFlashVisible: boolean;
-  recentScanItem: ScanListItem | null;
+  recentScanItem: ScanHistoryItem | null;
   videoRef: RefObject<HTMLVideoElement | null>;
+};
+
+type ResultRoute = '/result/critical' | '/result/non-url' | '/result/safe' | '/result/warning';
+
+const nonUrlResultRoute = '/result/non-url';
+
+const resultRouteByStatus: Record<ScanHistoryStatus, ResultRoute> = {
+  safe: '/result/safe',
+  warning: '/result/warning',
+  critical: '/result/critical',
 };
 
 function formatCapturedAt(date: Date) {
@@ -116,8 +136,41 @@ async function requestCameraStream() {
   }
 }
 
+function isNonWebScanResponse(scanResponse: Record<string, unknown>): boolean {
+  const rawSchemeType =
+    typeof scanResponse.schemeType === 'string'
+      ? scanResponse.schemeType
+      : scanResponse.scheme_type;
+  const schemeType = typeof rawSchemeType === 'string' ? rawSchemeType.trim().toUpperCase() : '';
+  const rawIsUrl = scanResponse.isUrl !== undefined ? scanResponse.isUrl : scanResponse.is_url;
+
+  if (typeof rawIsUrl === 'boolean') {
+    return rawIsUrl === false;
+  }
+
+  return schemeType.length > 0 && schemeType !== 'WEB';
+}
+
+function isWebHistoryItem(item: ScanHistoryItem): boolean {
+  return item.isUrl !== false && item.schemeType?.trim().toUpperCase() === 'WEB';
+}
+
+function openResultPage(route: ResultRoute, url: string) {
+  if (route === nonUrlResultRoute) {
+    window.location.assign(route);
+    return;
+  }
+
+  window.location.assign(`${route}?url=${encodeURIComponent(url)}`);
+}
+
 export function useQRScanPage(): UseQRScanPageReturn {
   const { message } = App.useApp();
+  const navigate = useNavigate();
+  const resetScanProgress = useScanProgressStore((state) => state.reset);
+  const resetForNewScan = useScanSessionStore((state) => state.resetForNewScan);
+  const setHistorySelection = useScanSessionStore((state) => state.setHistorySelection);
+  const setScanResponse = useScanSessionStore((state) => state.setScanResponse);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -129,8 +182,8 @@ export function useQRScanPage(): UseQRScanPageReturn {
   const [captureRecord, setCaptureRecord] = useState<CaptureRecord | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isFlashVisible, setIsFlashVisible] = useState(false);
-  const [scanHistoryItems, setScanHistoryItems] = useState<ScanListItem[]>(() => {
-    return getInitialScanListPageData(defaultScanListUuid).items;
+  const [scanHistoryItems, setScanHistoryItems] = useState<ScanHistoryItem[]>(() => {
+    return getInitialScanHistoryData().items;
   });
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
   const recentScanItem = scanHistoryItems[currentHistoryIndex] ?? null;
@@ -203,7 +256,14 @@ export function useQRScanPage(): UseQRScanPageReturn {
       setCameraStatus('ready');
       setCameraStatusText('후면 카메라가 연결되었습니다. 버튼을 눌러 현재 화면을 촬영하세요.');
     } catch (error) {
-      console.error('Failed to start QR camera preview.', error);
+      if (
+        error instanceof DOMException &&
+        (error.name === 'NotFoundError' || error.name === 'OverconstrainedError')
+      ) {
+        console.warn('QR camera preview is unavailable on this device.', error);
+      } else {
+        console.error('Failed to start QR camera preview.', error);
+      }
 
       if (!isMountedRef.current) {
         return;
@@ -213,6 +273,47 @@ export function useQRScanPage(): UseQRScanPageReturn {
       setCameraStatusText(resolveCameraErrorMessage(error));
     }
   }, []);
+
+  const submitScanFile = useCallback(
+    async ({
+      file,
+      fileName,
+      onSuccessMessage,
+    }: {
+      file: Blob;
+      fileName?: string;
+      onSuccessMessage: string;
+    }) => {
+      resetForNewScan();
+      resetScanProgress();
+
+      try {
+        const scanResponse = await submitQrImage({
+          file,
+          fileName,
+        });
+
+        setScanResponse(scanResponse);
+        message.success(onSuccessMessage);
+
+        if (isNonWebScanResponse(scanResponse)) {
+          void navigate({ to: '/result/non-url' });
+          return;
+        }
+
+        void navigate({ to: '/loading' });
+      } catch (error) {
+        if (isCaptchaRequiredUploadError(error)) {
+          message.warning('요청 횟수를 초과했습니다. 캡차 인증 후 다시 업로드해 주세요.');
+          void navigate({ to: '/captcha' });
+          return;
+        }
+
+        throw error;
+      }
+    },
+    [message, navigate, resetForNewScan, resetScanProgress, setScanResponse],
+  );
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -235,7 +336,7 @@ export function useQRScanPage(): UseQRScanPageReturn {
 
     const loadRecentScanItems = async () => {
       try {
-        const response = await fetchScanListPageData(defaultScanListUuid);
+        const response = await fetchRecentScanHistoryData();
 
         if (isMounted) {
           setScanHistoryItems(response.items);
@@ -251,7 +352,7 @@ export function useQRScanPage(): UseQRScanPageReturn {
         console.error('Failed to load latest scan list items.', error);
 
         if (isMounted) {
-          const fallbackItems = getInitialScanListPageData(defaultScanListUuid).items;
+          const fallbackItems = getInitialScanHistoryData().items;
 
           setScanHistoryItems(fallbackItems);
           setCurrentHistoryIndex((previousIndex) => {
@@ -291,6 +392,25 @@ export function useQRScanPage(): UseQRScanPageReturn {
       return (previousIndex + 1) % scanHistoryItems.length;
     });
   }, [scanHistoryItems.length]);
+
+  const handleOpenRecentScanResult = useCallback(() => {
+    if (!recentScanItem) {
+      return;
+    }
+
+    setHistorySelection({
+      isUrl: recentScanItem.isUrl,
+      riskLevel: recentScanItem.status,
+      scannedAt: recentScanItem.scannedAt,
+      schemeType: recentScanItem.schemeType,
+      url: recentScanItem.url,
+    });
+    const route = isWebHistoryItem(recentScanItem)
+      ? resultRouteByStatus[recentScanItem.status]
+      : nonUrlResultRoute;
+
+    openResultPage(route, recentScanItem.url);
+  }, [recentScanItem, setHistorySelection]);
 
   const handleCapturePhoto = useCallback(async () => {
     if (cameraStatus !== 'ready') {
@@ -341,13 +461,28 @@ export function useQRScanPage(): UseQRScanPageReturn {
         summary: '현재 화면을 캡처해 최근 기록에 반영했습니다.',
       });
       triggerCaptureFlash();
-      message.success('사진을 촬영했습니다.');
+
+      await submitScanFile({
+        file: photoBlob,
+        fileName: `capture-${Date.now()}.jpg`,
+        onSuccessMessage: '사진을 업로드하고 분석을 시작했습니다.',
+      });
+    } catch (error) {
+      console.error('Failed to capture or upload QR scan image.', error);
+      showApiError(message, error, 'QR 이미지 업로드에 실패했습니다.');
     } finally {
       if (isMountedRef.current) {
         setIsCapturing(false);
       }
     }
-  }, [cameraStatus, message, startCamera, triggerCaptureFlash, updateCaptureRecord]);
+  }, [
+    cameraStatus,
+    message,
+    startCamera,
+    submitScanFile,
+    triggerCaptureFlash,
+    updateCaptureRecord,
+  ]);
 
   const handleOpenGallery = useCallback(() => {
     fileInputRef.current?.click();
@@ -370,10 +505,27 @@ export function useQRScanPage(): UseQRScanPageReturn {
         photoUrl,
         summary: '갤러리 이미지를 불러와 최근 기록에 반영했습니다.',
       });
-      message.success('갤러리 이미지를 불러왔습니다.');
+
+      setIsCapturing(true);
+
+      void submitScanFile({
+        file: selectedFile,
+        fileName: selectedFile.name,
+        onSuccessMessage: '이미지를 업로드하고 분석을 시작했습니다.',
+      })
+        .catch((error) => {
+          console.error('Failed to upload QR scan image from gallery.', error);
+          showApiError(message, error, '갤러리 이미지 업로드에 실패했습니다.');
+        })
+        .finally(() => {
+          if (isMountedRef.current) {
+            setIsCapturing(false);
+          }
+        });
+
       event.target.value = '';
     },
-    [message, updateCaptureRecord],
+    [message, submitScanFile, updateCaptureRecord],
   );
 
   return {
@@ -384,8 +536,9 @@ export function useQRScanPage(): UseQRScanPageReturn {
     fileInputRef,
     handleCapturePhoto,
     handleGalleryFileChange,
-    handleShowNextHistoryItem,
     handleOpenGallery,
+    handleOpenRecentScanResult,
+    handleShowNextHistoryItem,
     handleShowPreviousHistoryItem,
     isCapturing,
     isFlashVisible,

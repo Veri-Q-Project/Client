@@ -14,18 +14,22 @@ const serverEnvLocalPath = path.join(rootDir, '.env.server.local');
 const OWNER_READ_WRITE_MODE = 0o600;
 
 const defaultEnvContent = [
-  '# Captcha provider: mock | googleRecaptchaEnterprise',
-  'VITE_CAPTCHA_PROVIDER=googleRecaptchaEnterprise',
-  '',
   '# Google reCAPTCHA Enterprise checkbox site key (required when provider is googleRecaptchaEnterprise)',
   'VITE_RECAPTCHA_SITE_KEY=',
   '',
-  '# Enable mock/debug controls on CaptchaPage (true | false)',
-  'VITE_ENABLE_DEBUG_CAPTCHA=false',
+  '# Backend base URLs. Provide deployed values via .env.local or secret management.',
+  '# Local defaults are only for development proxy targets.',
+  'VITE_BE1_BASE_URL=http://localhost:8081',
+  'VITE_BE3_BASE_URL=http://localhost:8083',
   '',
-  '# Optional backend verification endpoint',
-  '# Example: http://localhost:8080/api/captcha/verify',
-  'VITE_CAPTCHA_VERIFY_ENDPOINT=http://localhost:8080/api/captcha/verify',
+  '# Shared request timeout',
+  'VITE_API_TIMEOUT_MS=10000',
+  '',
+  '# Upload request timeout',
+  'VITE_UPLOAD_TIMEOUT_MS=60000',
+  '',
+  '# Maximum SSE reconnect attempts',
+  'VITE_SSE_RECONNECT_MAX=3',
   '',
 ].join('\n');
 

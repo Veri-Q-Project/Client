@@ -1,15 +1,10 @@
-﻿import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import * as styles from '../styles/captchaPage.css';
 
-import type { CaptchaProvider } from '../types/captcha.types';
-
 type CaptchaWidgetProps = {
-  onMockToggle: (checked: boolean) => void;
   onTokenChange: (token: string | null) => void;
-  provider: CaptchaProvider;
   recaptchaSiteKey: string;
-  token: string | null;
 };
 
 type GrecaptchaEnterprise = {
@@ -24,6 +19,7 @@ type GrecaptchaEnterprise = {
       theme?: 'light' | 'dark';
     },
   ) => number;
+  reset?: (widgetId: number) => void;
 };
 
 declare global {
@@ -112,21 +108,13 @@ function loadEnterpriseScript(): Promise<void> {
   return scriptPromise;
 }
 
-export default function CaptchaWidget({
-  onMockToggle,
-  onTokenChange,
-  provider,
-  recaptchaSiteKey,
-  token,
-}: CaptchaWidgetProps) {
+export default function CaptchaWidget({ onTokenChange, recaptchaSiteKey }: CaptchaWidgetProps) {
   const widgetContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (provider !== 'googleRecaptchaEnterprise') {
-      return;
-    }
-
     const container = widgetContainerRef.current;
+    let cancelled = false;
+    let widgetId: number | null = null;
 
     if (!container || !recaptchaSiteKey) {
       return;
@@ -136,54 +124,86 @@ export default function CaptchaWidget({
 
     loadEnterpriseScript()
       .then(() => {
+        if (cancelled || widgetContainerRef.current !== container) {
+          return;
+        }
+
         const enterprise = window.grecaptcha?.enterprise;
 
         if (!enterprise) {
+          if (cancelled) {
+            return;
+          }
+
           onTokenChange(null);
           return;
         }
 
         enterprise.ready(() => {
-          enterprise.render(container, {
-            callback: (nextToken) => {
-              onTokenChange(nextToken);
-            },
-            'error-callback': () => {
-              onTokenChange(null);
-            },
-            'expired-callback': () => {
-              onTokenChange(null);
-            },
-            sitekey: recaptchaSiteKey,
-            theme: 'light',
-          });
+          if (cancelled || widgetContainerRef.current !== container) {
+            return;
+          }
+
+          try {
+            widgetId = enterprise.render(container, {
+              callback: (nextToken) => {
+                if (cancelled) {
+                  return;
+                }
+
+                onTokenChange(nextToken);
+              },
+              'error-callback': () => {
+                if (cancelled) {
+                  return;
+                }
+
+                onTokenChange(null);
+              },
+              'expired-callback': () => {
+                if (cancelled) {
+                  return;
+                }
+
+                onTokenChange(null);
+              },
+              sitekey: recaptchaSiteKey,
+              theme: 'light',
+            });
+          } catch (error) {
+            widgetId = null;
+
+            if (cancelled) {
+              return;
+            }
+
+            console.error('Failed to render reCAPTCHA Enterprise widget.', error);
+            onTokenChange(null);
+          }
         });
       })
       .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
         onTokenChange(null);
       });
-  }, [onTokenChange, provider, recaptchaSiteKey]);
 
-  if (provider === 'googleRecaptchaEnterprise') {
-    return (
-      <div className={styles.enterpriseBox}>
-        <div ref={widgetContainerRef} />
-      </div>
-    );
-  }
+    return () => {
+      cancelled = true;
+
+      if (widgetId !== null) {
+        window.grecaptcha?.enterprise?.reset?.(widgetId);
+      }
+
+      container.innerHTML = '';
+    };
+  }, [onTokenChange, recaptchaSiteKey]);
 
   return (
-    <label className={styles.mockCheckbox}>
-      <input
-        checked={token !== null}
-        className={styles.mockCheckboxInput}
-        onChange={(event) => {
-          onMockToggle(event.currentTarget.checked);
-        }}
-        type="checkbox"
-      />
-      <span className={styles.mockCheckboxIndicator} />
-      <span className={styles.mockCheckboxText}>I&apos;m not a robot (Mock)</span>
-    </label>
+    <div className={styles.enterpriseBox}>
+      <div ref={widgetContainerRef} />
+    </div>
   );
 }

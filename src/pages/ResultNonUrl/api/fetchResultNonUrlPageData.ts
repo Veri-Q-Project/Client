@@ -1,17 +1,26 @@
+import { getScanSessionSnapshot } from '@/shared/store/scanSessionStore';
+
+import { toResultNonUrlPageData } from '../lib/toResultNonUrlPageData';
+
 import type { ResultNonUrlPageData } from '../types/resultNonUrlPage.types';
 
-export const mockResultNonUrlPageData: ResultNonUrlPageData = {
-  detectedActionType: 'telSms',
-  sectionDescription: '백엔드에서 전달한 실행 유형 상세 설명과 주의사항을 표시합니다.',
-  sectionNumber: '1',
-  sectionTitle: '탐지된 비 URL 유형 분석',
-  targetValue: '010-1234-5678',
-};
-
-export async function fetchResultNonUrlPageData(): Promise<ResultNonUrlPageData> {
-  return Promise.resolve({ ...mockResultNonUrlPageData });
+function hasNonUrlResultSession(): boolean {
+  const session = getScanSessionSnapshot();
+  return Boolean(session.finalResult || session.scanResponse || session.historySelection);
 }
 
-export function getInitialResultNonUrlPageData(): ResultNonUrlPageData {
-  return { ...mockResultNonUrlPageData };
+export async function fetchResultNonUrlPageData(): Promise<ResultNonUrlPageData> {
+  if (hasNonUrlResultSession()) {
+    return toResultNonUrlPageData(getScanSessionSnapshot());
+  }
+
+  throw new Error('SCAN_SESSION_REQUIRED');
+}
+
+export function getInitialResultNonUrlPageData(): ResultNonUrlPageData | null {
+  if (!hasNonUrlResultSession()) {
+    return null;
+  }
+
+  return toResultNonUrlPageData(getScanSessionSnapshot());
 }

@@ -5,13 +5,13 @@ import { qrIconByTone } from '@/shared/icon/resultIcons';
 import { openExternalLink } from '@/shared/lib/browser/openExternalLink';
 import AppHeader from '@/shared/ui/app-header';
 import ResultHero from '@/shared/ui/resultHero';
+import { resultPageStyles } from '@/shared/ui/resultPage';
 
-import { nonUrlActionPreviewItems } from './constants/nonUrlActionCatalog';
+import { nonUrlActionPreviewItems } from './constants/nonUrlActionText';
 import { useResultNonUrlPage } from './hooks/useResultNonUrlPage';
 import { resolveNonUrlActionExecution } from './lib/resolveNonUrlActionExecution';
 import * as styles from './styles/resultNonUrlPage.css';
 import DetectedNonUrlActionSection from './ui/DetectedNonUrlActionSection';
-import * as warningStyles from '../ResultWarning/styles/resultWarningPage.css';
 
 import type { NonUrlActionType } from './types/resultNonUrlPage.types';
 
@@ -30,12 +30,26 @@ export default function ResultNonUrlPage() {
     [selectedPreviewActionType],
   );
 
+  if (!resultNonUrlPageData) {
+    return null;
+  }
+
   const displayedActionType =
     selectedPreviewItem?.actionType ?? resultNonUrlPageData.detectedActionType;
   const displayedTargetValue =
-    selectedPreviewItem?.sampleTargetValue ?? resultNonUrlPageData.targetValue;
+    displayedActionType === resultNonUrlPageData.detectedActionType
+      ? resultNonUrlPageData.targetValue
+      : undefined;
+  const isExecutable =
+    displayedActionType === resultNonUrlPageData.detectedActionType &&
+    displayedTargetValue !== undefined &&
+    displayedTargetValue !== null;
 
   const handleExecuteAction = () => {
+    if (!isExecutable) {
+      return;
+    }
+
     const executionPlan = resolveNonUrlActionExecution(displayedActionType, displayedTargetValue);
     setExecutionFeedbackMessage(executionPlan.message);
 
@@ -50,11 +64,11 @@ export default function ResultNonUrlPage() {
   };
 
   return (
-    <main className={warningStyles.page}>
+    <main className={resultPageStyles.page}>
       <AppHeader iconSrc={qrIconByTone.warning} />
 
-      <div className={warningStyles.shell}>
-        <section className={warningStyles.content}>
+      <div className={resultPageStyles.shell}>
+        <section className={resultPageStyles.content}>
           <ResultHero
             description="Veri-Q 분석 결과, 해당 QR 코드는 비 URL로 분류되었습니다."
             title={
@@ -76,7 +90,12 @@ export default function ResultNonUrlPage() {
               targetValue={displayedTargetValue}
             />
 
-            <button className={styles.executionButton} onClick={handleExecuteAction} type="button">
+            <button
+              className={styles.executionButton}
+              disabled={!isExecutable}
+              onClick={handleExecuteAction}
+              type="button"
+            >
               주의하여 실행하기
             </button>
 
