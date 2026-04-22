@@ -1,5 +1,5 @@
-import { normalizeRiskLevel } from '@/shared/api/mappers/normalizeRiskLevel';
-import { pickString } from '@/shared/api/mappers/payloadAccess';
+import { pickString } from '@/shared/api/responseAccess/payloadAccess';
+import { normalizeRiskLevel } from '@/shared/api/risk/normalizeRiskLevel';
 import type { ResultTone } from '@/shared/types/resultTone';
 
 const historyIdKeys = ['id', 'scanId', 'scan_id', 'uuid', 'scanUuid', 'scan_uuid'];

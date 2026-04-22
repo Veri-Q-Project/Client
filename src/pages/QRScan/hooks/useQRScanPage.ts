@@ -8,14 +8,16 @@ import { showApiError } from '@/shared/lib/feedback/showApiError';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 import { useScanSessionStore } from '@/shared/store/scanSessionStore';
 
+import {
+  fetchRecentScanHistoryData,
+  getInitialScanHistoryData,
+} from '@/features/scan-history/api/fetchScanHistoryData';
+import type {
+  ScanHistoryItem,
+  ScanHistoryStatus,
+} from '@/features/scan-history/types/scanHistory.types';
 import { submitQrImage } from '@/features/scan-url/api/submitQrImage';
 import { isCaptchaRequiredUploadError } from '@/features/scan-url/api/uploadErrors';
-
-import {
-  fetchScanListPageData,
-  getInitialScanListPageData,
-} from '@/pages/ScanList/api/fetchScanListPageData';
-import type { ScanListItem, ScanListStatus } from '@/pages/ScanList/types/scanListPage.types';
 
 type CameraStatus = 'loading' | 'ready' | 'error';
 
@@ -41,12 +43,12 @@ type UseQRScanPageReturn = {
   handleShowPreviousHistoryItem: () => void;
   isCapturing: boolean;
   isFlashVisible: boolean;
-  recentScanItem: ScanListItem | null;
+  recentScanItem: ScanHistoryItem | null;
   videoRef: RefObject<HTMLVideoElement | null>;
 };
 
 const resultRouteByStatus: Record<
-  ScanListStatus,
+  ScanHistoryStatus,
   '/result/safe' | '/result/warning' | '/result/critical'
 > = {
   safe: '/result/safe',
@@ -166,8 +168,8 @@ export function useQRScanPage(): UseQRScanPageReturn {
   const [captureRecord, setCaptureRecord] = useState<CaptureRecord | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isFlashVisible, setIsFlashVisible] = useState(false);
-  const [scanHistoryItems, setScanHistoryItems] = useState<ScanListItem[]>(() => {
-    return getInitialScanListPageData().items;
+  const [scanHistoryItems, setScanHistoryItems] = useState<ScanHistoryItem[]>(() => {
+    return getInitialScanHistoryData().items;
   });
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
   const recentScanItem = scanHistoryItems[currentHistoryIndex] ?? null;
@@ -320,7 +322,7 @@ export function useQRScanPage(): UseQRScanPageReturn {
 
     const loadRecentScanItems = async () => {
       try {
-        const response = await fetchScanListPageData();
+        const response = await fetchRecentScanHistoryData();
 
         if (isMounted) {
           setScanHistoryItems(response.items);
@@ -336,7 +338,7 @@ export function useQRScanPage(): UseQRScanPageReturn {
         console.error('Failed to load latest scan list items.', error);
 
         if (isMounted) {
-          const fallbackItems = getInitialScanListPageData().items;
+          const fallbackItems = getInitialScanHistoryData().items;
 
           setScanHistoryItems(fallbackItems);
           setCurrentHistoryIndex((previousIndex) => {

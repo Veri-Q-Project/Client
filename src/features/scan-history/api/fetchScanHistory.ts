@@ -1,6 +1,6 @@
 import { axiosBe3 } from '@/shared/api/axios';
 import { apiEndpoints } from '@/shared/api/endpoints';
-import { asArray, asRecord } from '@/shared/api/mappers/payloadAccess';
+import { asArray, asRecord } from '@/shared/api/responseAccess/payloadAccess';
 import type { BackendHistoryItemResponse } from '@/shared/api/types';
 import { useGuestStore } from '@/shared/store/guestStore';
 
