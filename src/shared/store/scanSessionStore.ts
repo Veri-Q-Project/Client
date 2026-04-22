@@ -45,9 +45,9 @@ type ScanSessionState = ScanSessionSnapshot & {
 const scanSessionStorageKey = 'veriq.scanSession';
 
 const noopStorage: StateStorage = {
-  getItem: () => null,
-  removeItem: () => {},
-  setItem: () => {},
+  getItem: (_key) => null,
+  removeItem: (_key) => {},
+  setItem: (_key, _value) => {},
 };
 
 function createScanSessionStorage(): StateStorage {
@@ -72,6 +72,26 @@ const initialState: ScanSessionSnapshot = {
   scanResponse: null,
   schemeType: null,
 };
+
+function mergePersistedLightSession(
+  persistedState: unknown,
+  currentState: ScanSessionState,
+): ScanSessionState {
+  if (!persistedState || typeof persistedState !== 'object' || Array.isArray(persistedState)) {
+    return currentState;
+  }
+
+  const persisted = persistedState as Partial<ScanSessionSnapshot>;
+
+  return {
+    ...currentState,
+    decodedUrl: typeof persisted.decodedUrl === 'string' ? persisted.decodedUrl : null,
+    historySelection: persisted.historySelection ?? null,
+    isUrl: typeof persisted.isUrl === 'boolean' ? persisted.isUrl : null,
+    riskLevel: persisted.riskLevel ?? null,
+    schemeType: typeof persisted.schemeType === 'string' ? persisted.schemeType : null,
+  };
+}
 
 function resolveDecodedUrl(source: unknown): string | null {
   return pickString(source, [
@@ -216,15 +236,13 @@ export const useScanSessionStore = create<ScanSessionState>()(
     {
       name: scanSessionStorageKey,
       partialize: (state) => ({
-        analysisDetail: state.analysisDetail,
         decodedUrl: state.decodedUrl,
-        finalResult: state.finalResult,
         historySelection: state.historySelection,
         isUrl: state.isUrl,
         riskLevel: state.riskLevel,
-        scanResponse: state.scanResponse,
         schemeType: state.schemeType,
       }),
+      merge: mergePersistedLightSession,
       storage: createJSONStorage(createScanSessionStorage),
     },
   ),
