@@ -144,31 +144,42 @@ export default function CaptchaWidget({ onTokenChange, recaptchaSiteKey }: Captc
             return;
           }
 
-          widgetId = enterprise.render(container, {
-            callback: (nextToken) => {
-              if (cancelled) {
-                return;
-              }
+          try {
+            widgetId = enterprise.render(container, {
+              callback: (nextToken) => {
+                if (cancelled) {
+                  return;
+                }
 
-              onTokenChange(nextToken);
-            },
-            'error-callback': () => {
-              if (cancelled) {
-                return;
-              }
+                onTokenChange(nextToken);
+              },
+              'error-callback': () => {
+                if (cancelled) {
+                  return;
+                }
 
-              onTokenChange(null);
-            },
-            'expired-callback': () => {
-              if (cancelled) {
-                return;
-              }
+                onTokenChange(null);
+              },
+              'expired-callback': () => {
+                if (cancelled) {
+                  return;
+                }
 
-              onTokenChange(null);
-            },
-            sitekey: recaptchaSiteKey,
-            theme: 'light',
-          });
+                onTokenChange(null);
+              },
+              sitekey: recaptchaSiteKey,
+              theme: 'light',
+            });
+          } catch (error) {
+            widgetId = null;
+
+            if (cancelled) {
+              return;
+            }
+
+            console.error('Failed to render reCAPTCHA Enterprise widget.', error);
+            onTokenChange(null);
+          }
         });
       })
       .catch(() => {

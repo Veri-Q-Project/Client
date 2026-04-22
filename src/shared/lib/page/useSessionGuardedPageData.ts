@@ -16,6 +16,10 @@ type UseSessionGuardedPageDataReturn<T> = {
   reload: () => Promise<void>;
 };
 
+/**
+ * Loads page data that requires an active scan session.
+ * Pass stable fetch/getInitial callbacks when possible; fetchPageData is read via ref to avoid reload loops.
+ */
 export function useSessionGuardedPageData<T>({
   fetchPageData,
   getInitialPageData,
@@ -24,8 +28,13 @@ export function useSessionGuardedPageData<T>({
 }: UseSessionGuardedPageDataOptions<T>): UseSessionGuardedPageDataReturn<T> {
   const { message } = App.useApp();
   const navigate = useNavigate();
+  const fetchPageDataRef = useRef(fetchPageData);
   const isMountedRef = useRef(false);
   const [data, setData] = useState<T | null>(getInitialPageData);
+
+  useEffect(() => {
+    fetchPageDataRef.current = fetchPageData;
+  }, [fetchPageData]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -37,7 +46,7 @@ export function useSessionGuardedPageData<T>({
 
   const reload = useCallback(async () => {
     try {
-      const response = await fetchPageData();
+      const response = await fetchPageDataRef.current();
 
       if (isMountedRef.current) {
         setData(response);
@@ -55,9 +64,8 @@ export function useSessionGuardedPageData<T>({
       }
 
       showApiError(message, error, loadErrorMessage);
-      void navigate({ to: '/' });
     }
-  }, [fetchPageData, loadErrorMessage, logMessage, message, navigate]);
+  }, [loadErrorMessage, logMessage, message, navigate]);
 
   useEffect(() => {
     void reload();

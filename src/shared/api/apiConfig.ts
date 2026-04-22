@@ -5,9 +5,9 @@ const DEV_BE1_PROXY_BASE_URL = '/be1';
 const DEV_BE3_PROXY_BASE_URL = '/be3';
 
 function parsePositiveInteger(rawValue: string | undefined, fallback: number): number {
-  const parsedValue = Number.parseInt(rawValue ?? '', 10);
+  const parsedValue = Number(trimEnvValue(rawValue));
 
-  if (Number.isNaN(parsedValue) || parsedValue <= 0) {
+  if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
     return fallback;
   }
 

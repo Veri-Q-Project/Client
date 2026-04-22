@@ -167,13 +167,11 @@ function resolveReportUrls(session: ScanSessionSnapshot, sources: unknown[]): Re
 }
 
 function resolveDetectedRiskTypes(sources: unknown[], riskLevel: ResultTone): string[] {
-  const riskTypes = pickSourceStringArray(sources, [
-    'detectedRiskTypes',
-    'detected_risk_types',
-    'riskTypes',
-    'risk_types',
-    'threats',
-  ]);
+  const riskTypes = pickSourceStringArray(
+    sources,
+    ['detectedRiskTypes', 'detected_risk_types', 'riskTypes', 'risk_types', 'threats'],
+    ',',
+  );
 
   return riskTypes.length > 0 ? riskTypes : reportFallbackCopyByTone[riskLevel].detectedRiskTypes;
 }

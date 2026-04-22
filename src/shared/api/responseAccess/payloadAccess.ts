@@ -50,7 +50,7 @@ export function asRecord(value: unknown): UnknownRecord | null {
   return value as UnknownRecord;
 }
 
-function getCandidateRecords(source: unknown): UnknownRecord[] {
+export function getCandidateRecords(source: unknown): UnknownRecord[] {
   const rootRecord = asRecord(source);
 
   if (!rootRecord) {
@@ -145,7 +145,11 @@ export function pickRecord(source: unknown, keys: string[]): UnknownRecord | nul
   return asRecord(pickUnknown(source, keys));
 }
 
-function pickStringArray(source: unknown, keys: string[]): string[] {
+function pickStringArray(
+  source: unknown,
+  keys: string[],
+  splitDelimiter?: string | null,
+): string[] {
   const value = pickUnknown(source, keys);
 
   if (Array.isArray(value)) {
@@ -156,10 +160,15 @@ function pickStringArray(source: unknown, keys: string[]): string[] {
   }
 
   if (typeof value === 'string') {
-    return value
-      .split(',')
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
+    if (splitDelimiter) {
+      return value
+        .split(splitDelimiter)
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+    }
+
+    const trimmedValue = value.trim();
+    return trimmedValue.length > 0 ? [trimmedValue] : [];
   }
 
   return [];
@@ -201,9 +210,13 @@ export function pickSourceRecord(sources: unknown[], keys: string[]): UnknownRec
   return null;
 }
 
-export function pickSourceStringArray(sources: unknown[], keys: string[]): string[] {
+export function pickSourceStringArray(
+  sources: unknown[],
+  keys: string[],
+  splitDelimiter?: string | null,
+): string[] {
   for (const source of sources) {
-    const value = pickStringArray(source, keys);
+    const value = pickStringArray(source, keys, splitDelimiter);
 
     if (value.length > 0) {
       return value;

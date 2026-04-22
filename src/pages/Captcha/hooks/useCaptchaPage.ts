@@ -28,13 +28,14 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
 
   const handleSubmit = useCallback(async () => {
     setFeedbackMessage(null);
+    const trimmedToken = token?.trim() ?? '';
 
     if (recaptchaSiteKey.length === 0) {
       setFeedbackMessage('reCAPTCHA 사이트 키가 비어 있습니다. `.env.local`을 확인해 주세요.');
       return;
     }
 
-    if (!token) {
+    if (!trimmedToken) {
       setFeedbackMessage('캡차를 먼저 완료해 주세요.');
       return;
     }
@@ -42,7 +43,7 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
     setIsVerifying(true);
 
     try {
-      const result = await submitCaptchaVerification({ token });
+      const result = await submitCaptchaVerification({ token: trimmedToken });
 
       if (!result.success) {
         setFeedbackMessage(result.message ?? '캡차 검증에 실패했습니다.');
