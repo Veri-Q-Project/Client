@@ -37,7 +37,13 @@ export function readGuestUuidFromStorage(): string | null {
     return null;
   }
 
-  const rawValue = window.localStorage.getItem(guestUuidStorageKey);
+  let rawValue: string | null = null;
+
+  try {
+    rawValue = window.localStorage.getItem(guestUuidStorageKey);
+  } catch {
+    return null;
+  }
 
   if (!rawValue) {
     return null;

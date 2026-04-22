@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { toApiError } from '@/shared/api/errors/apiError';
-import { readGuestUuidFromStorage } from '@/shared/store/guestStore';
+import { readGuestUuidFromStorage, useGuestStore } from '@/shared/store/guestStore';
 
 type CreateAxiosOptions = {
   baseURL: string;
@@ -15,6 +15,10 @@ export function createAxios({ baseURL, timeout }: CreateAxiosOptions) {
   });
 
   instance.interceptors.request.use((config) => {
+    if (typeof window !== 'undefined') {
+      useGuestStore.getState().ensureGuestUuid();
+    }
+
     const guestUuid = readGuestUuidFromStorage();
 
     if (guestUuid) {

@@ -56,9 +56,11 @@ export function toApiError(error: unknown): ApiError {
   }
 
   if (error instanceof Error) {
+    const message = error.message.trim() || 'Unknown API error.';
+
     return new ApiError({
       cause: error,
-      message: error.message,
+      message,
     });
   }
 

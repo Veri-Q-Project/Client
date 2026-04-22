@@ -18,12 +18,22 @@ function trimEnvValue(rawValue: string | undefined): string {
   return (rawValue ?? '').trim();
 }
 
+function requireProdEnvValue(rawValue: string | undefined, variableName: string): string {
+  const trimmedValue = trimEnvValue(rawValue);
+
+  if (!trimmedValue) {
+    throw new Error(`${variableName} is required for production builds.`);
+  }
+
+  return trimmedValue;
+}
+
 export function getBe1BaseUrl(): string {
   if (import.meta.env.DEV) {
     return DEV_BE1_PROXY_BASE_URL;
   }
 
-  return trimEnvValue(import.meta.env.VITE_BE1_BASE_URL);
+  return requireProdEnvValue(import.meta.env.VITE_BE1_BASE_URL, 'VITE_BE1_BASE_URL');
 }
 
 export function getBe3BaseUrl(): string {
@@ -31,7 +41,7 @@ export function getBe3BaseUrl(): string {
     return DEV_BE3_PROXY_BASE_URL;
   }
 
-  return trimEnvValue(import.meta.env.VITE_BE3_BASE_URL);
+  return requireProdEnvValue(import.meta.env.VITE_BE3_BASE_URL, 'VITE_BE3_BASE_URL');
 }
 
 export function getApiTimeoutMs(): number {
