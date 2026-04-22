@@ -152,7 +152,7 @@ function isNonWebScanResponse(scanResponse: Record<string, unknown>): boolean {
 }
 
 function isWebHistoryItem(item: ScanHistoryItem): boolean {
-  return item.isUrl === true && item.schemeType?.trim().toUpperCase() === 'WEB';
+  return item.isUrl !== false && item.schemeType?.trim().toUpperCase() === 'WEB';
 }
 
 function openResultPage(route: ResultRoute, url: string) {

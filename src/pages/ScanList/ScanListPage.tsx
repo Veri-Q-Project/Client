@@ -92,7 +92,7 @@ function StatusBadgeIcon({ tone }: { tone: ScanListStatus }) {
 }
 
 function isWebScanListItem(item: { isUrl: boolean | null; schemeType: string | null }): boolean {
-  return item.isUrl === true && item.schemeType?.trim().toUpperCase() === 'WEB';
+  return item.isUrl !== false && item.schemeType?.trim().toUpperCase() === 'WEB';
 }
 
 export default function ScanListPage() {
