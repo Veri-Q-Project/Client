@@ -10,7 +10,6 @@ type UseCaptchaPageReturn = {
   handleSubmit: () => Promise<void>;
   isVerifying: boolean;
   recaptchaSiteKey: string;
-  token: string | null;
 };
 
 export function useCaptchaPage(): UseCaptchaPageReturn {
@@ -64,6 +63,5 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
     handleSubmit,
     isVerifying,
     recaptchaSiteKey,
-    token,
   };
 }
