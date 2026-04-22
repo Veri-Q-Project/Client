@@ -1,5 +1,5 @@
 import { isApiError } from '@/shared/api/errors/apiError';
-import { pickString } from '@/shared/api/mappers/payloadAccess';
+import { pickString } from '@/shared/api/responseAccess/payloadAccess';
 
 function normalizeValue(value: string | null): string {
   return value?.trim().toLowerCase() ?? '';

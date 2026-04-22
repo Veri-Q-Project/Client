@@ -1,8 +1,12 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 
-import { pickBoolean, pickSourceString, pickString } from '@/shared/api/mappers/payloadAccess';
-import { resolveResultToneFromSource } from '@/shared/api/mappers/resolveResultTone';
+import {
+  pickBoolean,
+  pickSourceString,
+  pickString,
+} from '@/shared/api/responseAccess/payloadAccess';
+import { resolveResultToneFromSource } from '@/shared/api/risk/resolveResultTone';
 import type {
   BackendAnalysisDetailResponse,
   BackendScanResponse,

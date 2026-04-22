@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 
-import { pickNumber, pickString, pickUnknown } from '@/shared/api/mappers/payloadAccess';
+import { pickNumber, pickString, pickUnknown } from '@/shared/api/responseAccess/payloadAccess';
 import {
   mapSseStepId,
   mapSseStepIds,
   mappedLoadingStepOrder,
   type MappedLoadingStepId,
-} from '@/shared/api/mappers/sseStepMapper';
+} from '@/shared/api/sse/sseStepMapper';
 
 type ScanProgressStatus = 'active' | 'completed' | 'connecting' | 'error' | 'idle';
 

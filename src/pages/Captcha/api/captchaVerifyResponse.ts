@@ -1,4 +1,4 @@
-import { pickBoolean, pickString } from '@/shared/api/mappers/payloadAccess';
+import { pickBoolean, pickString } from '@/shared/api/responseAccess/payloadAccess';
 
 import type { CaptchaVerifyResponse } from '../types/captcha.types';
 

@@ -1,7 +1,12 @@
 import type { ResultTone } from '@/shared/types/resultTone';
 
 import { normalizeRiskLevel } from './normalizeRiskLevel';
-import { pickNumber, pickSourceNumber, pickSourceString, pickString } from './payloadAccess';
+import {
+  pickNumber,
+  pickSourceNumber,
+  pickSourceString,
+  pickString,
+} from '../responseAccess/payloadAccess';
 
 const SAFE_MAX_SCORE = 29;
 const WARNING_MAX_SCORE = 59;
