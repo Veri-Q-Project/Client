@@ -3,7 +3,7 @@ import { App } from 'antd';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { isApiError } from '@/shared/api/errors/apiError';
-import { pickNumber, pickString } from '@/shared/api/responseAccess/payloadAccess';
+import { pickString } from '@/shared/api/responseAccess/payloadAccess';
 import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
 import { mapSseStepId } from '@/shared/api/sse/sseStepMapper';
 import { ensureScanDetail } from '@/shared/lib/scan-session/ensureScanDetail';
@@ -61,6 +61,17 @@ function openResultRouteForCurrentSession() {
   window.location.assign(route);
 }
 
+function resolveScanIdentifier(source: unknown): string | null {
+  return pickString(source, ['scanId', 'scan_id', 'id']);
+}
+
+function isSameScanFinalResult(finalResult: unknown, scanResponse: unknown): boolean {
+  const finalResultId = resolveScanIdentifier(finalResult);
+  const scanResponseId = resolveScanIdentifier(scanResponse);
+
+  return Boolean(finalResultId && scanResponseId && finalResultId === scanResponseId);
+}
+
 export function useLoadingPage(): UseLoadingPageReturn {
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -89,6 +100,10 @@ export function useLoadingPage(): UseLoadingPageReturn {
   useEffect(() => {
     if (!scanResponse && !finalResult) {
       void navigate({ to: '/' });
+      return;
+    }
+
+    if (finalResult && scanResponse && isSameScanFinalResult(finalResult, scanResponse)) {
       return;
     }
 
@@ -256,9 +271,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
     onFinal: async (payload) => {
       setFinalResult(payload);
 
-      const hasResolvedRiskLevel =
-        resolveResultToneFromSources([payload], null) !== null ||
-        pickNumber(payload, ['trustScore', 'trust_score', 'score']) !== null;
+      const hasResolvedRiskLevel = resolveResultToneFromSources([payload], null) !== null;
 
       if (!hasResolvedRiskLevel) {
         let isResolved = false;
@@ -276,6 +289,8 @@ export function useLoadingPage(): UseLoadingPageReturn {
         if (detailResolutionFailedRef.current) {
           return;
         }
+
+        return;
       }
 
       detailResolutionStartedRef.current = true;
