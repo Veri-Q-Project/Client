@@ -37,6 +37,22 @@ describe('parseSseMessage', () => {
     });
   });
 
+  it('treats completed status payloads as final before progress heuristics', () => {
+    const payload = {
+      message: 'done',
+      status: 'COMPLETED',
+      step: 'UNKNOWN_BACKEND_STEP',
+    };
+    const parsedMessage = parseSseMessage(JSON.stringify(payload), 'message');
+
+    expect(parsedMessage.type).toBe('final');
+    expect(parsedMessage.payload).toMatchObject({
+      message: 'done',
+      status: 'COMPLETED',
+      step: 'UNKNOWN_BACKEND_STEP',
+    });
+  });
+
   it('treats default message events with final analysis fields as final messages', () => {
     const payload = {
       originalUrl: 'https://example.com',

@@ -108,6 +108,25 @@ describe('scanProgressStore', () => {
     expect(useScanProgressStore.getState().errorMessage).toBeNull();
   });
 
+  it('clears stale progress when an error is set', () => {
+    useScanProgressStore.getState().updateFromProgressEvent({
+      percent: 70,
+      status: 'IN_PROGRESS',
+      step: 'DB_CHECK',
+    });
+
+    useScanProgressStore.getState().setError('network failure');
+
+    const state = useScanProgressStore.getState();
+
+    expect(state.status).toBe('error');
+    expect(state.backendMessage).toBe('network failure');
+    expect(state.backendStatus).toBe('error');
+    expect(state.percent).toBe(0);
+    expect(state.currentStepId).toBeNull();
+    expect(state.completedStepIds).toEqual([]);
+  });
+
   it('marks the flow completed when backend sends only a terminal status', () => {
     useScanProgressStore.getState().updateFromProgressEvent({
       status: 'COMPLETED',
@@ -120,7 +139,7 @@ describe('scanProgressStore', () => {
     expect(state.percent).toBe(100);
   });
 
-  it('keeps unknown backend steps as raw metadata without completing mapped steps', () => {
+  it('keeps unknown in-progress steps as raw metadata and completes on terminal status', () => {
     useScanProgressStore.getState().updateFromProgressEvent({
       message: 'new step started',
       status: 'IN_PROGRESS',
@@ -144,11 +163,12 @@ describe('scanProgressStore', () => {
 
     state = useScanProgressStore.getState();
 
-    expect(state.status).toBe('active');
+    expect(state.status).toBe('completed');
     expect(state.backendStep).toBe('NEW_BACKEND_STEP');
     expect(state.backendStatus).toBe('completed');
     expect(state.backendMessage).toBe('new step completed');
-    expect(state.currentStepId).toBeNull();
-    expect(state.completedStepIds).toEqual([]);
+    expect(state.currentStepId).toBe('completed');
+    expect(state.completedStepIds.at(-1)).toBe('completed');
+    expect(state.percent).toBe(100);
   });
 });

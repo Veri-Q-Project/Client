@@ -184,7 +184,12 @@ export const useScanProgressStore = create<ScanProgressState>((set) => ({
   setError: (errorMessage) => {
     set({
       backendMessage: errorMessage,
+      backendStatus: 'error',
+      backendStep: null,
+      completedStepIds: [],
+      currentStepId: null,
       errorMessage,
+      percent: 0,
       status: 'error',
     });
   },
@@ -209,10 +214,9 @@ export const useScanProgressStore = create<ScanProgressState>((set) => ({
 
     set((state) => {
       let nextCurrentStepId = currentStepId ?? state.currentStepId;
-      const hasUnknownBackendStep = backendStep !== null && currentStepId === null;
-      const progressStatus = hasUnknownBackendStep && isCompletedStatus(status) ? '' : status;
+      const progressStatus = status;
 
-      if (isCompletedStatus(status) && currentStepId === null && backendStep === null) {
+      if (isCompletedStatus(status) && currentStepId === null) {
         nextCurrentStepId = 'completed';
       }
 

@@ -63,6 +63,16 @@ function resolveMessageType(eventType: string | undefined, payload: unknown): Ss
   }
 
   if (
+    payloadStatus === 'final' ||
+    payloadStatus === 'result' ||
+    payloadStatus === 'complete' ||
+    payloadStatus === 'completed' ||
+    payloadStatus === 'done'
+  ) {
+    return 'final';
+  }
+
+  if (
     candidateType === 'final' ||
     candidateType === 'result' ||
     candidateType === 'complete' ||
@@ -70,28 +80,6 @@ function resolveMessageType(eventType: string | undefined, payload: unknown): Ss
     candidateType === 'done'
   ) {
     return 'final';
-  }
-
-  if (
-    payloadRecord &&
-    hasAnyDefinedKey(payloadRecord, [
-      'currentStepId',
-      'current_step_id',
-      'step',
-      'stepId',
-      'step_id',
-    ])
-  ) {
-    return 'progress';
-  }
-
-  if (
-    candidateType === 'progress' ||
-    candidateType === 'status' ||
-    candidateType === 'step' ||
-    candidateType === 'update'
-  ) {
-    return 'progress';
   }
 
   if (
@@ -119,6 +107,28 @@ function resolveMessageType(eventType: string | undefined, payload: unknown): Ss
     ])
   ) {
     return 'final';
+  }
+
+  if (
+    payloadRecord &&
+    hasAnyDefinedKey(payloadRecord, [
+      'currentStepId',
+      'current_step_id',
+      'step',
+      'stepId',
+      'step_id',
+    ])
+  ) {
+    return 'progress';
+  }
+
+  if (
+    candidateType === 'progress' ||
+    candidateType === 'status' ||
+    candidateType === 'step' ||
+    candidateType === 'update'
+  ) {
+    return 'progress';
   }
 
   if (

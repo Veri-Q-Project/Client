@@ -257,7 +257,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
       setFinalResult(payload);
 
       const hasResolvedRiskLevel =
-        Boolean(pickString(payload, ['riskLevel', 'risk_level', 'status', 'result'])) ||
+        resolveResultToneFromSources([payload], null) !== null ||
         pickNumber(payload, ['trustScore', 'trust_score', 'score']) !== null;
 
       if (!hasResolvedRiskLevel) {
