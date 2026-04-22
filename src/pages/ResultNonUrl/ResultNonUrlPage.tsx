@@ -40,8 +40,16 @@ export default function ResultNonUrlPage() {
     displayedActionType === resultNonUrlPageData.detectedActionType
       ? resultNonUrlPageData.targetValue
       : undefined;
+  const isExecutable =
+    displayedActionType === resultNonUrlPageData.detectedActionType &&
+    displayedTargetValue !== undefined &&
+    displayedTargetValue !== null;
 
   const handleExecuteAction = () => {
+    if (!isExecutable) {
+      return;
+    }
+
     const executionPlan = resolveNonUrlActionExecution(displayedActionType, displayedTargetValue);
     setExecutionFeedbackMessage(executionPlan.message);
 
@@ -82,7 +90,12 @@ export default function ResultNonUrlPage() {
               targetValue={displayedTargetValue}
             />
 
-            <button className={styles.executionButton} onClick={handleExecuteAction} type="button">
+            <button
+              className={styles.executionButton}
+              disabled={!isExecutable}
+              onClick={handleExecuteAction}
+              type="button"
+            >
               주의하여 실행하기
             </button>
 

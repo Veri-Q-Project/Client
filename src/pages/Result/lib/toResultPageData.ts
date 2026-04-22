@@ -33,9 +33,9 @@ function formatDateOnlyLabel(rawDate: string | null): string | null {
     return rawDate;
   }
 
-  const year = parsedDate.getFullYear();
-  const month = `${parsedDate.getMonth() + 1}`.padStart(2, '0');
-  const day = `${parsedDate.getDate()}`.padStart(2, '0');
+  const year = parsedDate.getUTCFullYear();
+  const month = `${parsedDate.getUTCMonth() + 1}`.padStart(2, '0');
+  const day = `${parsedDate.getUTCDate()}`.padStart(2, '0');
 
   return `${year}.${month}.${day}`;
 }

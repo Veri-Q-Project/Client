@@ -39,8 +39,11 @@ export function resolveRiskDetectionContent(
     return resolved;
   }
 
+  const riskTypeLabel = riskType.trim();
+  const fallbackContent = unknownThreatTextByTone[riskLevel];
+
   return {
-    ...unknownThreatTextByTone[riskLevel],
-    title: `${riskType} 감지`,
+    ...fallbackContent,
+    title: riskTypeLabel ? `${riskTypeLabel} 감지` : fallbackContent.title,
   };
 }

@@ -1,3 +1,5 @@
+import { Link } from '@tanstack/react-router';
+
 import { qrIconByTone } from '@/shared/icon/resultIcons';
 import AppHeader from '@/shared/ui/app-header';
 
@@ -109,12 +111,15 @@ export default function ScanListPage() {
             <ul className={styles.list}>
               {scanListPageData.items.map((item) => (
                 <li key={item.id}>
-                  <a
+                  <Link
                     className={`${styles.card} ${styles.cardTone[item.status]}`}
-                    href={`${resultRouteByStatus[item.status]}?url=${encodeURIComponent(item.url)}`}
                     onClick={() => {
                       handleSelectScanResult(item);
                     }}
+                    search={{
+                      url: item.url,
+                    }}
+                    to={resultRouteByStatus[item.status]}
                   >
                     <span className={`${styles.badge} ${styles.badgeTone[item.status]}`}>
                       <span aria-hidden="true" className={styles.badgeIcon}>
@@ -143,7 +148,7 @@ export default function ScanListPage() {
                         {item.scannedAt}
                       </p>
                     </article>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

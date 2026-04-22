@@ -42,6 +42,8 @@ type ResultStatusPageProps = {
   tone: ResultTone;
 };
 
+const SECURITY_ENGINE_VERSION = 'v2.4.1';
+
 export default function ResultStatusPage({
   actionButtons,
   hero,
@@ -54,6 +56,8 @@ export default function ResultStatusPage({
   siteCard,
   tone,
 }: ResultStatusPageProps) {
+  const currentYear = new Date().getFullYear();
+
   return (
     <main className={styles.page}>
       <AppHeader iconSrc={qrIconByTone[tone]} />
@@ -86,7 +90,7 @@ export default function ResultStatusPage({
           <ReportToggleButton isOpen={false} onToggle={onViewReportClick} />
 
           <p className={styles.footer}>
-            Veri-Q Security Engine v2.4.1 (c) 2024. All rights reserved.
+            {`Veri-Q Security Engine ${SECURITY_ENGINE_VERSION} (c) ${currentYear}. All rights reserved.`}
           </p>
         </section>
       </div>

@@ -1,9 +1,8 @@
 import { useNavigate } from '@tanstack/react-router';
-import { App } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
 import { shareCurrentPage } from '@/shared/lib/browser/shareCurrentPage';
-import { showApiError } from '@/shared/lib/feedback/showApiError';
+import { useSessionGuardedPageData } from '@/shared/lib/page/useSessionGuardedPageData';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 import { useScanSessionStore } from '@/shared/store/scanSessionStore';
 
@@ -21,43 +20,15 @@ type UseResultNonUrlPageReturn = {
 };
 
 export function useResultNonUrlPage(): UseResultNonUrlPageReturn {
-  const { message } = App.useApp();
   const navigate = useNavigate();
   const clearScanSession = useScanSessionStore((state) => state.clearSession);
   const resetScanProgress = useScanProgressStore((state) => state.reset);
-  const [resultNonUrlPageData, setResultNonUrlPageData] = useState<ResultNonUrlPageData | null>(
-    getInitialResultNonUrlPageData,
-  );
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadResultNonUrlPageData = async () => {
-      try {
-        const response = await fetchResultNonUrlPageData();
-
-        if (isMounted) {
-          setResultNonUrlPageData(response);
-        }
-      } catch (error) {
-        console.error('[ResultNonUrlPage] failed to load page data', error);
-
-        if (error instanceof Error && error.message === 'SCAN_SESSION_REQUIRED') {
-          void navigate({ to: '/' });
-          return;
-        }
-
-        showApiError(message, error, '비 URL 결과를 불러오지 못했습니다.');
-        void navigate({ to: '/' });
-      }
-    };
-
-    void loadResultNonUrlPageData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [message, navigate]);
+  const { data: resultNonUrlPageData } = useSessionGuardedPageData({
+    fetchPageData: fetchResultNonUrlPageData,
+    getInitialPageData: getInitialResultNonUrlPageData,
+    loadErrorMessage: '비 URL 결과를 불러오지 못했습니다.',
+    logMessage: '[ResultNonUrlPage] failed to load page data',
+  });
 
   const handleRescan = useCallback(() => {
     clearScanSession();

@@ -9,9 +9,17 @@ const ResultPage = lazy(() => import('@/pages/Result'));
 const ResultNonUrlPage = lazy(() => import('@/pages/ResultNonUrl'));
 const ScanListPage = lazy(() => import('@/pages/ScanList'));
 
+function RouteLoader() {
+  return (
+    <div aria-live="polite" role="status">
+      Loading...
+    </div>
+  );
+}
+
 function RootLayout() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<RouteLoader />}>
       <Outlet />
     </Suspense>
   );

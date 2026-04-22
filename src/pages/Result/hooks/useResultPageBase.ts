@@ -1,9 +1,8 @@
 import { useNavigate } from '@tanstack/react-router';
-import { App } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
 import { shareCurrentPage } from '@/shared/lib/browser/shareCurrentPage';
-import { showApiError } from '@/shared/lib/feedback/showApiError';
+import { useSessionGuardedPageData } from '@/shared/lib/page/useSessionGuardedPageData';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 import { useScanSessionStore } from '@/shared/store/scanSessionStore';
 
@@ -25,41 +24,15 @@ export function useResultPageBase<T>({
   getInitialPageData,
   loadErrorMessage,
 }: UseResultPageBaseOptions<T>): UseResultPageBaseReturn<T> {
-  const { message } = App.useApp();
   const navigate = useNavigate();
   const clearScanSession = useScanSessionStore((state) => state.clearSession);
   const resetScanProgress = useScanProgressStore((state) => state.reset);
-  const [resultData, setResultData] = useState<T | null>(getInitialPageData);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadResultData = async () => {
-      try {
-        const response = await fetchPageData();
-
-        if (isMounted) {
-          setResultData(response);
-        }
-      } catch (error) {
-        console.error('Failed to load result page data.', error);
-
-        if (error instanceof Error && error.message === 'SCAN_SESSION_REQUIRED') {
-          void navigate({ to: '/' });
-          return;
-        }
-
-        showApiError(message, error, loadErrorMessage);
-        void navigate({ to: '/' });
-      }
-    };
-
-    void loadResultData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [fetchPageData, loadErrorMessage, message, navigate]);
+  const { data: resultData } = useSessionGuardedPageData({
+    fetchPageData,
+    getInitialPageData,
+    loadErrorMessage,
+    logMessage: 'Failed to load result page data.',
+  });
 
   const handleShareResult = useCallback(async () => {
     await shareCurrentPage({
