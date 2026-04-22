@@ -19,7 +19,7 @@ const historyTargetValueKeys = [
 ];
 const historyTitleKeys = ['title', 'siteName', 'site_name', 'name'];
 
-function normalizeTimestampValue(rawScannedAt: string): string {
+export function normalizeHistoryTimestampValue(rawScannedAt: string): string {
   return rawScannedAt.replace(/\./g, '-').replace(' ', 'T');
 }
 
@@ -68,6 +68,6 @@ export function resolveHistoryTimestamp(rawScannedAt: string | null): number {
     return 0;
   }
 
-  const parsedTimestamp = Date.parse(normalizeTimestampValue(rawScannedAt));
+  const parsedTimestamp = Date.parse(normalizeHistoryTimestampValue(rawScannedAt));
   return Number.isNaN(parsedTimestamp) ? 0 : parsedTimestamp;
 }

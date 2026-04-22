@@ -79,7 +79,12 @@ function resolveNonUrlActionType(rawActionType: string | null): NonUrlActionType
 }
 
 export function toResultNonUrlPageData(session: ScanSessionSnapshot): ResultNonUrlPageData {
-  const sources = [session.analysisDetail, session.finalResult, session.scanResponse];
+  const sources = [
+    session.analysisDetail,
+    session.finalResult,
+    session.scanResponse,
+    session.historySelection,
+  ];
   const actionType = resolveNonUrlActionType(
     pickSourceString(sources, ['actionType', 'action_type', 'schemeType', 'scheme_type']),
   );

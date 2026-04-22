@@ -3,6 +3,7 @@ import { useGuestStore } from '@/shared/store/guestStore';
 import { fetchScanHistory } from './fetchScanHistory';
 import {
   buildHistoryItemId,
+  normalizeHistoryTimestampValue,
   pickHistoryIsUrl,
   pickHistoryRiskLevel,
   pickHistoryScannedAt,
@@ -19,6 +20,11 @@ type FetchScanHistoryDataOptions = {
   limit?: number;
 };
 
+type HistoryItemWithTargetValue = {
+  item: unknown;
+  targetValue: string;
+};
+
 function resolveScanHistoryUuid(): string {
   return useGuestStore.getState().guestUuid ?? useGuestStore.getState().ensureGuestUuid();
 }
@@ -32,7 +38,15 @@ function getSortedHistoryItems(items: unknown[]): unknown[] {
   });
 }
 
-function applyItemLimit(items: unknown[], limit?: number): unknown[] {
+function getItemsWithTargetValue(items: unknown[]): HistoryItemWithTargetValue[] {
+  return items.flatMap((item) => {
+    const targetValue = pickHistoryTargetValue(item);
+
+    return targetValue ? [{ item, targetValue }] : [];
+  });
+}
+
+function applyItemLimit<T>(items: T[], limit?: number): T[] {
   if (limit === undefined) {
     return items;
   }
@@ -45,7 +59,7 @@ function formatScannedAt(rawScannedAt: string | null): string {
     return '날짜 정보 없음';
   }
 
-  const parsedDate = new Date(rawScannedAt.replace(' ', 'T'));
+  const parsedDate = new Date(normalizeHistoryTimestampValue(rawScannedAt));
 
   if (Number.isNaN(parsedDate.getTime())) {
     return rawScannedAt;
@@ -63,17 +77,22 @@ export async function fetchScanHistoryData(
 ): Promise<ScanHistoryData> {
   const uuid = resolveScanHistoryUuid();
   const items = await fetchScanHistory();
-  const visibleItems = applyItemLimit(getSortedHistoryItems(items), options.limit);
+  const visibleItems = applyItemLimit(
+    getItemsWithTargetValue(getSortedHistoryItems(items)),
+    options.limit,
+  );
 
   return {
-    items: visibleItems.map((item, index) => ({
-      id: buildHistoryItemId(item, index),
-      isUrl: pickHistoryIsUrl(item),
-      scannedAt: formatScannedAt(pickHistoryScannedAt(item)),
-      schemeType: pickHistorySchemeType(item),
-      status: pickHistoryRiskLevel(item) ?? 'warning',
-      url: pickHistoryTargetValue(item) ?? 'URL 정보 없음',
-    })),
+    items: visibleItems.map(({ item, targetValue }, index) => {
+      return {
+        id: buildHistoryItemId(item, index),
+        isUrl: pickHistoryIsUrl(item),
+        scannedAt: formatScannedAt(pickHistoryScannedAt(item)),
+        schemeType: pickHistorySchemeType(item),
+        status: pickHistoryRiskLevel(item) ?? 'warning',
+        url: targetValue,
+      };
+    }),
     uuid,
   };
 }

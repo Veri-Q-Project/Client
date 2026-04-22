@@ -47,10 +47,11 @@ type UseQRScanPageReturn = {
   videoRef: RefObject<HTMLVideoElement | null>;
 };
 
-const resultRouteByStatus: Record<
-  ScanHistoryStatus,
-  '/result/safe' | '/result/warning' | '/result/critical'
-> = {
+type ResultRoute = '/result/critical' | '/result/non-url' | '/result/safe' | '/result/warning';
+
+const nonUrlResultRoute = '/result/non-url';
+
+const resultRouteByStatus: Record<ScanHistoryStatus, ResultRoute> = {
   safe: '/result/safe',
   warning: '/result/warning',
   critical: '/result/critical',
@@ -150,7 +151,16 @@ function isNonWebScanResponse(scanResponse: Record<string, unknown>): boolean {
   return schemeType.length > 0 && schemeType !== 'WEB';
 }
 
-function openResultPage(route: string, url: string) {
+function isWebHistoryItem(item: ScanHistoryItem): boolean {
+  return item.isUrl === true && item.schemeType?.trim().toUpperCase() === 'WEB';
+}
+
+function openResultPage(route: ResultRoute, url: string) {
+  if (route === nonUrlResultRoute) {
+    window.location.assign(route);
+    return;
+  }
+
   window.location.assign(`${route}?url=${encodeURIComponent(url)}`);
 }
 
@@ -395,7 +405,11 @@ export function useQRScanPage(): UseQRScanPageReturn {
       schemeType: recentScanItem.schemeType,
       url: recentScanItem.url,
     });
-    openResultPage(resultRouteByStatus[recentScanItem.status], recentScanItem.url);
+    const route = isWebHistoryItem(recentScanItem)
+      ? resultRouteByStatus[recentScanItem.status]
+      : nonUrlResultRoute;
+
+    openResultPage(route, recentScanItem.url);
   }, [recentScanItem, setHistorySelection]);
 
   const handleCapturePhoto = useCallback(async () => {

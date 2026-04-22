@@ -35,4 +35,10 @@ describe('historyItemAccess', () => {
       resolveHistoryTimestamp('2026-04-21 02:50:44'),
     );
   });
+
+  it('normalizes dotted timestamp labels before parsing', () => {
+    expect(resolveHistoryTimestamp('2026.04.21 02:50:44')).toBe(
+      resolveHistoryTimestamp('2026-04-21T02:50:44'),
+    );
+  });
 });

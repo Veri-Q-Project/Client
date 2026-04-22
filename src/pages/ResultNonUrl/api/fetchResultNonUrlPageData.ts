@@ -6,7 +6,7 @@ import type { ResultNonUrlPageData } from '../types/resultNonUrlPage.types';
 
 function hasNonUrlResultSession(): boolean {
   const session = getScanSessionSnapshot();
-  return Boolean(session.finalResult || session.scanResponse);
+  return Boolean(session.finalResult || session.scanResponse || session.historySelection);
 }
 
 export async function fetchResultNonUrlPageData(): Promise<ResultNonUrlPageData> {
