@@ -82,4 +82,73 @@ describe('scanProgressStore', () => {
     expect(state.completedStepIds).toContain('urlNormalize');
     expect(state.completedStepIds).toContain('completed');
   });
+
+  it('clears stale progress when starting a new connection', () => {
+    useScanProgressStore.getState().updateFromProgressEvent({
+      percent: 80,
+      status: 'IN_PROGRESS',
+      step: 'DB_CHECK',
+    });
+
+    useScanProgressStore.getState().setConnecting();
+
+    const state = useScanProgressStore.getState();
+
+    expect(state.status).toBe('connecting');
+    expect(state.percent).toBe(0);
+    expect(state.currentStepId).toBeNull();
+    expect(state.completedStepIds).toEqual([]);
+    expect(state.errorMessage).toBeNull();
+  });
+
+  it('clears stale errors when a retry completes', () => {
+    useScanProgressStore.getState().setError('temporary failure');
+    useScanProgressStore.getState().setCompleted();
+
+    expect(useScanProgressStore.getState().errorMessage).toBeNull();
+  });
+
+  it('marks the flow completed when backend sends only a terminal status', () => {
+    useScanProgressStore.getState().updateFromProgressEvent({
+      status: 'COMPLETED',
+    });
+
+    const state = useScanProgressStore.getState();
+
+    expect(state.status).toBe('completed');
+    expect(state.currentStepId).toBe('completed');
+    expect(state.percent).toBe(100);
+  });
+
+  it('keeps unknown backend steps as raw metadata without completing mapped steps', () => {
+    useScanProgressStore.getState().updateFromProgressEvent({
+      message: 'new step started',
+      status: 'IN_PROGRESS',
+      step: 'NEW_BACKEND_STEP',
+    });
+
+    let state = useScanProgressStore.getState();
+
+    expect(state.status).toBe('active');
+    expect(state.backendStep).toBe('NEW_BACKEND_STEP');
+    expect(state.backendStatus).toBe('in_progress');
+    expect(state.backendMessage).toBe('new step started');
+    expect(state.currentStepId).toBeNull();
+    expect(state.completedStepIds).toEqual([]);
+
+    useScanProgressStore.getState().updateFromProgressEvent({
+      message: 'new step completed',
+      status: 'COMPLETED',
+      step: 'NEW_BACKEND_STEP',
+    });
+
+    state = useScanProgressStore.getState();
+
+    expect(state.status).toBe('active');
+    expect(state.backendStep).toBe('NEW_BACKEND_STEP');
+    expect(state.backendStatus).toBe('completed');
+    expect(state.backendMessage).toBe('new step completed');
+    expect(state.currentStepId).toBeNull();
+    expect(state.completedStepIds).toEqual([]);
+  });
 });

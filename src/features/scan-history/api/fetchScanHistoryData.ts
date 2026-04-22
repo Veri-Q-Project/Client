@@ -3,8 +3,10 @@ import { useGuestStore } from '@/shared/store/guestStore';
 import { fetchScanHistory } from './fetchScanHistory';
 import {
   buildHistoryItemId,
+  pickHistoryIsUrl,
   pickHistoryRiskLevel,
   pickHistoryScannedAt,
+  pickHistorySchemeType,
   pickHistoryTargetValue,
   resolveHistoryTimestamp,
 } from '../lib/historyItemAccess';
@@ -66,7 +68,9 @@ export async function fetchScanHistoryData(
   return {
     items: visibleItems.map((item, index) => ({
       id: buildHistoryItemId(item, index),
+      isUrl: pickHistoryIsUrl(item),
       scannedAt: formatScannedAt(pickHistoryScannedAt(item)),
+      schemeType: pickHistorySchemeType(item),
       status: pickHistoryRiskLevel(item) ?? 'warning',
       url: pickHistoryTargetValue(item) ?? 'URL 정보 없음',
     })),

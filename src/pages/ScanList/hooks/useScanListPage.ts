@@ -14,12 +14,15 @@ type UseScanListPageReturn = {
 };
 
 export function useScanListPage(): UseScanListPageReturn {
-  const guestUuid =
-    useGuestStore((state) => state.guestUuid) ?? useGuestStore.getState().ensureGuestUuid();
+  const guestUuid = useGuestStore((state) => state.guestUuid);
   const setHistorySelection = useScanSessionStore((state) => state.setHistorySelection);
   const [scanListPageData, setScanListPageData] = useState<ScanListPageData>(() =>
-    getInitialScanListPageData(guestUuid),
+    getInitialScanListPageData(guestUuid ?? ''),
   );
+
+  useEffect(() => {
+    useGuestStore.getState().ensureGuestUuid();
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -35,7 +38,7 @@ export function useScanListPage(): UseScanListPageReturn {
         console.error('Failed to load scan list page data.', error);
 
         if (isMounted) {
-          setScanListPageData(getInitialScanListPageData(guestUuid));
+          setScanListPageData(getInitialScanListPageData(guestUuid ?? ''));
         }
       }
     };
@@ -50,8 +53,10 @@ export function useScanListPage(): UseScanListPageReturn {
   const handleSelectScanResult = useCallback(
     (item: ScanListItem) => {
       setHistorySelection({
+        isUrl: item.isUrl,
         riskLevel: item.status,
         scannedAt: item.scannedAt,
+        schemeType: item.schemeType,
         url: item.url,
       });
     },
@@ -61,6 +66,6 @@ export function useScanListPage(): UseScanListPageReturn {
   return {
     handleSelectScanResult,
     scanListPageData,
-    scanListUuid: guestUuid,
+    scanListUuid: scanListPageData.uuid || guestUuid || '',
   };
 }

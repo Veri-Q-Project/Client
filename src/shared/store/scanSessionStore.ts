@@ -15,8 +15,10 @@ import type {
 import type { ResultTone } from '@/shared/types/resultTone';
 
 export type ScanHistorySelection = {
+  isUrl: boolean | null;
   riskLevel: ResultTone | null;
   scannedAt: string | null;
+  schemeType: string | null;
   url: string;
 };
 
@@ -49,11 +51,15 @@ const noopStorage: StateStorage = {
 };
 
 function createScanSessionStorage(): StateStorage {
-  if (typeof window === 'undefined' || !window.localStorage) {
+  if (typeof window === 'undefined') {
     return noopStorage;
   }
 
-  return window.localStorage;
+  try {
+    return window.localStorage ?? noopStorage;
+  } catch {
+    return noopStorage;
+  }
 }
 
 const initialState: ScanSessionSnapshot = {
@@ -178,15 +184,17 @@ export const useScanSessionStore = create<ScanSessionState>()(
         }));
       },
       setHistorySelection: (historySelection) => {
+        const schemeType = resolveSchemeType(historySelection, historySelection.url);
+
         set({
           analysisDetail: null,
           decodedUrl: historySelection.url,
           finalResult: null,
           historySelection,
-          isUrl: true,
+          isUrl: resolveIsUrl(historySelection, historySelection.url, schemeType),
           riskLevel: historySelection.riskLevel,
           scanResponse: null,
-          schemeType: 'WEB',
+          schemeType,
         });
       },
       setScanResponse: (scanResponse) => {

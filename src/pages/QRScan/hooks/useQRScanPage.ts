@@ -136,11 +136,15 @@ async function requestCameraStream() {
 }
 
 function isNonWebScanResponse(scanResponse: Record<string, unknown>): boolean {
-  const schemeType =
-    typeof scanResponse.schemeType === 'string' ? scanResponse.schemeType.trim().toUpperCase() : '';
+  const rawSchemeType =
+    typeof scanResponse.schemeType === 'string'
+      ? scanResponse.schemeType
+      : scanResponse.scheme_type;
+  const schemeType = typeof rawSchemeType === 'string' ? rawSchemeType.trim().toUpperCase() : '';
+  const rawIsUrl = scanResponse.isUrl !== undefined ? scanResponse.isUrl : scanResponse.is_url;
 
-  if (typeof scanResponse.isUrl === 'boolean') {
-    return scanResponse.isUrl === false;
+  if (typeof rawIsUrl === 'boolean') {
+    return rawIsUrl === false;
   }
 
   return schemeType.length > 0 && schemeType !== 'WEB';
@@ -385,8 +389,10 @@ export function useQRScanPage(): UseQRScanPageReturn {
     }
 
     setHistorySelection({
+      isUrl: recentScanItem.isUrl,
       riskLevel: recentScanItem.status,
       scannedAt: recentScanItem.scannedAt,
+      schemeType: recentScanItem.schemeType,
       url: recentScanItem.url,
     });
     openResultPage(resultRouteByStatus[recentScanItem.status], recentScanItem.url);

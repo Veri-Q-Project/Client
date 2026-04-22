@@ -1,4 +1,4 @@
-import { pickString } from '@/shared/api/responseAccess/payloadAccess';
+import { pickBoolean, pickString } from '@/shared/api/responseAccess/payloadAccess';
 import { normalizeRiskLevel } from '@/shared/api/risk/normalizeRiskLevel';
 import type { ResultTone } from '@/shared/types/resultTone';
 
@@ -39,6 +39,10 @@ export function pickHistorySchemeType(source: unknown): string | null {
   return pickString(source, historySchemeTypeKeys);
 }
 
+export function pickHistoryIsUrl(source: unknown): boolean | null {
+  return pickBoolean(source, ['isUrl', 'is_url']);
+}
+
 export function pickHistoryTitle(source: unknown): string | null {
   return pickString(source, historyTitleKeys);
 }
@@ -56,7 +60,7 @@ export function buildHistoryItemId(source: unknown, index: number): string {
     pickHistoryScannedAt(source),
   ].filter((part): part is string => Boolean(part));
 
-  return stableParts.length > 0 ? stableParts.join('|') : `history-${index + 1}`;
+  return stableParts.length > 0 ? `${stableParts.join('|')}|${index}` : `history-${index + 1}`;
 }
 
 export function resolveHistoryTimestamp(rawScannedAt: string | null): number {

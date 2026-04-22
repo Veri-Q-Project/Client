@@ -164,6 +164,7 @@ export const useScanProgressStore = create<ScanProgressState>((set) => ({
       backendStep: 'completed',
       completedStepIds: [...mappedLoadingStepOrder],
       currentStepId: 'completed',
+      errorMessage: null,
       percent: 100,
       status: 'completed',
     });
@@ -173,7 +174,10 @@ export const useScanProgressStore = create<ScanProgressState>((set) => ({
       backendMessage: null,
       backendStatus: null,
       backendStep: null,
+      completedStepIds: [],
+      currentStepId: null,
       errorMessage: null,
+      percent: 0,
       status: 'connecting',
     });
   },
@@ -204,13 +208,20 @@ export const useScanProgressStore = create<ScanProgressState>((set) => ({
     const backendMessage = pickString(payload, ['message', 'description', 'detail']);
 
     set((state) => {
-      const nextCurrentStepId = currentStepId ?? state.currentStepId;
+      let nextCurrentStepId = currentStepId ?? state.currentStepId;
+      const hasUnknownBackendStep = backendStep !== null && currentStepId === null;
+      const progressStatus = hasUnknownBackendStep && isCompletedStatus(status) ? '' : status;
+
+      if (isCompletedStatus(status) && currentStepId === null && backendStep === null) {
+        nextCurrentStepId = 'completed';
+      }
+
       const completedStepIds = deriveCompletedStepIds({
         currentStepId: nextCurrentStepId,
         explicitCompletedStepIds,
         previousCompletedStepIds: state.completedStepIds,
         previousCurrentStepId: state.currentStepId,
-        status,
+        status: progressStatus,
       });
       const nextPercent = derivePercent({
         completedStepIds,
@@ -221,7 +232,7 @@ export const useScanProgressStore = create<ScanProgressState>((set) => ({
       const isCompleted =
         completedStepIds.includes('completed') || nextCurrentStepId === 'completed';
 
-      if (isErrorStatus(status)) {
+      if (isErrorStatus(progressStatus)) {
         return {
           backendMessage,
           backendStatus: status || state.backendStatus,

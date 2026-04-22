@@ -14,6 +14,7 @@ type UseScanSubscriptionParams = {
 
 const INACTIVITY_TIMEOUT_MS = 120_000;
 const RECONNECT_DELAY_MS = 1_000;
+const STABLE_CONNECTION_MS = 5_000;
 const sseEventNames = [
   'INIT',
   'COMPLETE',
@@ -94,8 +95,16 @@ export function useScanSubscription({
     let reconnectAttempts = 0;
     let reconnectTimerId: number | null = null;
     let inactivityTimerId: number | null = null;
+    let stabilityTimerId: number | null = null;
     let isDisposed = false;
     let eventSource: EventSource | null = null;
+
+    const clearStabilityTimer = () => {
+      if (stabilityTimerId !== null) {
+        window.clearTimeout(stabilityTimerId);
+        stabilityTimerId = null;
+      }
+    };
 
     const clearTimers = () => {
       if (reconnectTimerId !== null) {
@@ -107,6 +116,8 @@ export function useScanSubscription({
         window.clearTimeout(inactivityTimerId);
         inactivityTimerId = null;
       }
+
+      clearStabilityTimer();
     };
 
     const closeEventSource = () => {
@@ -165,6 +176,7 @@ export function useScanSubscription({
         return;
       }
 
+      clearStabilityTimer();
       closeEventSource();
 
       if (reconnectAttempts >= getSseReconnectMax()) {
@@ -191,8 +203,12 @@ export function useScanSubscription({
       eventSource = nextEventSource;
 
       nextEventSource.onopen = () => {
-        reconnectAttempts = 0;
         resetInactivityTimer();
+        clearStabilityTimer();
+        stabilityTimerId = window.setTimeout(() => {
+          reconnectAttempts = 0;
+          stabilityTimerId = null;
+        }, STABLE_CONNECTION_MS);
       };
 
       nextEventSource.onmessage = (event) => {
@@ -200,6 +216,7 @@ export function useScanSubscription({
       };
 
       nextEventSource.onerror = () => {
+        clearStabilityTimer();
         scheduleReconnect('실시간 분석 연결이 종료되었습니다. 다시 시도해 주세요.');
       };
 

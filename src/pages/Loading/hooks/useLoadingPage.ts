@@ -22,7 +22,10 @@ type UseLoadingPageReturn = {
 
 const DETAIL_RETRY_DELAY_MS = 2_000;
 const DETAIL_RETRY_MAX = 60;
+const DETAIL_POLL_MAX_ATTEMPTS = 1;
 const DETAIL_POLL_START_DELAY_MS = 5_000;
+const DETAIL_RESOLUTION_ERROR_MESSAGE = 'Analysis detail could not be loaded. Please try again.';
+const DETAIL_RESOLUTION_TIMEOUT_MESSAGE = 'Analysis detail was not ready in time. Please retry.';
 const DEFAULT_LOADING_PAGE_DATA: LoadingPageData = {
   steps: getLoadingSteps(),
 };
@@ -70,8 +73,10 @@ export function useLoadingPage(): UseLoadingPageReturn {
   const setConnecting = useScanProgressStore((state) => state.setConnecting);
   const setError = useScanProgressStore((state) => state.setError);
   const updateFromProgressEvent = useScanProgressStore((state) => state.updateFromProgressEvent);
+  const detailResolutionFailedRef = useRef(false);
   const detailResolutionStartedRef = useRef(false);
   const isMountedRef = useRef(true);
+  const pollAttemptCountRef = useRef(0);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -88,12 +93,28 @@ export function useLoadingPage(): UseLoadingPageReturn {
     }
 
     resetProgress();
+    detailResolutionFailedRef.current = false;
     detailResolutionStartedRef.current = false;
+    pollAttemptCountRef.current = 0;
     setConnecting();
   }, [finalResult, navigate, resetProgress, scanResponse, setConnecting]);
 
+  const failDetailResolution = useCallback(
+    (errorMessage: string) => {
+      if (detailResolutionFailedRef.current) {
+        return;
+      }
+
+      detailResolutionFailedRef.current = true;
+      detailResolutionStartedRef.current = true;
+      setError(errorMessage);
+      message.error(errorMessage);
+    },
+    [message, setError],
+  );
+
   const resolveDetailAndOpenResult = useCallback(async () => {
-    if (detailResolutionStartedRef.current) {
+    if (detailResolutionStartedRef.current || detailResolutionFailedRef.current) {
       return false;
     }
 
@@ -121,8 +142,10 @@ export function useLoadingPage(): UseLoadingPageReturn {
         }
 
         if (!isApiError(error) || error.statusCode !== 404) {
-          detailResolutionStartedRef.current = false;
-          return false;
+          failDetailResolution(
+            error instanceof Error ? error.message : DETAIL_RESOLUTION_ERROR_MESSAGE,
+          );
+          throw error;
         }
 
         await new Promise<void>((resolve) => {
@@ -131,9 +154,9 @@ export function useLoadingPage(): UseLoadingPageReturn {
       }
     }
 
-    detailResolutionStartedRef.current = false;
+    failDetailResolution(DETAIL_RESOLUTION_TIMEOUT_MESSAGE);
     return false;
-  }, [setCompleted]);
+  }, [failDetailResolution, setCompleted]);
 
   const tryResolveDetailAfterTerminalProgress = useCallback(
     async (payload: Record<string, unknown>) => {
@@ -153,7 +176,11 @@ export function useLoadingPage(): UseLoadingPageReturn {
         return;
       }
 
-      await resolveDetailAndOpenResult();
+      try {
+        await resolveDetailAndOpenResult();
+      } catch {
+        return;
+      }
     },
     [resolveDetailAndOpenResult],
   );
@@ -173,13 +200,31 @@ export function useLoadingPage(): UseLoadingPageReturn {
     let pollTimerId: number | null = null;
 
     const startPolling = async () => {
-      if (isDisposed || detailResolutionStartedRef.current) {
+      if (
+        isDisposed ||
+        detailResolutionFailedRef.current ||
+        detailResolutionStartedRef.current ||
+        pollAttemptCountRef.current >= DETAIL_POLL_MAX_ATTEMPTS
+      ) {
         return;
       }
 
-      const isResolved = await resolveDetailAndOpenResult();
+      pollAttemptCountRef.current += 1;
 
-      if (isDisposed || isResolved) {
+      let isResolved = false;
+
+      try {
+        isResolved = await resolveDetailAndOpenResult();
+      } catch {
+        return;
+      }
+
+      if (isDisposed || isResolved || detailResolutionFailedRef.current) {
+        return;
+      }
+
+      if (pollAttemptCountRef.current >= DETAIL_POLL_MAX_ATTEMPTS) {
+        failDetailResolution(DETAIL_RESOLUTION_TIMEOUT_MESSAGE);
         return;
       }
 
@@ -199,7 +244,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
         window.clearTimeout(pollTimerId);
       }
     };
-  }, [finalResult, resolveDetailAndOpenResult, scanResponse]);
+  }, [failDetailResolution, finalResult, resolveDetailAndOpenResult, scanResponse]);
 
   useScanSubscription({
     enabled: Boolean(guestUuid) && Boolean(scanResponse || finalResult),
@@ -216,9 +261,19 @@ export function useLoadingPage(): UseLoadingPageReturn {
         pickNumber(payload, ['trustScore', 'trust_score', 'score']) !== null;
 
       if (!hasResolvedRiskLevel) {
-        const isResolved = await resolveDetailAndOpenResult();
+        let isResolved = false;
+
+        try {
+          isResolved = await resolveDetailAndOpenResult();
+        } catch {
+          return;
+        }
 
         if (isResolved) {
+          return;
+        }
+
+        if (detailResolutionFailedRef.current) {
           return;
         }
       }
