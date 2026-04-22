@@ -28,10 +28,6 @@ type ReportUrls = {
 };
 
 const scannedUrlKeys = [
-  'finalUrl',
-  'final_url',
-  'destinationUrl',
-  'destination_url',
   'decodedUrl',
   'decoded_url',
   'originalUrl',
@@ -41,14 +37,9 @@ const scannedUrlKeys = [
   'url',
 ];
 
-const destinationUrlKeys = [
-  'finalUrl',
-  'final_url',
-  'destinationUrl',
-  'destination_url',
-  'decodedUrl',
-  'decoded_url',
-];
+const scannedUrlFallbackKeys = ['finalUrl', 'final_url', 'destinationUrl', 'destination_url'];
+
+const destinationUrlKeys = ['finalUrl', 'final_url', 'destinationUrl', 'destination_url'];
 
 function clampCount(value: number | null): number {
   return value === null ? 0 : Math.max(0, Math.round(value));
@@ -76,10 +67,11 @@ function formatDateLabel(rawDate: string | null, fallbackLabel = '분석 시각 
     return fallbackLabel;
   }
 
+  // TODO: Pin timezone formatting once backend timestamp semantics are confirmed.
   const parsedDate = new Date(rawDate);
 
   if (Number.isNaN(parsedDate.getTime())) {
-    return rawDate;
+    return fallbackLabel;
   }
 
   const year = parsedDate.getFullYear();
@@ -141,6 +133,7 @@ function resolveReportUrls(session: ScanSessionSnapshot, sources: unknown[]): Re
     pickSourceString(sources, scannedUrlKeys) ??
     session.decodedUrl ??
     session.historySelection?.url ??
+    pickSourceString(sources, scannedUrlFallbackKeys) ??
     '';
   const originalUrl =
     pickSourceString(sources, ['originalUrl', 'original_url', 'sourceUrl', 'source_url']) ??

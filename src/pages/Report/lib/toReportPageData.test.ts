@@ -112,4 +112,50 @@ describe('toReportPageData', () => {
     expect(reportPageData.reputation.providerName).toBe('Google Safe Browsing');
     expect(reportPageData.serverInfo.certificateStatusTone).toBe('error');
   });
+
+  it('keeps scanned and destination URLs distinct for redirect reports', () => {
+    const session: ScanSessionSnapshot = {
+      analysisDetail: {
+        originalUrl: 'https://short.example/a',
+        redirect: {
+          finalUrl: 'https://final.example/path',
+        },
+        riskLevel: 'warning',
+      },
+      decodedUrl: null,
+      finalResult: null,
+      historySelection: null,
+      isUrl: true,
+      riskLevel: null,
+      scanResponse: null,
+      schemeType: 'WEB',
+    };
+
+    const reportPageData = toReportPageData(session);
+
+    expect(reportPageData.scannedUrl).toBe('https://short.example/a');
+    expect(reportPageData.urlAnalysis.originalUrl).toBe('https://short.example/a');
+    expect(reportPageData.urlAnalysis.destinationUrl).toBe('https://final.example/path');
+  });
+
+  it('prefers session decoded URL over final URL when scanned URL fields are absent', () => {
+    const session: ScanSessionSnapshot = {
+      analysisDetail: {
+        finalUrl: 'https://final.example/path',
+        riskLevel: 'safe',
+      },
+      decodedUrl: 'https://short.example/a',
+      finalResult: null,
+      historySelection: null,
+      isUrl: true,
+      riskLevel: null,
+      scanResponse: null,
+      schemeType: 'WEB',
+    };
+
+    const reportPageData = toReportPageData(session);
+
+    expect(reportPageData.scannedUrl).toBe('https://short.example/a');
+    expect(reportPageData.urlAnalysis.destinationUrl).toBe('https://final.example/path');
+  });
 });
