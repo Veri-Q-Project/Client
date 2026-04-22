@@ -1,11 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 
-import {
-  pickBoolean,
-  pickSourceString,
-  pickString,
-} from '@/shared/api/responseAccess/payloadAccess';
+import { pickBoolean, pickString } from '@/shared/api/responseAccess/payloadAccess';
 import { resolveResultToneFromSource } from '@/shared/api/risk/resolveResultTone';
 import type {
   BackendAnalysisDetailResponse,
@@ -175,15 +171,21 @@ export const useScanSessionStore = create<ScanSessionState>()(
         });
       },
       setAnalysisDetail: (analysisDetail) => {
-        const sources = [analysisDetail];
         const decodedUrl = resolveDecodedUrl(analysisDetail);
 
-        set((state) => ({
-          analysisDetail,
-          decodedUrl: decodedUrl ?? state.decodedUrl,
-          riskLevel: resolveRiskLevel(analysisDetail) ?? state.riskLevel,
-          schemeType: pickSourceString(sources, ['schemeType', 'scheme_type']) ?? state.schemeType,
-        }));
+        set((state) => {
+          const nextDecodedUrl = decodedUrl ?? state.decodedUrl;
+          const schemeType = resolveSchemeType(analysisDetail, nextDecodedUrl);
+          const nextSchemeType = schemeType ?? state.schemeType;
+
+          return {
+            analysisDetail,
+            decodedUrl: nextDecodedUrl,
+            isUrl: resolveIsUrl(analysisDetail, nextDecodedUrl, nextSchemeType) ?? state.isUrl,
+            riskLevel: resolveRiskLevel(analysisDetail) ?? state.riskLevel,
+            schemeType: nextSchemeType,
+          };
+        });
       },
       setFinalResult: (finalResult) => {
         const decodedUrl = resolveDecodedUrl(finalResult);

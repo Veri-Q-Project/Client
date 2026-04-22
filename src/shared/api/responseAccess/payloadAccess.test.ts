@@ -40,6 +40,9 @@ describe('payloadAccess', () => {
   it('trims strings and rejects whitespace-only strings', () => {
     expect(pickString({ message: '  ready  ' }, ['message'])).toBe('ready');
     expect(pickString({ message: '   ' }, ['message'])).toBeNull();
+    expect(pickString({ detail: 'fallback', message: 123 }, ['message', 'detail'])).toBe(
+      'fallback',
+    );
   });
 
   it('parses only strict finite numeric values', () => {
@@ -51,6 +54,7 @@ describe('payloadAccess', () => {
     expect(pickNumber({ score: '0' }, ['score'])).toBe(0);
     expect(pickNumber({ score: Number.NaN }, ['score'])).toBeNull();
     expect(pickNumber({ score: Number.POSITIVE_INFINITY }, ['score'])).toBeNull();
+    expect(pickNumber({ score: '12abc', trustScore: '42' }, ['score', 'trustScore'])).toBe(42);
   });
 
   it('parses boolean strings and rejects unrelated values', () => {
@@ -59,6 +63,7 @@ describe('payloadAccess', () => {
     expect(pickBoolean({ isUrl: 'false' }, ['isUrl'])).toBe(false);
     expect(pickBoolean({ isUrl: 'yes' }, ['isUrl'])).toBeNull();
     expect(pickBoolean({ isUrl: 1 }, ['isUrl'])).toBeNull();
+    expect(pickBoolean({ isUrl: 'yes', is_url: ' TRUE ' }, ['isUrl', 'is_url'])).toBe(true);
   });
 
   it('uses the first source that contains a matching string', () => {

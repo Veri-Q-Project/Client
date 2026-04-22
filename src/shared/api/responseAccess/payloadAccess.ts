@@ -86,35 +86,80 @@ export function pickUnknown(source: unknown, keys: string[]): unknown {
   return null;
 }
 
+function pickTypedValue<T>(
+  source: unknown,
+  keys: string[],
+  parseValue: (value: unknown) => T | null,
+): T | null {
+  const records = getCandidateRecords(source);
+
+  for (const record of records) {
+    for (const key of keys) {
+      const value = record[key];
+
+      if (value === undefined || value === null) {
+        continue;
+      }
+
+      const parsedValue = parseValue(value);
+
+      if (parsedValue !== null) {
+        return parsedValue;
+      }
+    }
+  }
+
+  return null;
+}
+
 export function pickString(source: unknown, keys: string[]): string | null {
-  const value = pickUnknown(source, keys);
+  return pickTypedValue(source, keys, (value) => {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const trimmedValue = value.trim();
+    return trimmedValue.length > 0 ? trimmedValue : null;
+  });
+}
+
+function parseNumberValue(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
 
   if (typeof value !== 'string') {
     return null;
   }
 
   const trimmedValue = value.trim();
-  return trimmedValue.length > 0 ? trimmedValue : null;
+
+  if (!/^[+-]?\d+(?:\.\d+)?$/u.test(trimmedValue)) {
+    return null;
+  }
+
+  const parsedValue = Number(trimmedValue);
+  return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
 export function pickNumber(source: unknown, keys: string[]): number | null {
-  const value = pickUnknown(source, keys);
+  return pickTypedValue(source, keys, parseNumberValue);
+}
 
-  if (typeof value === 'number' && Number.isFinite(value)) {
+function parseBooleanValue(value: unknown): boolean | null {
+  if (typeof value === 'boolean') {
     return value;
   }
 
   if (typeof value === 'string') {
-    const trimmedValue = value.trim();
+    const normalizedValue = value.trim().toLowerCase();
 
-    if (!/^[+-]?\d+(?:\.\d+)?$/u.test(trimmedValue)) {
-      return null;
+    if (normalizedValue === 'true') {
+      return true;
     }
 
-    const parsedValue = Number(trimmedValue);
-
-    if (Number.isFinite(parsedValue)) {
-      return parsedValue;
+    if (normalizedValue === 'false') {
+      return false;
     }
   }
 
@@ -122,23 +167,7 @@ export function pickNumber(source: unknown, keys: string[]): number | null {
 }
 
 export function pickBoolean(source: unknown, keys: string[]): boolean | null {
-  const value = pickUnknown(source, keys);
-
-  if (typeof value === 'boolean') {
-    return value;
-  }
-
-  if (typeof value === 'string') {
-    if (value === 'true') {
-      return true;
-    }
-
-    if (value === 'false') {
-      return false;
-    }
-  }
-
-  return null;
+  return pickTypedValue(source, keys, parseBooleanValue);
 }
 
 export function pickRecord(source: unknown, keys: string[]): UnknownRecord | null {

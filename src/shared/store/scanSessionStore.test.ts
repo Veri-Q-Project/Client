@@ -35,5 +35,19 @@ describe('scanSessionStore', () => {
 
     expect(state.decodedUrl).toBe('https://final.example/path');
     expect(state.riskLevel).toBe('critical');
+    expect(state.isUrl).toBe(true);
+  });
+
+  it('updates URL classification from analysis detail payloads', () => {
+    useScanSessionStore.getState().setAnalysisDetail({
+      scheme_type: 'SMS',
+      targetValue: '01012345678',
+    });
+
+    const state = useScanSessionStore.getState();
+
+    expect(state.decodedUrl).toBe('01012345678');
+    expect(state.schemeType).toBe('SMS');
+    expect(state.isUrl).toBe(false);
   });
 });
