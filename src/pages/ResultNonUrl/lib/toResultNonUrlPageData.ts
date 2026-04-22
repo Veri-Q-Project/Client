@@ -1,23 +1,12 @@
-import { pickSourceString } from '@/shared/api/mappers/payloadAccess';
+import { pickSourceString } from '@/shared/api/responseAccess/payloadAccess';
 import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
 
-type ResultNonUrlActionType = 'appLaunch' | 'appStore' | 'bitcoin' | 'telSms' | 'unknown' | 'wifi';
+import type { NonUrlActionType, ResultNonUrlPageData } from '../types/resultNonUrlPage.types';
 
-type ResultNonUrlViewData = {
-  detectedActionType: ResultNonUrlActionType;
-  sectionDescription: string;
-  sectionNumber: string;
-  sectionTitle: string;
-  targetValue?: string;
-};
-
-type NonUrlCopy = {
-  sectionDescription: string;
-  sectionTitle: string;
-};
+type NonUrlCopy = Pick<ResultNonUrlPageData, 'sectionDescription' | 'sectionTitle'>;
 
 const actionMatchers: Array<{
-  actionType: ResultNonUrlActionType;
+  actionType: NonUrlActionType;
   keywords: string[];
 }> = [
   { actionType: 'wifi', keywords: ['wifi'] },
@@ -27,7 +16,7 @@ const actionMatchers: Array<{
   { actionType: 'appLaunch', keywords: ['app', 'intent'] },
 ];
 
-const nonUrlCopyByActionType: Record<ResultNonUrlActionType, NonUrlCopy> = {
+const nonUrlCopyByActionType: Record<NonUrlActionType, NonUrlCopy> = {
   appLaunch: {
     sectionDescription:
       '특정 앱 실행을 요청하는 QR 코드입니다. 사용자가 예상한 앱이 맞는지 먼저 확인해야 합니다.',
@@ -75,7 +64,7 @@ const targetValueKeys = [
   'url',
 ];
 
-function resolveNonUrlActionType(rawActionType: string | null): ResultNonUrlActionType {
+function resolveNonUrlActionType(rawActionType: string | null): NonUrlActionType {
   const normalizedActionType = rawActionType?.trim().toLowerCase() ?? '';
 
   if (!normalizedActionType) {
@@ -89,7 +78,7 @@ function resolveNonUrlActionType(rawActionType: string | null): ResultNonUrlActi
   );
 }
 
-export function toResultNonUrlData(session: ScanSessionSnapshot): ResultNonUrlViewData {
+export function toResultNonUrlPageData(session: ScanSessionSnapshot): ResultNonUrlPageData {
   const sources = [session.analysisDetail, session.finalResult, session.scanResponse];
   const actionType = resolveNonUrlActionType(
     pickSourceString(sources, ['actionType', 'action_type', 'schemeType', 'scheme_type']),

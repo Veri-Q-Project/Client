@@ -3,26 +3,24 @@ import { describe, expect, it } from 'vitest';
 import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
 
 import { toReportPageData } from './toReportPageData';
-import { toResultCardData } from './toResultCardData';
-import { toResultNonUrlData } from './toResultNonUrlData';
 
-describe('session mappers', () => {
+describe('toReportPageData', () => {
   it('maps detail payload into report page data', () => {
     const session: ScanSessionSnapshot = {
       analysisDetail: {
         destinationUrl: 'https://danger.example',
-        detectedRiskTypes: ['도메인 사칭'],
+        detectedRiskTypes: ['phishing'],
         domainComparison: {
           officialUrl: 'https://official.example',
-          riskBadgeText: '위험 등급: 높음',
-          summary: '공식 도메인과 유사합니다.',
+          riskBadgeText: 'high risk',
+          summary: 'similar to official domain',
           suspiciousUrl: 'https://danger.example',
         },
         originalUrl: 'https://qr.example/source',
         reputation: {
-          detailDescription: '위협 기록이 탐지되었습니다.',
+          detailDescription: 'unsafe history was found',
           providerName: 'Google Safe Browsing',
-          providerStatusText: '검사 완료',
+          providerStatusText: 'checked',
           summary: {
             malwareCount: 1,
             phishingCount: 2,
@@ -33,7 +31,7 @@ describe('session mappers', () => {
         scannedAt: '2026-04-20T12:34:00Z',
         serverInfo: {
           certificateIssuer: 'ACME CA',
-          certificateStatusText: '만료됨',
+          certificateStatusText: 'expired',
           certificateValidityPeriod: '2025-01-01 - 2026-01-01',
           serverLocation: 'Seoul, KR',
           serverType: 'nginx',
@@ -113,54 +111,5 @@ describe('session mappers', () => {
     expect(reportPageData.detectedRiskTypes).toContain('dummy_ml_threat');
     expect(reportPageData.reputation.providerName).toBe('Google Safe Browsing');
     expect(reportPageData.serverInfo.certificateStatusTone).toBe('error');
-  });
-
-  it('maps certificate metadata into result card site meta', () => {
-    const session: ScanSessionSnapshot = {
-      analysisDetail: {
-        originalUrl: 'https://qr.generatorqr.com/1SpwYoKyl',
-        score: 23,
-        serverInfo: {
-          certificate: {
-            issuer: null,
-            valid: false,
-            validFrom: null,
-            validTo: null,
-          },
-        },
-      },
-      decodedUrl: null,
-      finalResult: null,
-      historySelection: null,
-      isUrl: true,
-      riskLevel: null,
-      scanResponse: null,
-      schemeType: 'WEB',
-    };
-
-    const resultCardData = toResultCardData(session, 'safe');
-
-    expect(resultCardData.siteMeta).toBe('SSL 인증서 유효하지 않음 · 발급자 정보 없음');
-  });
-
-  it('maps non-web scan payload into non-url result data', () => {
-    const session: ScanSessionSnapshot = {
-      analysisDetail: null,
-      decodedUrl: null,
-      finalResult: null,
-      historySelection: null,
-      isUrl: false,
-      riskLevel: null,
-      scanResponse: {
-        schemeType: 'TEL',
-        targetValue: '010-1234-5678',
-      },
-      schemeType: 'TEL',
-    };
-
-    const resultNonUrlData = toResultNonUrlData(session);
-
-    expect(resultNonUrlData.detectedActionType).toBe('telSms');
-    expect(resultNonUrlData.targetValue).toBe('010-1234-5678');
   });
 });

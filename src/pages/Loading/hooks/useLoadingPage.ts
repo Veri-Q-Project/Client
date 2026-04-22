@@ -2,11 +2,11 @@ import { useNavigate } from '@tanstack/react-router';
 import { App } from 'antd';
 import { useCallback, useEffect, useRef } from 'react';
 
-import { ensureScanDetail } from '@/shared/api/ensureScanDetail';
 import { isApiError } from '@/shared/api/errors/apiError';
-import { pickNumber, pickString } from '@/shared/api/mappers/payloadAccess';
-import { resolveResultToneFromSources } from '@/shared/api/mappers/resolveResultTone';
-import { mapSseStepId } from '@/shared/api/mappers/sseStepMapper';
+import { pickNumber, pickString } from '@/shared/api/responseAccess/payloadAccess';
+import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
+import { mapSseStepId } from '@/shared/api/sse/sseStepMapper';
+import { ensureScanDetail } from '@/shared/lib/scan-session/ensureScanDetail';
 import { useScanSubscription } from '@/shared/lib/sse/useScanSubscription';
 import { useGuestStore } from '@/shared/store/guestStore';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';

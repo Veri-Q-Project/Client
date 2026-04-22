@@ -5,11 +5,8 @@ const CaptchaPage = lazy(() => import('@/pages/Captcha'));
 const LoadingPage = lazy(() => import('@/pages/Loading'));
 const QRScanPage = lazy(() => import('@/pages/QRScan'));
 const ReportPage = lazy(() => import('@/pages/Report'));
-const ResultCriticalPage = lazy(() => import('@/pages/ResultCritical'));
+const ResultPage = lazy(() => import('@/pages/Result'));
 const ResultNonUrlPage = lazy(() => import('@/pages/ResultNonUrl'));
-const ResultSafePage = lazy(() => import('@/pages/ResultSafe'));
-const ResultWarningPage = lazy(() => import('@/pages/ResultWarning'));
-const ScanHistoryPage = lazy(() => import('@/pages/ScanHistory'));
 const ScanListPage = lazy(() => import('@/pages/ScanList'));
 
 function RootLayout() {
@@ -57,7 +54,7 @@ const reportRoute = createRoute({
 const scanHistoryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/scan-history',
-  component: ScanHistoryPage,
+  component: ScanListPage,
 });
 
 const scanListRoute = createRoute({
@@ -69,7 +66,7 @@ const scanListRoute = createRoute({
 const resultCriticalRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/result/critical',
-  component: ResultCriticalPage,
+  component: () => <ResultPage tone="critical" />,
 });
 
 const resultNonUrlRoute = createRoute({
@@ -81,13 +78,13 @@ const resultNonUrlRoute = createRoute({
 const resultSafeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/result/safe',
-  component: ResultSafePage,
+  component: () => <ResultPage tone="safe" />,
 });
 
 const resultWarningRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/result/warning',
-  component: ResultWarningPage,
+  component: () => <ResultPage tone="warning" />,
 });
 
 const routeTree = rootRoute.addChildren([

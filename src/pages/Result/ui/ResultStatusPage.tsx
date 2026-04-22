@@ -1,6 +1,5 @@
 import type { ComponentProps, ReactNode } from 'react';
 
-import type { ResultSafeData } from '@/shared/api/result-safe';
 import {
   ReportToggleButton,
   ResultActionButtons,
@@ -11,8 +10,7 @@ import {
 import { qrIconByTone } from '@/shared/icon/resultIcons';
 import type { ResultTone } from '@/shared/types/resultTone';
 import AppHeader from '@/shared/ui/app-header';
-
-import * as styles from './resultPage.css';
+import * as styles from '@/shared/ui/resultPage/resultPage.css';
 
 type RiskLevelCardOptions = ComponentProps<typeof RiskLevelCard>;
 type SafeSiteCardOptions = Pick<
@@ -24,6 +22,13 @@ type ResultActionOptions = Pick<
   'onReportClick' | 'reportLabel'
 >;
 
+type ResultStatusPageData = {
+  siteMeta: string;
+  siteName: string;
+  siteUrl: string;
+  trustScore: number;
+};
+
 type ResultStatusPageProps = {
   actionButtons?: ResultActionOptions;
   hero: ReactNode;
@@ -31,7 +36,7 @@ type ResultStatusPageProps = {
   onShareClick: ComponentProps<typeof ResultActionButtons>['onShareClick'];
   onViewReportClick: () => void;
   onVisitClick: () => void;
-  resultData: ResultSafeData;
+  resultData: ResultStatusPageData;
   riskLevelCard?: RiskLevelCardOptions;
   siteCard?: SafeSiteCardOptions;
   tone: ResultTone;

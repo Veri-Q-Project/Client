@@ -1,4 +1,4 @@
-export type ResultSafeData = {
+export type ResultPageData = {
   previewUrl: string;
   siteMeta: string;
   siteName: string;

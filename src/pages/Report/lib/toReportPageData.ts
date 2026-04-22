@@ -7,54 +7,18 @@ import {
   pickSourceRecord,
   pickSourceString,
   pickSourceStringArray,
-} from '@/shared/api/mappers/payloadAccess';
+} from '@/shared/api/responseAccess/payloadAccess';
+import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
+import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
+import type { ResultTone } from '@/shared/types/resultTone';
+
 import {
   missingReportInfoLabel,
   reportFallbackCopyByTone,
   trustScoreFallbackByTone,
-} from '@/shared/api/mappers/reportText';
-import { resolveResultToneFromSources } from '@/shared/api/mappers/resolveResultTone';
-import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
-import type { ResultTone } from '@/shared/types/resultTone';
+} from '../constants/reportText';
 
-type ReportPageViewData = {
-  detectedRiskTypes: string[];
-  domainComparison: {
-    officialUrl: string;
-    riskBadgeText: string;
-    summary: string;
-    suspiciousUrl: string;
-  };
-  reputation: {
-    detailDescription: string;
-    providerName: string;
-    providerStatusText: string;
-    summary: {
-      malwareCount: number;
-      phishingCount: number;
-      spamCount: number;
-    };
-  };
-  reportTitle: string;
-  riskDescription: string;
-  riskLevel: ResultTone;
-  riskLevelText: string;
-  scannedAt: string;
-  scannedUrl: string;
-  serverInfo: {
-    certificateIssuer: string;
-    certificateStatusText: string;
-    certificateStatusTone: 'error' | 'success' | 'warning';
-    certificateValidityPeriod: string;
-    serverLocation: string;
-    serverType: string;
-  };
-  trustScore: number;
-  urlAnalysis: {
-    destinationUrl: string;
-    originalUrl: string;
-  };
-};
+import type { ReportPageData } from '../types/reportPage.types';
 
 type ReportUrls = {
   destinationUrl: string;
@@ -150,7 +114,9 @@ function formatCertificateValidityPeriod(
   return `${validFrom ?? '알 수 없음'} - ${validTo ?? '알 수 없음'}`;
 }
 
-function resolveCertificateTone(rawStatusText: string | null): 'error' | 'success' | 'warning' {
+function resolveCertificateTone(
+  rawStatusText: string | null,
+): ReportPageData['serverInfo']['certificateStatusTone'] {
   if (!rawStatusText) {
     return 'warning';
   }
@@ -281,7 +247,7 @@ function buildDomainComparison(
   domainComparisonRecord: Record<string, unknown> | null,
   riskLevel: ResultTone,
   urls: ReportUrls,
-): ReportPageViewData['domainComparison'] {
+): ReportPageData['domainComparison'] {
   return {
     officialUrl:
       pickSourceString([domainComparisonRecord], ['officialUrl', 'official_url']) ??
@@ -301,7 +267,7 @@ function buildDomainComparison(
 function buildReputation(
   reputationRecord: Record<string, unknown> | null,
   internalDbRecord: Record<string, unknown> | null,
-): ReportPageViewData['reputation'] {
+): ReportPageData['reputation'] {
   const reputationSummaryRecord =
     pickRecord(reputationRecord, ['summary']) ?? asRecord(reputationRecord);
 
@@ -337,7 +303,7 @@ function buildReputation(
 function buildServerInfo(
   serverInfoRecord: Record<string, unknown> | null,
   certificateRecord: Record<string, unknown> | null,
-): ReportPageViewData['serverInfo'] {
+): ReportPageData['serverInfo'] {
   const certificateStatusText =
     pickSourceString([serverInfoRecord], ['certificateStatusText', 'certificate_status_text']) ??
     formatCertificateStatus(certificateRecord) ??
@@ -363,7 +329,7 @@ function buildServerInfo(
   };
 }
 
-export function toReportPageData(session: ScanSessionSnapshot): ReportPageViewData {
+export function toReportPageData(session: ScanSessionSnapshot): ReportPageData {
   const sources = getSessionSources(session);
   const riskLevel = resolveResultToneFromSources(sources, session.riskLevel) ?? 'warning';
   const urls = resolveReportUrls(session, sources);

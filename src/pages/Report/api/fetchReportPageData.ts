@@ -1,6 +1,7 @@
-import { ensureScanDetail } from '@/shared/api/ensureScanDetail';
-import { toReportPageData } from '@/shared/api/mappers/toReportPageData';
+import { ensureScanDetail } from '@/shared/lib/scan-session/ensureScanDetail';
 import { getScanSessionSnapshot } from '@/shared/store/scanSessionStore';
+
+import { toReportPageData } from '../lib/toReportPageData';
 
 import type { ReportPageData } from '../types/reportPage.types';
 

@@ -3,11 +3,12 @@ import {
   pickSourceNumber,
   pickSourceRecord,
   pickSourceString,
-} from '@/shared/api/mappers/payloadAccess';
-import { resolveResultToneFromSources } from '@/shared/api/mappers/resolveResultTone';
-import type { ResultSafeData } from '@/shared/api/result-safe';
+} from '@/shared/api/responseAccess/payloadAccess';
+import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
 import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
 import type { ResultTone } from '@/shared/types/resultTone';
+
+import type { ResultPageData } from '../types/resultPage.types';
 
 const trustScoreFallbackByTone: Record<ResultTone, number> = {
   critical: 82,
@@ -95,10 +96,10 @@ function buildSiteMeta(sources: unknown[]): string {
   return metaParts.join(' · ');
 }
 
-export function toResultCardData(
+export function toResultPageData(
   session: ScanSessionSnapshot,
   fallbackTone: ResultTone,
-): ResultSafeData {
+): ResultPageData {
   const sources = [
     session.analysisDetail,
     session.finalResult,

@@ -1,13 +1,18 @@
-import { ensureScanDetail, resolveRequestedUrlFromSearch } from '@/shared/api/ensureScanDetail';
-import { toResultCardData } from '@/shared/api/mappers/toResultCardData';
-import type { ResultSafeData } from '@/shared/api/result-safe';
+import {
+  ensureScanDetail,
+  resolveRequestedUrlFromSearch,
+} from '@/shared/lib/scan-session/ensureScanDetail';
 import { getScanSessionSnapshot } from '@/shared/store/scanSessionStore';
 import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
 import type { ResultTone } from '@/shared/types/resultTone';
 
+import { toResultPageData } from '../lib/toResultPageData';
+
+import type { ResultPageData } from '../types/resultPage.types';
+
 type ResultPageFetcher = {
-  fetchResultPageData: () => Promise<ResultSafeData>;
-  getInitialResultPageData: () => ResultSafeData | null;
+  fetchResultPageData: () => Promise<ResultPageData>;
+  getInitialResultPageData: () => ResultPageData | null;
 };
 
 function hasSessionResult(session: ScanSessionSnapshot): boolean {
@@ -20,7 +25,7 @@ function hasSessionResult(session: ScanSessionSnapshot): boolean {
 }
 
 export function createResultPageFetcher(tone: ResultTone): ResultPageFetcher {
-  async function fetchResultPageData(): Promise<ResultSafeData> {
+  async function fetchResultPageData(): Promise<ResultPageData> {
     const session = getScanSessionSnapshot();
     const hasRecoverableUrl = Boolean(
       session.decodedUrl || session.historySelection?.url || resolveRequestedUrlFromSearch(),
@@ -28,21 +33,21 @@ export function createResultPageFetcher(tone: ResultTone): ResultPageFetcher {
 
     if (!session.analysisDetail && hasRecoverableUrl) {
       const detailSession = await ensureScanDetail();
-      return toResultCardData(detailSession, tone);
+      return toResultPageData(detailSession, tone);
     }
 
     if (hasSessionResult(session)) {
-      return toResultCardData(session, tone);
+      return toResultPageData(session, tone);
     }
 
     throw new Error('SCAN_SESSION_REQUIRED');
   }
 
-  function getInitialResultPageData(): ResultSafeData | null {
+  function getInitialResultPageData(): ResultPageData | null {
     const session = getScanSessionSnapshot();
 
     if (hasSessionResult(session)) {
-      return toResultCardData(session, tone);
+      return toResultPageData(session, tone);
     }
 
     return null;

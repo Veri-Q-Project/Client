@@ -1,5 +1,6 @@
-import { toResultNonUrlData } from '@/shared/api/mappers/toResultNonUrlData';
 import { getScanSessionSnapshot } from '@/shared/store/scanSessionStore';
+
+import { toResultNonUrlPageData } from '../lib/toResultNonUrlPageData';
 
 import type { ResultNonUrlPageData } from '../types/resultNonUrlPage.types';
 
@@ -10,7 +11,7 @@ function hasNonUrlResultSession(): boolean {
 
 export async function fetchResultNonUrlPageData(): Promise<ResultNonUrlPageData> {
   if (hasNonUrlResultSession()) {
-    return toResultNonUrlData(getScanSessionSnapshot());
+    return toResultNonUrlPageData(getScanSessionSnapshot());
   }
 
   throw new Error('SCAN_SESSION_REQUIRED');
@@ -21,5 +22,5 @@ export function getInitialResultNonUrlPageData(): ResultNonUrlPageData | null {
     return null;
   }
 
-  return toResultNonUrlData(getScanSessionSnapshot());
+  return toResultNonUrlPageData(getScanSessionSnapshot());
 }
