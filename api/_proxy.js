@@ -28,7 +28,7 @@ function buildHeaders(sourceHeaders) {
   return headers;
 }
 
-function requireHttpsTarget(envName) {
+function requireProxyTarget(envName) {
   const rawTarget = process.env[envName]?.trim();
 
   if (!rawTarget) {
@@ -37,18 +37,40 @@ function requireHttpsTarget(envName) {
 
   const target = new URL(rawTarget);
 
-  if (target.protocol !== 'https:') {
-    throw new Error(`${envName} must use an https URL.`);
+  if (!['http:', 'https:'].includes(target.protocol)) {
+    throw new Error(`${envName} must use an http or https URL.`);
   }
 
   return target;
 }
 
-function buildTargetUrl(requestUrl, prefix, targetBase) {
+function normalizeProxyPrefixes({ prefix, prefixes }) {
+  if (Array.isArray(prefixes)) {
+    return prefixes;
+  }
+
+  if (prefix) {
+    return [prefix];
+  }
+
+  return [];
+}
+
+function stripProxyPrefix(pathname, prefixes) {
+  const matchedPrefix = prefixes.find((prefix) => {
+    return pathname === prefix || pathname.startsWith(`${prefix}/`);
+  });
+
+  if (!matchedPrefix) {
+    return pathname;
+  }
+
+  return pathname.slice(matchedPrefix.length) || '/';
+}
+
+function buildTargetUrl(requestUrl, options, targetBase) {
   const incomingUrl = new URL(requestUrl, 'https://vercel.local');
-  const pathname = incomingUrl.pathname.startsWith(prefix)
-    ? incomingUrl.pathname.slice(prefix.length)
-    : incomingUrl.pathname;
+  const pathname = stripProxyPrefix(incomingUrl.pathname, normalizeProxyPrefixes(options));
 
   const targetUrl = new URL(pathname || '/', targetBase);
   targetUrl.search = incomingUrl.search;
@@ -56,11 +78,11 @@ function buildTargetUrl(requestUrl, prefix, targetBase) {
   return targetUrl;
 }
 
-async function proxyRequest(request, response, { envName, prefix }) {
+async function proxyRequest(request, response, { envName, prefix, prefixes }) {
   let targetUrl;
 
   try {
-    targetUrl = buildTargetUrl(request.url, prefix, requireHttpsTarget(envName));
+    targetUrl = buildTargetUrl(request.url, { prefix, prefixes }, requireProxyTarget(envName));
   } catch (error) {
     response.statusCode = 500;
     response.setHeader('content-type', 'application/json; charset=utf-8');
@@ -110,5 +132,6 @@ async function proxyRequest(request, response, { envName, prefix }) {
 }
 
 module.exports = {
+  buildTargetUrl,
   proxyRequest,
 };
