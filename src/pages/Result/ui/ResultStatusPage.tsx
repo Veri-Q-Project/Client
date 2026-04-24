@@ -39,6 +39,8 @@ type ResultStatusPageProps = {
   resultData: ResultStatusPageData;
   riskLevelCard?: RiskLevelCardOptions;
   siteCard?: SafeSiteCardOptions;
+  showMetrics?: boolean;
+  showReportToggle?: boolean;
   tone: ResultTone;
 };
 
@@ -54,6 +56,8 @@ export default function ResultStatusPage({
   resultData,
   riskLevelCard,
   siteCard,
+  showMetrics = true,
+  showReportToggle = true,
   tone,
 }: ResultStatusPageProps) {
   const currentYear = new Date().getFullYear();
@@ -66,10 +70,12 @@ export default function ResultStatusPage({
         <section className={styles.content}>
           {hero}
 
-          <section className={styles.metricsGrid}>
-            <TrustScoreCard score={resultData.trustScore} tone={tone} />
-            <RiskLevelCard {...riskLevelCard} tone={riskLevelCard?.tone ?? tone} />
-          </section>
+          {showMetrics ? (
+            <section className={styles.metricsGrid}>
+              <TrustScoreCard score={resultData.trustScore} tone={tone} />
+              <RiskLevelCard {...riskLevelCard} tone={riskLevelCard?.tone ?? tone} />
+            </section>
+          ) : null}
 
           <SafeSiteCard
             {...siteCard}
@@ -87,7 +93,9 @@ export default function ResultStatusPage({
             reportLabel={actionButtons?.reportLabel}
           />
 
-          <ReportToggleButton isOpen={false} onToggle={onViewReportClick} />
+          {showReportToggle ? (
+            <ReportToggleButton isOpen={false} onToggle={onViewReportClick} />
+          ) : null}
 
           <p className={styles.footer}>
             {`Veri-Q Security Engine ${SECURITY_ENGINE_VERSION} (c) ${currentYear}. All rights reserved.`}

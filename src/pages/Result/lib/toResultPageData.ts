@@ -154,6 +154,7 @@ export function toResultPageData(
     trustScoreFallbackByTone[resolvedTone];
 
   return {
+    detailUnavailable: false,
     previewUrl: resolvedPreviewUrl,
     siteMeta: buildSiteMeta(sources),
     siteName: resolvedOriginalUrl,

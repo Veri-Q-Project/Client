@@ -74,6 +74,33 @@ const resultViewConfig = {
   },
 } as const;
 
+const detailUnavailableViewConfig = {
+  hero: (
+    <ResultHero
+      description="상세 분석 데이터를 찾지 못했습니다. 잠시 후 다시 시도하거나 다시 검사해 주세요."
+      title={
+        <>
+          아직 분석 결과를
+          <br />
+          가져오지 못했습니다
+        </>
+      }
+      tone="warning"
+    />
+  ),
+  riskLevelCard: {
+    description: '스캔 결과 상세 데이터가 준비되지 않았습니다.',
+    levelText: '분석 대기',
+    tone: 'warning' as const,
+  },
+  siteCard: {
+    badgeLabel: '?',
+    statusLabel: 'ANALYSIS NEEDED',
+    tone: 'warning' as const,
+    visitLabel: '다시 검사하기',
+  },
+} as const;
+
 export default function ResultPage({ tone }: ResultPageProps) {
   const {
     handleReport,
@@ -84,6 +111,8 @@ export default function ResultPage({ tone }: ResultPageProps) {
     resultData,
   } = useResultPage(tone);
   const config = resultViewConfig[tone];
+  const isDetailUnavailable = resultData?.detailUnavailable === true;
+  const resolvedTone: ResultTone = isDetailUnavailable ? 'warning' : tone;
 
   if (!resultData) {
     return null;
@@ -92,22 +121,26 @@ export default function ResultPage({ tone }: ResultPageProps) {
   return (
     <ResultStatusPage
       actionButtons={
-        config.actionButtons
+        !isDetailUnavailable && config.actionButtons
           ? {
               onReportClick: handleReport,
               reportLabel: config.actionButtons.reportLabel,
             }
           : undefined
       }
-      hero={config.hero}
+      hero={isDetailUnavailable ? detailUnavailableViewConfig.hero : config.hero}
       onRescanClick={handleRescan}
       onShareClick={handleShareResult}
       onViewReportClick={handleViewReport}
-      onVisitClick={handleVisit}
+      onVisitClick={isDetailUnavailable ? handleRescan : handleVisit}
       resultData={resultData}
-      riskLevelCard={config.riskLevelCard}
-      siteCard={config.siteCard}
-      tone={tone}
+      riskLevelCard={
+        isDetailUnavailable ? detailUnavailableViewConfig.riskLevelCard : config.riskLevelCard
+      }
+      showMetrics={!isDetailUnavailable}
+      showReportToggle={!isDetailUnavailable}
+      siteCard={isDetailUnavailable ? detailUnavailableViewConfig.siteCard : config.siteCard}
+      tone={resolvedTone}
     />
   );
 }

@@ -42,4 +42,26 @@ describe('createResultPageFetcher', () => {
       trustScore: 23,
     });
   });
+
+  it('returns detail-unavailable data when scan detail is missing and only URL query is available', async () => {
+    const { ensureScanDetail, resolveRequestedUrlFromSearch } =
+      await import('@/shared/lib/scan-session/ensureScanDetail');
+    vi.mocked(ensureScanDetail).mockRejectedValue(
+      new ApiError({
+        message: 'Request failed with status code 404',
+        statusCode: 404,
+      }),
+    );
+    vi.mocked(resolveRequestedUrlFromSearch).mockReturnValue('https://www.daum.net/');
+
+    const { fetchResultPageData } = createResultPageFetcher('safe');
+
+    await expect(fetchResultPageData()).resolves.toMatchObject({
+      detailUnavailable: true,
+      siteMeta: '상세 분석 데이터를 찾지 못했습니다. 잠시 후 다시 시도하거나 다시 검사해 주세요.',
+      siteName: 'https://www.daum.net/',
+      siteUrl: 'https://www.daum.net/',
+      trustScore: 0,
+    });
+  });
 });

@@ -25,20 +25,39 @@ function hasSessionResult(session: ScanSessionSnapshot): boolean {
   );
 }
 
+function resolveRecoverableUrl(session: ScanSessionSnapshot): string | null {
+  return session.decodedUrl ?? session.historySelection?.url ?? resolveRequestedUrlFromSearch();
+}
+
+function createDetailUnavailableResultPageData(url: string): ResultPageData {
+  return {
+    detailUnavailable: true,
+    previewUrl: url,
+    siteMeta: '상세 분석 데이터를 찾지 못했습니다. 잠시 후 다시 시도하거나 다시 검사해 주세요.',
+    siteName: url,
+    siteUrl: url,
+    trustScore: 0,
+    visitUrl: url,
+  };
+}
+
 export function createResultPageFetcher(tone: ResultTone): ResultPageFetcher {
   async function fetchResultPageData(): Promise<ResultPageData> {
     const session = getScanSessionSnapshot();
-    const hasRecoverableUrl = Boolean(
-      session.decodedUrl || session.historySelection?.url || resolveRequestedUrlFromSearch(),
-    );
+    const recoverableUrl = resolveRecoverableUrl(session);
+    const hasRecoverableUrl = Boolean(recoverableUrl);
 
     if (!session.analysisDetail && hasRecoverableUrl) {
       try {
         const detailSession = await ensureScanDetail();
         return toResultPageData(detailSession, tone);
       } catch (error) {
-        if (isApiError(error) && error.statusCode === 404 && hasSessionResult(session)) {
-          return toResultPageData(session, tone);
+        if (isApiError(error) && error.statusCode === 404) {
+          if (hasSessionResult(session)) {
+            return toResultPageData(session, tone);
+          }
+
+          return createDetailUnavailableResultPageData(recoverableUrl ?? '');
         }
 
         throw error;
