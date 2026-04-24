@@ -1,3 +1,4 @@
+import { isApiError } from '@/shared/api/errors/apiError';
 import {
   ensureScanDetail,
   resolveRequestedUrlFromSearch,
@@ -32,8 +33,16 @@ export function createResultPageFetcher(tone: ResultTone): ResultPageFetcher {
     );
 
     if (!session.analysisDetail && hasRecoverableUrl) {
-      const detailSession = await ensureScanDetail();
-      return toResultPageData(detailSession, tone);
+      try {
+        const detailSession = await ensureScanDetail();
+        return toResultPageData(detailSession, tone);
+      } catch (error) {
+        if (isApiError(error) && error.statusCode === 404 && hasSessionResult(session)) {
+          return toResultPageData(session, tone);
+        }
+
+        throw error;
+      }
     }
 
     if (hasSessionResult(session)) {
