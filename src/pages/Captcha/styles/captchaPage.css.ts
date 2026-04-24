@@ -70,9 +70,18 @@ export const widgetFrame = style({
 
 export const enterpriseBox = style({
   display: 'flex',
+  flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
   minHeight: '78px',
+  gap: vars.spacing.xs,
+});
+
+export const captchaError = style({
+  margin: 0,
+  color: '#B42318',
+  fontSize: vars.font.size.xs,
+  lineHeight: 1.4,
 });
 
 export const captchaHint = style({

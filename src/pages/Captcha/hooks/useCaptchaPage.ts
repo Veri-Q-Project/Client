@@ -18,7 +18,7 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const recaptchaSiteKey = (import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? '').trim();
-  const canSubmit = recaptchaSiteKey.length > 0 && (token?.trim().length ?? 0) > 0;
+  const canSubmit = recaptchaSiteKey.length > 0 && (token?.trim().length ?? 0) > 0 && !isVerifying;
 
   const handleCaptchaTokenChange = useCallback((nextToken: string | null) => {
     setToken(nextToken);
@@ -27,12 +27,13 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
 
   const handleSubmit = useCallback(async () => {
     setFeedbackMessage(null);
-    const trimmedToken = token?.trim() ?? '';
 
     if (recaptchaSiteKey.length === 0) {
-      setFeedbackMessage('reCAPTCHA 사이트 키가 비어 있습니다. `.env.local`을 확인해 주세요.');
+      setFeedbackMessage('reCAPTCHA 사이트 키가 비어 있습니다.');
       return;
     }
+
+    const trimmedToken = token?.trim() ?? '';
 
     if (!trimmedToken) {
       setFeedbackMessage('캡차를 먼저 완료해 주세요.');
@@ -49,7 +50,7 @@ export function useCaptchaPage(): UseCaptchaPageReturn {
         return;
       }
 
-      setFeedbackMessage('캡차 검증이 완료되었습니다. 스캔 화면으로 이동합니다.');
+      setFeedbackMessage('캡차 검증이 완료되었습니다.');
       void navigate({ to: '/qr-scan' });
     } finally {
       setIsVerifying(false);

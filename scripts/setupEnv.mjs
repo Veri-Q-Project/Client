@@ -14,7 +14,7 @@ const serverEnvLocalPath = path.join(rootDir, '.env.server.local');
 const OWNER_READ_WRITE_MODE = 0o600;
 
 const defaultEnvContent = [
-  '# Google reCAPTCHA Enterprise checkbox site key (required when provider is googleRecaptchaEnterprise)',
+  '# Google reCAPTCHA Enterprise site key (required when provider is googleRecaptchaEnterprise)',
   'VITE_RECAPTCHA_SITE_KEY=',
   '',
   '# Backend base URLs. Provide deployed values via .env.local or secret management.',
