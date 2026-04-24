@@ -1,209 +1,31 @@
 import { useEffect, useRef } from 'react';
 
-import * as styles from '../styles/captchaPage.css';
+import { loadRecaptchaEnterprise } from '../lib/recaptchaEnterprise';
 
 type CaptchaWidgetProps = {
-  onTokenChange: (token: string | null) => void;
   recaptchaSiteKey: string;
 };
 
-type GrecaptchaEnterprise = {
-  ready: (callback: () => void) => void;
-  render: (
-    container: HTMLElement,
-    parameters: {
-      callback: (token: string) => void;
-      'error-callback': () => void;
-      'expired-callback': () => void;
-      sitekey: string;
-      theme?: 'light' | 'dark';
-    },
-  ) => number;
-  reset?: (widgetId: number) => void;
-};
-
-declare global {
-  interface Window {
-    grecaptcha?: {
-      enterprise?: GrecaptchaEnterprise;
-    };
-  }
-}
-
-let enterpriseScriptPromise: Promise<void> | null = null;
-
-function isEnterpriseApiReady() {
-  return typeof window.grecaptcha?.enterprise?.render === 'function';
-}
-
-function loadEnterpriseScript(): Promise<void> {
-  if (isEnterpriseApiReady()) {
-    return Promise.resolve();
-  }
-
-  if (enterpriseScriptPromise) {
-    return enterpriseScriptPromise;
-  }
-
-  const scriptPromise = new Promise<void>((resolve, reject) => {
-    const existingScript = document.querySelector<HTMLScriptElement>(
-      'script[data-recaptcha-enterprise="true"]',
-    );
-
-    const onLoad = () => {
-      if (isEnterpriseApiReady()) {
-        resolve();
-        return;
-      }
-
-      reject(new Error('Enterprise API is not ready after script load'));
-    };
-
-    const onError = () => {
-      reject(new Error('Failed to load reCAPTCHA Enterprise script'));
-    };
-
-    if (existingScript) {
-      const loadStatus = existingScript.dataset.loadStatus;
-
-      if (loadStatus === 'loaded' || isEnterpriseApiReady()) {
-        onLoad();
-        return;
-      }
-
-      if (loadStatus === 'error') {
-        onError();
-        return;
-      }
-
-      existingScript.addEventListener('load', onLoad, { once: true });
-      existingScript.addEventListener('error', onError, { once: true });
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.async = true;
-    script.defer = true;
-    script.dataset.loadStatus = 'loading';
-    script.dataset.recaptchaEnterprise = 'true';
-    script.src = 'https://www.google.com/recaptcha/enterprise.js?render=explicit';
-
-    script.onload = () => {
-      script.dataset.loadStatus = 'loaded';
-      onLoad();
-    };
-
-    script.onerror = () => {
-      script.dataset.loadStatus = 'error';
-      onError();
-    };
-
-    document.head.appendChild(script);
-  }).catch((error) => {
-    enterpriseScriptPromise = null;
-    throw error;
-  });
-
-  enterpriseScriptPromise = scriptPromise;
-  return scriptPromise;
-}
-
-export default function CaptchaWidget({ onTokenChange, recaptchaSiteKey }: CaptchaWidgetProps) {
-  const widgetContainerRef = useRef<HTMLDivElement | null>(null);
+export default function CaptchaWidget({ recaptchaSiteKey }: CaptchaWidgetProps) {
+  const isMountedRef = useRef(false);
 
   useEffect(() => {
-    const container = widgetContainerRef.current;
-    let cancelled = false;
-    let widgetId: number | null = null;
-
-    if (!container || !recaptchaSiteKey) {
+    if (!recaptchaSiteKey) {
       return;
     }
 
-    container.innerHTML = '';
+    isMountedRef.current = true;
 
-    loadEnterpriseScript()
-      .then(() => {
-        if (cancelled || widgetContainerRef.current !== container) {
-          return;
-        }
-
-        const enterprise = window.grecaptcha?.enterprise;
-
-        if (!enterprise) {
-          if (cancelled) {
-            return;
-          }
-
-          onTokenChange(null);
-          return;
-        }
-
-        enterprise.ready(() => {
-          if (cancelled || widgetContainerRef.current !== container) {
-            return;
-          }
-
-          try {
-            widgetId = enterprise.render(container, {
-              callback: (nextToken) => {
-                if (cancelled) {
-                  return;
-                }
-
-                onTokenChange(nextToken);
-              },
-              'error-callback': () => {
-                if (cancelled) {
-                  return;
-                }
-
-                onTokenChange(null);
-              },
-              'expired-callback': () => {
-                if (cancelled) {
-                  return;
-                }
-
-                onTokenChange(null);
-              },
-              sitekey: recaptchaSiteKey,
-              theme: 'light',
-            });
-          } catch (error) {
-            widgetId = null;
-
-            if (cancelled) {
-              return;
-            }
-
-            console.error('Failed to render reCAPTCHA Enterprise widget.', error);
-            onTokenChange(null);
-          }
-        });
-      })
-      .catch(() => {
-        if (cancelled) {
-          return;
-        }
-
-        onTokenChange(null);
-      });
+    loadRecaptchaEnterprise(recaptchaSiteKey).catch((error) => {
+      if (isMountedRef.current) {
+        console.error('Failed to load reCAPTCHA Enterprise script.', error);
+      }
+    });
 
     return () => {
-      cancelled = true;
-
-      if (widgetId !== null) {
-        window.grecaptcha?.enterprise?.reset?.(widgetId);
-      }
-
-      container.innerHTML = '';
+      isMountedRef.current = false;
     };
-  }, [onTokenChange, recaptchaSiteKey]);
+  }, [recaptchaSiteKey]);
 
-  return (
-    <div className={styles.enterpriseBox}>
-      <div ref={widgetContainerRef} />
-    </div>
-  );
+  return null;
 }
