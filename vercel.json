@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/be1/:path*",
+      "destination": "/api/be1/:path*"
+    },
+    {
+      "source": "/be3/:path*",
+      "destination": "/api/be3/:path*"
+    }
+  ]
+}
