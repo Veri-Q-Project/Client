@@ -16,6 +16,9 @@ type ResultPageFetcher = {
   getInitialResultPageData: () => ResultPageData | null;
 };
 
+export const DETAIL_UNAVAILABLE_MESSAGE =
+  '상세 분석 데이터를 찾지 못했습니다. 잠시 후 다시 시도하거나 다시 검사해 주세요.';
+
 function hasSessionResult(session: ScanSessionSnapshot): boolean {
   return Boolean(
     session.analysisDetail ||
@@ -33,7 +36,7 @@ function createDetailUnavailableResultPageData(url: string): ResultPageData {
   return {
     detailUnavailable: true,
     previewUrl: url,
-    siteMeta: '상세 분석 데이터를 찾지 못했습니다. 잠시 후 다시 시도하거나 다시 검사해 주세요.',
+    siteMeta: DETAIL_UNAVAILABLE_MESSAGE,
     siteName: url,
     siteUrl: url,
     trustScore: 0,
@@ -45,9 +48,8 @@ export function createResultPageFetcher(tone: ResultTone): ResultPageFetcher {
   async function fetchResultPageData(): Promise<ResultPageData> {
     const session = getScanSessionSnapshot();
     const recoverableUrl = resolveRecoverableUrl(session);
-    const hasRecoverableUrl = Boolean(recoverableUrl);
 
-    if (!session.analysisDetail && hasRecoverableUrl) {
+    if (!session.analysisDetail && recoverableUrl) {
       try {
         const detailSession = await ensureScanDetail();
         return toResultPageData(detailSession, tone);
@@ -57,7 +59,7 @@ export function createResultPageFetcher(tone: ResultTone): ResultPageFetcher {
             return toResultPageData(session, tone);
           }
 
-          return createDetailUnavailableResultPageData(recoverableUrl ?? '');
+          return createDetailUnavailableResultPageData(recoverableUrl);
         }
 
         throw error;

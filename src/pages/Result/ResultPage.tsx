@@ -1,6 +1,7 @@
 import type { ResultTone } from '@/shared/types/resultTone';
 import ResultHero from '@/shared/ui/resultHero';
 
+import { DETAIL_UNAVAILABLE_MESSAGE } from './api/createResultPageFetcher';
 import { useResultPage } from './hooks/useResultPage';
 import ResultStatusPage from './ui/ResultStatusPage';
 
@@ -15,13 +16,13 @@ const resultViewConfig = {
     },
     hero: (
       <ResultHero
-        description="Veri-Q 분석 결과, 해당 QR 코드는 악성 위협 사이트로 분류되었습니다."
+        description="Veri-Q 분석 결과, 해당 QR 코드는 악성 위험 사이트로 분류되었습니다."
         title="위험! 악성 코드가 감지되어 접속을 권장하지 않는 사이트입니다."
         tone="critical"
       />
     ),
     riskLevelCard: {
-      description: '피싱 의심 패턴이 강하게 감지됨',
+      description: '실시간 위협 신호가 강하게 감지됨',
       levelText: '위험',
     },
     siteCard: {
@@ -37,7 +38,7 @@ const resultViewConfig = {
         description="Veri-Q 분석 결과, 해당 QR 코드는 검증된 안전한 웹사이트로 연결됩니다."
         title={
           <>
-            안심하세요!
+            안심하세요
             <br />
             안전한 사이트입니다
           </>
@@ -55,7 +56,7 @@ const resultViewConfig = {
         description="Veri-Q 분석 결과, 해당 QR 코드는 주의가 필요한 웹사이트로 분류되었습니다."
         title={
           <>
-            주의하세요!
+            주의하세요
             <br />
             주의가 필요한 사이트입니다
           </>
@@ -64,12 +65,12 @@ const resultViewConfig = {
       />
     ),
     riskLevelCard: {
-      description: '의심 패턴 일부 감지됨',
+      description: '의심 신호 일부 감지됨',
       levelText: '주의',
     },
     siteCard: {
       badgeLabel: '!',
-      visitLabel: '주의하여 사이트 방문하기',
+      visitLabel: '주의하며 사이트 방문하기',
     },
   },
 } as const;
@@ -77,7 +78,7 @@ const resultViewConfig = {
 const detailUnavailableViewConfig = {
   hero: (
     <ResultHero
-      description="상세 분석 데이터를 찾지 못했습니다. 잠시 후 다시 시도하거나 다시 검사해 주세요."
+      description={DETAIL_UNAVAILABLE_MESSAGE}
       title={
         <>
           아직 분석 결과를
@@ -95,7 +96,7 @@ const detailUnavailableViewConfig = {
   },
   siteCard: {
     badgeLabel: '?',
-    statusLabel: 'ANALYSIS NEEDED',
+    statusLabel: '분석 대기',
     tone: 'warning' as const,
     visitLabel: '다시 검사하기',
   },

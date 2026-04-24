@@ -78,15 +78,38 @@ function buildScriptSelector(sourceUrl: string): string {
 function waitForScriptReady(script: HTMLScriptElement): Promise<void> {
   return new Promise((resolve, reject) => {
     const onLoad = () => {
-      void waitForEnterpriseApiReady().then(resolve).catch(reject);
+      void waitForEnterpriseApiReady()
+        .then(() => {
+          cleanup();
+          resolve();
+        })
+        .catch((error) => {
+          cleanup();
+          reject(error);
+        });
     };
 
     const onError = () => {
+      cleanup();
       reject(new Error('Failed to load reCAPTCHA Enterprise script.'));
     };
 
-    script.addEventListener('load', onLoad, { once: true });
-    script.addEventListener('error', onError, { once: true });
+    const cleanup = () => {
+      script.removeEventListener('load', onLoad);
+      script.removeEventListener('error', onError);
+    };
+
+    script.addEventListener('load', onLoad);
+    script.addEventListener('error', onError);
+
+    if (script.dataset.loadStatus === 'loaded' || isEnterpriseApiReady()) {
+      onLoad();
+      return;
+    }
+
+    if (script.dataset.loadStatus === 'error') {
+      onError();
+    }
   });
 }
 

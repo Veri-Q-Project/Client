@@ -45,6 +45,11 @@ export default function CaptchaWidget({ onTokenChange, recaptchaSiteKey }: Captc
       siteKey: recaptchaSiteKey,
     })
       .then((nextWidgetId) => {
+        if (disposed) {
+          resetRecaptchaEnterprise(nextWidgetId);
+          return;
+        }
+
         widgetId = nextWidgetId;
       })
       .catch((error) => {
