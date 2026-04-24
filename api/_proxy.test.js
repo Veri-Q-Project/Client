@@ -43,4 +43,18 @@ describe('buildTargetUrl', () => {
 
     expect(targetUrl.toString()).toBe('https://backend.example.com/be10/api/v1/scan');
   });
+
+  it('builds the target path from a Vercel rewrite query parameter', () => {
+    const targetUrl = buildTargetUrl(
+      '/api/be3?path=api/v1/scan/subscribe&guest_uuid=guest-1',
+      {
+        pathQueryParam: 'path',
+      },
+      targetBase,
+    );
+
+    expect(targetUrl.toString()).toBe(
+      'https://backend.example.com/api/v1/scan/subscribe?guest_uuid=guest-1',
+    );
+  });
 });

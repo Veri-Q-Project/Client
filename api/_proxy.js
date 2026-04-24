@@ -68,21 +68,43 @@ function stripProxyPrefix(pathname, prefixes) {
   return pathname.slice(matchedPrefix.length) || '/';
 }
 
+function buildTargetPathFromQuery(incomingUrl, pathQueryParam) {
+  if (!pathQueryParam) {
+    return null;
+  }
+
+  const pathFromQuery = incomingUrl.searchParams.get(pathQueryParam);
+
+  if (!pathFromQuery) {
+    return '/';
+  }
+
+  incomingUrl.searchParams.delete(pathQueryParam);
+
+  return pathFromQuery.startsWith('/') ? pathFromQuery : `/${pathFromQuery}`;
+}
+
 function buildTargetUrl(requestUrl, options, targetBase) {
   const incomingUrl = new URL(requestUrl, 'https://vercel.local');
-  const pathname = stripProxyPrefix(incomingUrl.pathname, normalizeProxyPrefixes(options));
+  const pathname =
+    buildTargetPathFromQuery(incomingUrl, options.pathQueryParam) ??
+    stripProxyPrefix(incomingUrl.pathname, normalizeProxyPrefixes(options));
 
   const targetUrl = new URL(pathname || '/', targetBase);
-  targetUrl.search = incomingUrl.search;
+  targetUrl.search = incomingUrl.searchParams.toString();
 
   return targetUrl;
 }
 
-async function proxyRequest(request, response, { envName, prefix, prefixes }) {
+async function proxyRequest(request, response, { envName, pathQueryParam, prefix, prefixes }) {
   let targetUrl;
 
   try {
-    targetUrl = buildTargetUrl(request.url, { prefix, prefixes }, requireProxyTarget(envName));
+    targetUrl = buildTargetUrl(
+      request.url,
+      { pathQueryParam, prefix, prefixes },
+      requireProxyTarget(envName),
+    );
   } catch (error) {
     response.statusCode = 500;
     response.setHeader('content-type', 'application/json; charset=utf-8');
