@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/be1/:path*",
+      "destination": "http://34.64.182.89:8081/:path*"
+    },
+    {
+      "source": "/be3/:path*",
+      "destination": "http://34.64.182.89:8083/:path*"
+    }
+  ]
+}
