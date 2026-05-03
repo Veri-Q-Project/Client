@@ -6,7 +6,7 @@ type ScanTargetLike = {
 
 const webSchemeTypeAliases = new Set(['URL', 'WEB']);
 
-export function normalizeScanSchemeTypeAlias(schemeType: string | null): string | null {
+export function normalizeScanSchemeTypeAlias(schemeType: string | null | undefined): string | null {
   if (!schemeType) {
     return null;
   }
@@ -20,12 +20,12 @@ export function normalizeScanSchemeTypeAlias(schemeType: string | null): string 
   return webSchemeTypeAliases.has(normalizedSchemeType) ? 'WEB' : normalizedSchemeType;
 }
 
-export function isHttpUrl(url: string | null | undefined): boolean {
+export function isHttpUrl(url: unknown): boolean {
   return typeof url === 'string' && /^https?:\/\//iu.test(url.trim());
 }
 
 export function isWebScanTarget({ isUrl, schemeType, url }: ScanTargetLike): boolean {
-  const normalizedSchemeType = normalizeScanSchemeTypeAlias(schemeType ?? null);
+  const normalizedSchemeType = normalizeScanSchemeTypeAlias(schemeType);
 
   if (normalizedSchemeType) {
     return normalizedSchemeType === 'WEB';

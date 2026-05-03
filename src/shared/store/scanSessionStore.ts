@@ -140,10 +140,9 @@ function resolveIsUrl(
   schemeType: string | null,
 ): boolean | null {
   const explicitIsUrl = pickBoolean(source, ['isUrl', 'is_url']);
-  const normalizedSchemeType = normalizeScanSchemeTypeAlias(schemeType);
 
-  if (normalizedSchemeType) {
-    return normalizedSchemeType === 'WEB';
+  if (schemeType) {
+    return schemeType === 'WEB';
   }
 
   if (isHttpUrl(decodedUrl)) {

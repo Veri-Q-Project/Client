@@ -85,14 +85,6 @@ function StatusBadgeIcon({ tone }: { tone: ScanListStatus }) {
   );
 }
 
-function isWebScanListItem(item: {
-  isUrl: boolean | null;
-  schemeType: string | null;
-  url: string;
-}): boolean {
-  return isWebScanTarget(item);
-}
-
 export default function ScanListPage() {
   const { handleSelectScanResult, scanListPageData, scanListUuid } = useScanListPage();
 
@@ -113,7 +105,7 @@ export default function ScanListPage() {
           ) : (
             <ul className={styles.list}>
               {scanListPageData.items.map((item) => {
-                const nextRoute = isWebScanListItem(item) ? reportRoute : nonUrlResultRoute;
+                const nextRoute = isWebScanTarget(item) ? reportRoute : nonUrlResultRoute;
 
                 return (
                   <li key={item.id}>

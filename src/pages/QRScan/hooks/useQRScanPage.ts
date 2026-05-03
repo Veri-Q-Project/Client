@@ -154,12 +154,11 @@ function isNonWebScanResponse(scanResponse: Record<string, unknown>): boolean {
             : typeof scanResponse.url === 'string'
               ? scanResponse.url
               : null;
-  const schemeType = typeof rawSchemeType === 'string' ? rawSchemeType.trim().toUpperCase() : '';
   const rawIsUrl = scanResponse.isUrl !== undefined ? scanResponse.isUrl : scanResponse.is_url;
 
   return !isWebScanTarget({
     isUrl: typeof rawIsUrl === 'boolean' ? rawIsUrl : null,
-    schemeType,
+    schemeType: typeof rawSchemeType === 'string' ? rawSchemeType : null,
     url: targetValue,
   });
 }
