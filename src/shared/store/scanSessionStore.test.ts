@@ -50,4 +50,20 @@ describe('scanSessionStore', () => {
     expect(state.schemeType).toBe('SMS');
     expect(state.isUrl).toBe(false);
   });
+
+  it('normalizes URL history selections as web scans', () => {
+    useScanSessionStore.getState().setHistorySelection({
+      isUrl: false,
+      riskLevel: 'safe',
+      scannedAt: '2026.05.03',
+      schemeType: 'URL',
+      url: 'https://example.com/history',
+    });
+
+    const state = useScanSessionStore.getState();
+
+    expect(state.decodedUrl).toBe('https://example.com/history');
+    expect(state.schemeType).toBe('WEB');
+    expect(state.isUrl).toBe(true);
+  });
 });

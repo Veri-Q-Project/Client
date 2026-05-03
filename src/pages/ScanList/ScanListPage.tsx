@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
 import { qrIconByTone } from '@/shared/icon/resultIcons';
+import { isWebScanTarget } from '@/shared/lib/scan-session/scanClassification';
 import AppHeader from '@/shared/ui/app-header';
 
 import { useScanListPage } from './hooks/useScanListPage';
@@ -8,15 +9,8 @@ import * as styles from './styles/scanListPage.css';
 
 import type { ScanListStatus } from './types/scanListPage.types';
 
-type ResultRoute = '/result/critical' | '/result/non-url' | '/result/safe' | '/result/warning';
-
 const nonUrlResultRoute = '/result/non-url';
-
-const resultRouteByStatus: Record<ScanListStatus, ResultRoute> = {
-  safe: '/result/safe',
-  warning: '/result/warning',
-  critical: '/result/critical',
-};
+const reportRoute = '/report';
 
 const statusLabelByTone: Record<ScanListStatus, string> = {
   safe: '안전',
@@ -91,10 +85,6 @@ function StatusBadgeIcon({ tone }: { tone: ScanListStatus }) {
   );
 }
 
-function isWebScanListItem(item: { isUrl: boolean | null; schemeType: string | null }): boolean {
-  return item.isUrl !== false && item.schemeType?.trim().toUpperCase() === 'WEB';
-}
-
 export default function ScanListPage() {
   const { handleSelectScanResult, scanListPageData, scanListUuid } = useScanListPage();
 
@@ -115,9 +105,7 @@ export default function ScanListPage() {
           ) : (
             <ul className={styles.list}>
               {scanListPageData.items.map((item) => {
-                const resultRoute = isWebScanListItem(item)
-                  ? resultRouteByStatus[item.status]
-                  : nonUrlResultRoute;
+                const nextRoute = isWebScanTarget(item) ? reportRoute : nonUrlResultRoute;
 
                 return (
                   <li key={item.id}>
@@ -126,8 +114,8 @@ export default function ScanListPage() {
                       onClick={() => {
                         handleSelectScanResult(item);
                       }}
-                      search={resultRoute === nonUrlResultRoute ? {} : { url: item.url }}
-                      to={resultRoute}
+                      search={nextRoute === reportRoute ? { url: item.url } : {}}
+                      to={nextRoute}
                     >
                       <span className={`${styles.badge} ${styles.badgeTone[item.status]}`}>
                         <span aria-hidden="true" className={styles.badgeIcon}>

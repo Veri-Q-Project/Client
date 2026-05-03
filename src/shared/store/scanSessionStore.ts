@@ -8,6 +8,10 @@ import type {
   BackendScanResponse,
   BackendSseFinalPayload,
 } from '@/shared/api/types';
+import {
+  isHttpUrl,
+  normalizeScanSchemeTypeAlias,
+} from '@/shared/lib/scan-session/scanClassification';
 import type { ResultTone } from '@/shared/types/resultTone';
 
 export type ScanHistorySelection = {
@@ -85,7 +89,10 @@ function mergePersistedLightSession(
     historySelection: persisted.historySelection ?? null,
     isUrl: typeof persisted.isUrl === 'boolean' ? persisted.isUrl : null,
     riskLevel: persisted.riskLevel ?? null,
-    schemeType: typeof persisted.schemeType === 'string' ? persisted.schemeType : null,
+    schemeType:
+      typeof persisted.schemeType === 'string'
+        ? normalizeScanSchemeTypeAlias(persisted.schemeType)
+        : null,
   };
 }
 
@@ -108,7 +115,9 @@ function resolveDecodedUrl(source: unknown): string | null {
 }
 
 function resolveSchemeType(source: unknown, decodedUrl: string | null): string | null {
-  const explicitSchemeType = pickString(source, ['schemeType', 'scheme_type']);
+  const explicitSchemeType = normalizeScanSchemeTypeAlias(
+    pickString(source, ['schemeType', 'scheme_type']),
+  );
 
   if (explicitSchemeType) {
     return explicitSchemeType;
@@ -118,7 +127,7 @@ function resolveSchemeType(source: unknown, decodedUrl: string | null): string |
     return null;
   }
 
-  if (/^https?:\/\//iu.test(decodedUrl)) {
+  if (isHttpUrl(decodedUrl)) {
     return 'WEB';
   }
 
@@ -132,16 +141,16 @@ function resolveIsUrl(
 ): boolean | null {
   const explicitIsUrl = pickBoolean(source, ['isUrl', 'is_url']);
 
+  if (schemeType) {
+    return schemeType === 'WEB';
+  }
+
+  if (isHttpUrl(decodedUrl)) {
+    return true;
+  }
+
   if (explicitIsUrl !== null) {
     return explicitIsUrl;
-  }
-
-  if (schemeType) {
-    return schemeType.trim().toUpperCase() === 'WEB';
-  }
-
-  if (decodedUrl) {
-    return /^https?:\/\//iu.test(decodedUrl);
   }
 
   return null;
