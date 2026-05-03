@@ -7,6 +7,7 @@ import { pickString } from '@/shared/api/responseAccess/payloadAccess';
 import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
 import { mapSseStepId } from '@/shared/api/sse/sseStepMapper';
 import { ensureScanDetail } from '@/shared/lib/scan-session/ensureScanDetail';
+import { isWebScanTarget } from '@/shared/lib/scan-session/scanClassification';
 import { useScanSubscription } from '@/shared/lib/sse/useScanSubscription';
 import { useGuestStore } from '@/shared/store/guestStore';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
@@ -32,10 +33,14 @@ const DEFAULT_LOADING_PAGE_DATA: LoadingPageData = {
 
 function openResultRouteForCurrentSession() {
   const session = getScanSessionSnapshot();
+  const currentTargetUrl = session.decodedUrl ?? session.historySelection?.url ?? null;
 
   if (
-    session.isUrl === false ||
-    (session.schemeType && session.schemeType.trim().toUpperCase() !== 'WEB')
+    !isWebScanTarget({
+      isUrl: session.isUrl,
+      schemeType: session.schemeType,
+      url: currentTargetUrl,
+    })
   ) {
     window.location.assign('/result/non-url');
     return;
@@ -53,8 +58,8 @@ function openResultRouteForCurrentSession() {
   } as const;
   const route = routeByRiskLevel[riskLevel];
 
-  if (session.decodedUrl) {
-    window.location.assign(`${route}?url=${encodeURIComponent(session.decodedUrl)}`);
+  if (currentTargetUrl) {
+    window.location.assign(`${route}?url=${encodeURIComponent(currentTargetUrl)}`);
     return;
   }
 
