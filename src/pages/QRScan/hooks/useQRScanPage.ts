@@ -189,6 +189,7 @@ export function useQRScanPage(): UseQRScanPageReturn {
   const latestPhotoUrlRef = useRef<string | null>(null);
   const flashTimerRef = useRef<number | null>(null);
   const isMountedRef = useRef(true);
+  const isScanSubmittingRef = useRef(false);
   const [cameraStatus, setCameraStatus] = useState<CameraStatus>('loading');
   const [cameraStatusText, setCameraStatusText] = useState('후면 카메라를 연결하는 중입니다.');
   const [captureRecord, setCaptureRecord] = useState<CaptureRecord | null>(null);
@@ -218,6 +219,24 @@ export function useQRScanPage(): UseQRScanPageReturn {
     revokeObjectUrl(latestPhotoUrlRef.current);
     latestPhotoUrlRef.current = nextRecord.photoUrl;
     setCaptureRecord(nextRecord);
+  }, []);
+
+  const beginScanSubmission = useCallback(() => {
+    if (isScanSubmittingRef.current) {
+      return false;
+    }
+
+    isScanSubmittingRef.current = true;
+    setIsCapturing(true);
+    return true;
+  }, []);
+
+  const finishScanSubmission = useCallback(() => {
+    isScanSubmittingRef.current = false;
+
+    if (isMountedRef.current) {
+      setIsCapturing(false);
+    }
   }, []);
 
   const startCamera = useCallback(async () => {
@@ -437,7 +456,9 @@ export function useQRScanPage(): UseQRScanPageReturn {
       return;
     }
 
-    setIsCapturing(true);
+    if (!beginScanSubmission()) {
+      return;
+    }
 
     try {
       const canvas = document.createElement('canvas');
@@ -483,12 +504,12 @@ export function useQRScanPage(): UseQRScanPageReturn {
       console.error('Failed to capture or upload QR scan image.', error);
       showApiError(message, error, 'QR 이미지 업로드에 실패했습니다.');
     } finally {
-      if (isMountedRef.current) {
-        setIsCapturing(false);
-      }
+      finishScanSubmission();
     }
   }, [
+    beginScanSubmission,
     cameraStatus,
+    finishScanSubmission,
     message,
     startCamera,
     submitScanFile,
@@ -497,8 +518,12 @@ export function useQRScanPage(): UseQRScanPageReturn {
   ]);
 
   const handleOpenGallery = useCallback(() => {
+    if (isCapturing) {
+      return;
+    }
+
     fileInputRef.current?.click();
-  }, []);
+  }, [isCapturing]);
 
   const handleGalleryFileChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -508,36 +533,46 @@ export function useQRScanPage(): UseQRScanPageReturn {
         return;
       }
 
-      const photoUrl = URL.createObjectURL(selectedFile);
+      if (!beginScanSubmission()) {
+        event.target.value = '';
+        return;
+      }
 
-      updateCaptureRecord({
-        badgeLabel: 'UPLOAD',
-        capturedAt: formatCapturedAt(new Date()),
-        headline: selectedFile.name,
-        photoUrl,
-        summary: '갤러리 이미지를 불러와 최근 기록에 반영했습니다.',
-      });
+      let uploadStarted = false;
 
-      setIsCapturing(true);
+      try {
+        const photoUrl = URL.createObjectURL(selectedFile);
 
-      void submitScanFile({
-        file: selectedFile,
-        fileName: selectedFile.name,
-        onSuccessMessage: '이미지를 업로드하고 분석을 시작했습니다.',
-      })
-        .catch((error) => {
-          console.error('Failed to upload QR scan image from gallery.', error);
-          showApiError(message, error, '갤러리 이미지 업로드에 실패했습니다.');
-        })
-        .finally(() => {
-          if (isMountedRef.current) {
-            setIsCapturing(false);
-          }
+        updateCaptureRecord({
+          badgeLabel: 'UPLOAD',
+          capturedAt: formatCapturedAt(new Date()),
+          headline: selectedFile.name,
+          photoUrl,
+          summary: '갤러리 이미지를 불러와 최근 기록에 반영했습니다.',
         });
 
-      event.target.value = '';
+        void submitScanFile({
+          file: selectedFile,
+          fileName: selectedFile.name,
+          onSuccessMessage: '이미지를 업로드하고 분석을 시작했습니다.',
+        })
+          .catch((error) => {
+            console.error('Failed to upload QR scan image from gallery.', error);
+            showApiError(message, error, '갤러리 이미지 업로드에 실패했습니다.');
+          })
+          .finally(() => {
+            finishScanSubmission();
+          });
+
+        uploadStarted = true;
+        event.target.value = '';
+      } finally {
+        if (!uploadStarted) {
+          finishScanSubmission();
+        }
+      }
     },
-    [message, submitScanFile, updateCaptureRecord],
+    [beginScanSubmission, finishScanSubmission, message, submitScanFile, updateCaptureRecord],
   );
 
   return {

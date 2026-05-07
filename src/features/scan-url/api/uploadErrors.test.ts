@@ -40,7 +40,7 @@ describe('isCaptchaRequiredUploadError', () => {
     expect(isCaptchaRequiredUploadError(error)).toBe(false);
   });
 
-  it('returns false for 429 responses without captcha markers', () => {
+  it('returns true for plain 429 upload responses', () => {
     const error = new ApiError({
       data: {
         message: 'Too many requests.',
@@ -49,6 +49,6 @@ describe('isCaptchaRequiredUploadError', () => {
       statusCode: 429,
     });
 
-    expect(isCaptchaRequiredUploadError(error)).toBe(false);
+    expect(isCaptchaRequiredUploadError(error)).toBe(true);
   });
 });

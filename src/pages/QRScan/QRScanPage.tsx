@@ -203,7 +203,12 @@ export default function QRScanPage() {
             {isCapturing ? '촬영 중...' : 'QR 스캔하기'}
           </button>
 
-          <button className={styles.secondaryButton} onClick={handleOpenGallery} type="button">
+          <button
+            className={styles.secondaryButton}
+            disabled={isCapturing}
+            onClick={handleOpenGallery}
+            type="button"
+          >
             <span aria-hidden className={styles.buttonIcon}>
               <UploadGlyphIcon />
             </span>
