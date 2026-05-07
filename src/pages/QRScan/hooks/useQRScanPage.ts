@@ -526,30 +526,39 @@ export function useQRScanPage(): UseQRScanPageReturn {
         return;
       }
 
-      const photoUrl = URL.createObjectURL(selectedFile);
+      let uploadStarted = false;
 
-      updateCaptureRecord({
-        badgeLabel: 'UPLOAD',
-        capturedAt: formatCapturedAt(new Date()),
-        headline: selectedFile.name,
-        photoUrl,
-        summary: '갤러리 이미지를 불러와 최근 기록에 반영했습니다.',
-      });
+      try {
+        const photoUrl = URL.createObjectURL(selectedFile);
 
-      void submitScanFile({
-        file: selectedFile,
-        fileName: selectedFile.name,
-        onSuccessMessage: '이미지를 업로드하고 분석을 시작했습니다.',
-      })
-        .catch((error) => {
-          console.error('Failed to upload QR scan image from gallery.', error);
-          showApiError(message, error, '갤러리 이미지 업로드에 실패했습니다.');
-        })
-        .finally(() => {
-          finishScanSubmission();
+        updateCaptureRecord({
+          badgeLabel: 'UPLOAD',
+          capturedAt: formatCapturedAt(new Date()),
+          headline: selectedFile.name,
+          photoUrl,
+          summary: '갤러리 이미지를 불러와 최근 기록에 반영했습니다.',
         });
 
-      event.target.value = '';
+        void submitScanFile({
+          file: selectedFile,
+          fileName: selectedFile.name,
+          onSuccessMessage: '이미지를 업로드하고 분석을 시작했습니다.',
+        })
+          .catch((error) => {
+            console.error('Failed to upload QR scan image from gallery.', error);
+            showApiError(message, error, '갤러리 이미지 업로드에 실패했습니다.');
+          })
+          .finally(() => {
+            finishScanSubmission();
+          });
+
+        uploadStarted = true;
+        event.target.value = '';
+      } finally {
+        if (!uploadStarted) {
+          finishScanSubmission();
+        }
+      }
     },
     [beginScanSubmission, finishScanSubmission, message, submitScanFile, updateCaptureRecord],
   );

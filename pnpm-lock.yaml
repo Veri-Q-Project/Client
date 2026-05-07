@@ -11,6 +11,7 @@ overrides:
   lodash: ^4.18.1
   picomatch@^2.3.1: ^2.3.2
   picomatch@^4.0.3: ^4.0.4
+  postcss: ^8.5.10
   yaml: ^2.8.3
 
 importers:
@@ -26,8 +27,8 @@ importers:
         specifier: ^6.3.2
         version: 6.3.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       axios:
-        specifier: 1.15.1
-        version: 1.15.1
+        specifier: 1.15.2
+        version: 1.15.2
       react:
         specifier: ^19.1.1
         version: 19.2.4
@@ -1875,10 +1876,10 @@ packages:
       }
     engines: { node: '>= 0.4' }
 
-  axios@1.15.1:
+  axios@1.15.2:
     resolution:
       {
-        integrity: sha512-WOG+Jj8ZOvR0a3rAn+Tuf1UQJRxw5venr6DgdbJzngJE3qG7X0kL83CZGpdHMxEm+ZK3seAbvFsw4FfOfP9vxg==,
+        integrity: sha512-wLrXxPtcrPTsNlJmKjkPnNPK2Ihe0hn0wGSaTEiHRPxwjvJwT3hKmXF4dpqxmPO9SoNb2FsYXj/xEo0gHN+D5A==,
       }
 
   balanced-match@1.0.2:
@@ -3610,10 +3611,10 @@ packages:
       }
     engines: { node: '>= 0.4' }
 
-  postcss@8.5.8:
+  postcss@8.5.14:
     resolution:
       {
-        integrity: sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==,
+        integrity: sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==,
       }
     engines: { node: ^10 || ^12 || >=14 }
 
@@ -5863,7 +5864,7 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  axios@1.15.1:
+  axios@1.15.2:
     dependencies:
       follow-redirects: 1.16.0
       form-data: 4.0.5
@@ -6914,7 +6915,7 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss@8.5.8:
+  postcss@8.5.14:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -7450,7 +7451,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.8
+      postcss: 8.5.14
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:
