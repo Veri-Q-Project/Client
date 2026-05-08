@@ -7,7 +7,7 @@ import AppHeader from '@/shared/ui/app-header';
 import ResultHero from '@/shared/ui/resultHero';
 import { resultPageStyles } from '@/shared/ui/resultPage';
 
-import { nonUrlActionPreviewItems } from './constants/nonUrlActionText';
+import { nonUrlActionPreviewItems, resolveNonUrlSectionCopy } from './constants/nonUrlActionText';
 import { useResultNonUrlPage } from './hooks/useResultNonUrlPage';
 import { resolveNonUrlActionExecution } from './lib/resolveNonUrlActionExecution';
 import * as styles from './styles/resultNonUrlPage.css';
@@ -36,6 +36,11 @@ export default function ResultNonUrlPage() {
 
   const displayedActionType =
     selectedPreviewItem?.actionType ?? resultNonUrlPageData.detectedActionType;
+  const displayedActionLabel =
+    selectedPreviewItem?.label ??
+    nonUrlActionPreviewItems.find((item) => item.actionType === displayedActionType)?.label ??
+    displayedActionType;
+  const displayedSectionCopy = resolveNonUrlSectionCopy(displayedActionType);
   const displayedTargetValue =
     displayedActionType === resultNonUrlPageData.detectedActionType
       ? resultNonUrlPageData.targetValue
@@ -70,12 +75,11 @@ export default function ResultNonUrlPage() {
       <div className={resultPageStyles.shell}>
         <section className={resultPageStyles.content}>
           <ResultHero
-            description="Veri-Q 분석 결과, 해당 QR 코드는 비 URL로 분류되었습니다."
+            description={`${displayedActionLabel} 유형으로 분류된 QR 코드입니다. 실행 전 연결 대상과 의도를 먼저 확인하세요.`}
             title={
               <>
-                주의하세요!
-                <br />
-                URL이 아닌 어떠한 것이 실행되는 것이에요!
+                주의하세요
+                <br />이 QR 코드는 {displayedActionLabel} 동작을 유도할 수 있어요.
               </>
             }
             tone="warning"
@@ -84,9 +88,9 @@ export default function ResultNonUrlPage() {
           <section className={styles.futureContent}>
             <DetectedNonUrlActionSection
               actionType={displayedActionType}
-              sectionDescription={resultNonUrlPageData.sectionDescription}
+              sectionDescription={displayedSectionCopy.sectionDescription}
               sectionNumber={resultNonUrlPageData.sectionNumber}
-              sectionTitle={resultNonUrlPageData.sectionTitle}
+              sectionTitle={displayedSectionCopy.sectionTitle}
               targetValue={displayedTargetValue}
             />
 
@@ -96,7 +100,7 @@ export default function ResultNonUrlPage() {
               onClick={handleExecuteAction}
               type="button"
             >
-              주의하여 실행하기
+              주의하고 실행하기
             </button>
 
             {executionFeedbackMessage ? (
@@ -113,7 +117,7 @@ export default function ResultNonUrlPage() {
             />
 
             <section className={styles.previewSection}>
-              <h2 className={styles.previewTitle}>모든 비 URL 경우의 수 보기</h2>
+              <h2 className={styles.previewTitle}>전체 URL 스키마 타입 보기</h2>
 
               <div className={styles.previewButtonList}>
                 {nonUrlActionPreviewItems.map((previewItem) => (
