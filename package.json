@@ -31,6 +31,8 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "test": "vitest run",
+    "test-code": "node src/test-code/generate-qr-png.mjs",
+    "test-code:": "node src/test-code/generate-qr-png.mjs",
     "security:check": "secretlint \"**/*\" && pnpm audit --audit-level high"
   },
   "lint-staged": {
@@ -56,6 +58,7 @@
     "lefthook": "^1.13.6",
     "lint-staged": "^16.2.0",
     "prettier": "^3.8.1",
+    "qrcode": "^1.5.4",
     "secretlint": "^11.3.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.2",

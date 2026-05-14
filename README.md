@@ -48,7 +48,28 @@ pnpm lint:fix
 pnpm format
 pnpm format:write
 pnpm test
+pnpm test-code <url>
 pnpm security:check
+```
+
+## Test QR Code
+
+테스트할 URL을 QR 이미지로 만들 때 사용합니다.
+
+```bash
+pnpm test-code https://naver.com
+```
+
+`//`가 빠진 값도 자동 보정됩니다.
+
+```bash
+pnpm test-code: https:naver.com
+```
+
+생성된 PNG는 `src/test-code/generated-qr/`에 저장됩니다. 쿼리스트링에 `&`가 들어간 URL은 PowerShell에서 분리될 수 있으니 따옴표로 감싸서 실행합니다.
+
+```bash
+pnpm test-code "https://example.com/?a=1&b=2"
 ```
 
 ## Documents

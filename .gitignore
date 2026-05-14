@@ -13,3 +13,4 @@ out
 docs/local/
 .claude/
 .devserver.*.log
+src/test-code/generated-qr/
