@@ -13,6 +13,23 @@ import { resolveNonUrlActionExecution } from './lib/resolveNonUrlActionExecution
 import * as styles from './styles/resultNonUrlPage.css';
 import DetectedNonUrlActionSection from './ui/DetectedNonUrlActionSection';
 
+import type { NonUrlActionType } from './types/resultNonUrlPage.types';
+
+const nonUrlActionLabelByType: Record<NonUrlActionType, string> = {
+  APP_STORE: '앱 마켓',
+  CONTACT: '연락처',
+  CRYPTO: '가상자산',
+  DEEP_LINK: '딥링크',
+  EMAIL: '이메일',
+  OTHER: '기타',
+  OTP: 'OTP',
+  SHORT_URL: '단축 URL',
+  SMS: '문자',
+  TEL: '전화',
+  WEB: '웹',
+  WIFI: 'Wi-Fi',
+};
+
 export default function ResultNonUrlPage() {
   const { handleRescan, handleShareResult, resultNonUrlPageData } = useResultNonUrlPage();
   const [executionFeedbackMessage, setExecutionFeedbackMessage] = useState<string | null>(null);
@@ -22,7 +39,7 @@ export default function ResultNonUrlPage() {
   }
 
   const displayedActionType = resultNonUrlPageData.detectedActionType;
-  const displayedActionLabel = resultNonUrlPageData.detectedActionLabel;
+  const displayedActionLabel = nonUrlActionLabelByType[displayedActionType];
   const displayedSectionCopy = resolveNonUrlSectionCopy(displayedActionType);
   const displayedTargetValue = resultNonUrlPageData.targetValue;
   const isExecutable = displayedTargetValue !== undefined && displayedTargetValue !== null;
