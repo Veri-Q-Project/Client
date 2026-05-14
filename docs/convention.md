@@ -1,35 +1,36 @@
 # Convention
 
-> 이 문서는 프로젝트의 기본 코드 컨벤션을 정리한 문서입니다. 설명보다 규칙과 예시를 우선합니다.
+이 문서는 Veri-Q Client의 기본 코드 작성 규칙입니다. 설명보다 일관성을 우선하고, 기존 구조와 가까운 방식으로 변경합니다.
 
-## 기본 원칙
+## Architecture
 
-- 일관성을 우선합니다.
-- 한 파일은 한 가지 책임만 갖도록 작성합니다.
-- 페이지는 조합에 집중하고, 사용자 액션 로직은 `features`에 둡니다.
-- 불필요한 레이어를 만들지 않습니다. 필요할 때만 추가합니다.
-
-## 폴더 구조
+현재 프로젝트는 FSD-lite 구조를 사용합니다.
 
 ```text
 src/
-  pages/        # 페이지 UI 컴포넌트
-  routes/       # TanStack Router 설정 및 라우트 연결
+  pages/        # 페이지 조합, page-local hooks/lib/ui
+  routes/       # TanStack Router 설정
   features/     # 사용자 액션 단위 기능
-  shared/       # 공통 UI, 유틸, 타입, 상수, API
-  widgets/      # (선택) 여러 요소를 조합한 큰 UI 블록
+  shared/       # 공통 API, store, lib, UI, icon, type
+  test-code/    # 테스트 보조 스크립트
 ```
 
-## 컴포넌트 선언 및 export
+원칙:
 
-- 페이지/컴포넌트 파일은 `default export`를 사용합니다.
-- 유틸/훅/상수는 `named export`를 사용합니다.
-- 익명 `default export`는 사용하지 않습니다.
+- `pages`는 화면 조합과 페이지 전용 로직을 둔다.
+- `features`는 업로드, 이력 조회처럼 사용자 액션 중심 기능을 둔다.
+- `shared`는 여러 영역에서 재사용하는 API, store, lib, type, UI만 둔다.
+- `widgets`는 아직 사용하지 않는다. 여러 페이지에서 재사용되는 조합 UI가 생길 때 추가한다.
+- 새 레이어는 필요가 명확할 때만 만든다.
 
-짧은 예시:
+## Exports
+
+- 페이지 컴포넌트는 `default export`를 사용한다.
+- 유틸, 상수, 타입, store는 `named export`를 사용한다.
+- 익명 `default export`는 사용하지 않는다.
 
 ```tsx
-export default function HomePage() {
+export default function ReportPage() {
   return <main />;
 }
 ```
@@ -38,58 +39,90 @@ export default function HomePage() {
 export const MAX_URL_LENGTH = 2048;
 ```
 
-## import 순서
+## Import Order
 
-1. 프레임워크/런타임 모듈
+ESLint `import/order` 규칙을 따른다.
+
+1. Node/builtin
 2. 외부 패키지
-3. 프로젝트 내부 절대 경로
-4. 현재 디렉터리 기준 상대 경로
+3. 내부 alias 경로
+4. 상대 경로
+5. type import
 
-프로젝트 내부 절대 경로 순서:
+내부 alias 우선순위:
 
-`shared -> features -> widgets -> pages -> routes -> local`
+```text
+shared -> features -> widgets -> pages -> routes
+```
 
-추가 규칙:
+규칙:
 
-- 그룹 사이에는 한 줄 공백을 둡니다.
-- 타입 전용 import는 `import type`으로 분리합니다.
+- import 그룹 사이에는 빈 줄을 둔다.
+- 같은 그룹 안에는 불필요한 빈 줄을 두지 않는다.
+- 타입 전용 import는 `import type`을 사용한다.
 
-## 파일명 규칙
+## File Naming
 
-| 구분                  | 규칙                  | 예시                              |
-| --------------------- | --------------------- | --------------------------------- |
-| 폴더명                | `kebab-case`          | `scan-url`, `result-summary`      |
-| 컴포넌트 파일         | `PascalCase`          | `HomePage.tsx`, `UrlScanForm.tsx` |
-| util 함수 / 상수 파일 | `lowerCamelCase`      | `formatDate.ts`, `constants.ts`   |
-| 테스트 파일           | 대상 파일명 + `.test` | `isSafeExternalUrl.test.ts`       |
+| Target            | Rule                  | Example                      |
+| ----------------- | --------------------- | ---------------------------- |
+| Folder            | `kebab-case`          | `scan-url`, `result-summary` |
+| Page/component    | `PascalCase`          | `ReportPage.tsx`             |
+| Hook              | `useSomething.ts`     | `useLoadingPage.ts`          |
+| Utility/constants | `lowerCamelCase`      | `scanResultRoute.ts`         |
+| Test              | source name + `.test` | `scanResultRoute.test.ts`    |
 
-REST API 관련 파일명/함수명 접두사:
+API 함수 접두어:
 
 - GET: `fetch`
 - POST: `submit`
-- DELETE: `remove`
 - PUT/PATCH: `update`
+- DELETE: `remove`
 
-## 슬라이스 공개 범위
+## Page Logic
 
-- 슬라이스 외부 공개 진입점은 가능하면 `index.ts`로 관리합니다.
-- 다른 슬라이스의 내부 경로 직접 import는 지양합니다.
+- 페이지 컴포넌트는 화면 조합에 집중한다.
+- 복잡한 데이터 변환은 `lib`의 순수 함수로 분리한다.
+- 페이지 전용 hook은 `hooks`에 둔다.
+- 여러 페이지에서 쓰는 로직은 `shared/lib` 또는 `shared/store`로 올린다.
+- 테스트 가능한 로직은 UI에서 빼서 먼저 테스트할 수 있게 만든다.
 
-## 컴포넌트 작성 규칙
+## State
 
-- 페이지 컴포넌트는 화면 조합과 데이터 연결에 집중합니다.
-- `shared/ui`에는 도메인 의존성이 없는 공용 UI만 둡니다.
-- 재사용되지 않는 컴포넌트는 해당 기능/페이지 근처에 둡니다.
-- `utils.ts`, `helpers.ts`, `common.ts`처럼 의미가 약한 파일명은 지양합니다.
+- Zustand store는 상태 보관과 액션 노출에 집중한다.
+- 상태 전환 계산은 가능한 순수 함수로 분리한다.
+- persist 대상은 필요한 최소 필드만 저장한다.
 
-## 접근성
+## Security
 
-- `header`, `nav`, `main`, `section`, `article`, `aside`, `footer` 같은 시맨틱 태그를 우선 사용합니다.
-- 인터랙티브 요소에는 텍스트, `label`, `aria-label` 중 하나가 필요합니다.
-- 아이콘만 있는 버튼은 반드시 `aria-label`을 추가합니다.
+- 외부 링크와 실행 스킴은 허용 목록 기반으로 처리한다.
+- 위험하거나 사용자 행동을 유발하는 스킴은 확인 단계를 둔다.
+- `.env.local`, `.env.server.local`은 커밋하지 않는다.
+- 새 API/보안 정책 변경은 성공 케이스와 차단 케이스를 모두 테스트한다.
 
-## Router Note
+## Tests
 
-- 라우트 정의는 `src/routes`에 둡니다.
-- 화면 컴포넌트는 `src/pages`에서 import 합니다.
-- 파일 기반 자동 생성 대신 명시적인 라우트 트리 구성을 기본으로 사용합니다.
+- 공통 유틸과 데이터 변환은 단위 테스트를 붙인다.
+- 큰 리팩토링 전에는 기존 회귀 테스트를 보강한다.
+- CI 기준 검증은 다음 명령이다.
+
+```bash
+pnpm format
+pnpm lint
+pnpm test
+pnpm typecheck
+pnpm security:check
+pnpm build
+```
+
+## Accessibility
+
+- `main`, `section`, `article`, `nav`, `header`, `footer` 같은 시맨틱 태그를 우선한다.
+- 인터랙티브 요소에는 텍스트 label 또는 `aria-label`을 제공한다.
+- 아이콘만 있는 버튼에는 반드시 `aria-label`을 둔다.
+
+## Routing
+
+- 라우트 정의는 `src/routes`에 둔다.
+- 페이지 컴포넌트는 `src/pages`에서 import한다.
+- 페이지는 route-level `lazy()`로 불러온다.
+- 라우트 fallback은 접근 가능한 `role="status"` 영역으로 제공한다.

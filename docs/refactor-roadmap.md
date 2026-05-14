@@ -1,60 +1,72 @@
 # Refactor Roadmap
 
-## 현재 기준선
+## Current Baseline
 
-- 브랜치: `feat/42`
-- 테스트: `pnpm test` 통과
-- 린트: `pnpm lint` 통과
-- 보안 점검: `pnpm security:check` 통과
-- 타입 체크: `pnpm typecheck` 통과
-- 빌드: `pnpm build` 통과
+- Branch: `feat/42`
+- Test: `pnpm test` passed
+- Lint: `pnpm lint` passed
+- Format: `pnpm format` passed
+- Typecheck: `pnpm typecheck` passed
+- Security: `pnpm security:check` passed
+- Build: `pnpm build` passed
 
-## 진행 기록
+## Status
+
+All planned refactor items in this roadmap are complete as of 2026-05-14.
+
+## Progress Log
 
 - 2026-05-14: P0 CI 안정성 보강 완료. `typecheck` 스크립트와 CI 단계를 추가했다.
-- 2026-05-14: P1 비 URL 실행 보안 1차 보강 완료. 실행 가능한 스킴을 제한하고, 실행 전 확인 단계를 추가했다.
+- 2026-05-14: P1 비 URL 실행 보안 1차 보강 완료. 실행 가능한 스킴을 허용 목록으로 제한하고, 실행 전 확인 단계를 추가했다.
 - 2026-05-14: P1 응답 정규화 1차 보강 완료. URL, 스키마, 웹 여부, 위험도 판정을 공통 유틸로 분리했다.
 - 2026-05-14: P1 URL 해석 1차 보강 완료. 결과/리포트 페이지의 스캔 URL, 원본 URL, 최종 URL 선택 기준을 공통화했다.
 - 2026-05-14: P1 상태 관리 1차 보강 완료. `scanSessionStore`의 상태 전환 계산을 순수 함수로 분리하고 회귀 테스트를 추가했다.
 - 2026-05-14: P2 로딩/SSE 1차 분리 완료. 결과 라우트 결정, 스캔 식별자 비교, 완료 진행 이벤트 판정을 순수 함수로 분리했다.
 - 2026-05-14: P2 로딩 상세 조회 1차 분리 완료. 상세 조회 재시도와 polling 타이머 정책을 테스트 가능한 유틸로 분리했다.
 - 2026-05-14: P2 리포트 데이터 1차 분리 완료. 리포트 컨텍스트 추출과 평판 섹션 빌더를 분리하고 회귀 테스트를 추가했다.
+- 2026-05-14: P2 리포트 데이터 2차 분리 완료. 도메인 비교와 서버/인증서 정보 빌더를 분리하고 회귀 테스트를 추가했다.
+- 2026-05-14: P2 성능 점검 완료. 페이지 단위 lazy loading과 vendor chunk 분리 설정을 확인했다.
+- 2026-05-14: P3 문서 정리 완료. README와 로드맵을 현재 구조, 스크립트, 검증 절차 기준으로 최신화했다.
 
-## 관찰 결과
+## Completed Items
 
-- `vite build`만으로는 TypeScript 타입 오류가 잡히지 않는다. 실제로 `ResultNonUrlPage`의 존재하지 않는 필드 접근이 `tsc --noEmit`에서만 발견됐다.
-- 백엔드 응답 정규화가 `scanSessionStore`, `toResultPageData`, `toReportPageData`, `historyItemAccess`, `toResultNonUrlPageData`에 나뉘어 있다. 위험도/URL/스키마 판정이 계속 불일치할 수 있는 구조다.
-- 외부 HTTP 링크는 `openExternalLink`와 `isSafeExternalUrl`에서 제한하고 있지만, 비 URL 결과 실행은 `tel:`, `sms:`, `mailto:`, 앱 딥링크를 직접 실행한다. 허용 스킴과 사용자 확인 정책을 더 명확히 해야 한다.
-- `scanSessionStore`가 URL, 위험도, 스키마, 분석 응답 정규화를 함께 담당한다. 장기적으로는 저장소는 상태 보관에 집중하고, 정규화는 별도 도메인 유틸로 분리하는 편이 안전하다.
-- 긴 파일이 많다. 특히 `ReportPage`, `toReportPageData`, `useQRScanPage`, `useLoadingPage`, `resolveNonUrlActionExecution`은 변경 위험이 높고 테스트를 먼저 보강한 뒤 분리하는 것이 좋다.
-- 빌드 결과에서 `antd`와 `react` 청크가 크다. 성능 개선은 먼저 라우트 단위 lazy loading과 실제 사용자 진입 경로 기준으로 접근하는 것이 좋다.
-- 일부 문서/문구 파일은 인코딩이 깨져 보인다. 기능 리팩토링과 분리해서 문구/인코딩 정리 커밋으로 다루는 것이 안전하다.
+| Priority | Area          | Result                                                                            |
+| -------- | ------------- | --------------------------------------------------------------------------------- |
+| P0       | CI 안정성     | `typecheck` 스크립트와 CI typecheck 단계를 추가했다.                              |
+| P1       | 보안          | 비 URL 실행 스킴을 허용 목록으로 제한하고 위험 스킴은 확인 단계를 거치게 했다.    |
+| P1       | 데이터 정규화 | URL, 위험도, 스키마, 웹 여부 판정을 공통 scan-session 유틸로 모았다.              |
+| P1       | 상태 관리     | `scanSessionStore`에서 상태 전환 계산을 순수 함수로 분리했다.                     |
+| P2       | 로딩/SSE      | SSE 최종 결과, 상세 조회 retry, polling, 결과 라우팅 판정을 작은 함수로 분리했다. |
+| P2       | 성능          | route-level lazy loading과 vendor chunk 분리를 유지한다.                          |
+| P2       | 리포트 페이지 | `toReportPageData`를 컨텍스트, 평판, 도메인, 서버 정보 빌더로 분리했다.           |
+| P3       | 문서          | README와 로드맵을 최신 구조와 검증 명령 기준으로 정리했다.                        |
 
-## 우선순위
+## Current Architecture Notes
 
-| 우선순위 | 영역          | 목표                                                                      | 권장 커밋 단위                                    |
-| -------- | ------------- | ------------------------------------------------------------------------- | ------------------------------------------------- |
-| P0       | CI 안정성     | 타입 오류가 PR에서 반드시 잡히게 한다.                                    | `typecheck` 스크립트와 CI 단계 추가               |
-| P1       | 보안          | 비 URL 실행 스킴을 허용 목록으로 제한하고 위험 스킴은 확인 모달을 거친다. | 실행 정책 유틸 분리, 테스트 추가                  |
-| P1       | 데이터 정규화 | URL, 위험도, 스키마 판정을 하나의 공통 변환 계층으로 모은다.              | `scan-result-normalizer` 유틸 추가, 페이지별 적용 |
-| P1       | 상태 관리     | `scanSessionStore`에서 파싱 로직을 걷어내고 상태 저장 책임만 남긴다.      | store 내부 정규화 함수 외부화                     |
-| P2       | 로딩/SSE      | SSE 최종 결과, 상세 조회 폴링, 라우팅 전환을 더 작은 함수로 분리한다.     | `useLoadingPage` 분리 및 테스트 보강              |
-| P2       | 성능          | 라우트 단위 lazy loading과 무거운 청크 확인을 적용한다.                   | 라우터 lazy import, 빌드 크기 비교                |
-| P2       | 리포트 페이지 | `ReportPage`와 `toReportPageData`를 섹션 단위로 쪼갠다.                   | URL/평판/서버정보 빌더 분리                       |
-| P3       | 문구/인코딩   | 깨진 문구와 문서 인코딩을 정리한다.                                       | 문구 파일만 별도 수정                             |
+- `pages`는 화면 조합과 page-local hook/lib/ui를 맡는다.
+- `features`는 사용자 액션 중심 API와 타입을 맡는다.
+- `shared`는 공통 API, 상태 저장소, scan-session 유틸, 보안 유틸, 공용 UI를 맡는다.
+- `routes`는 TanStack Router 설정과 route-level lazy loading을 맡는다.
+- `widgets`는 아직 필요하지 않아 만들지 않았다. 여러 페이지에서 재사용되는 조합 UI가 생기면 추가한다.
 
-## 추천 진행 순서
+## Verification
 
-1. P0 CI 안정성 보강을 먼저 끝낸다.
-2. 비 URL 실행 보안 정책을 정리한다.
-3. 백엔드 응답 정규화 계층을 만들고 결과/리포트/이력에 순차 적용한다.
-4. 상태 저장소에서 정규화 책임을 분리한다.
-5. 라우트 lazy loading과 번들 크기 개선을 진행한다.
-6. 리포트/QR 스캔/로딩 페이지의 큰 파일을 테스트와 함께 분리한다.
+마지막 완료 기준 검증 명령:
 
-## 작업 원칙
+```bash
+pnpm format
+pnpm lint
+pnpm test
+pnpm typecheck
+pnpm security:check
+pnpm build
+```
 
-- 한 커밋은 한 책임만 가진다.
-- 리팩토링 전에는 해당 영역 테스트를 먼저 추가하거나 기존 테스트를 보강한다.
-- 보안 정책 변경은 성공 케이스와 차단 케이스를 모두 테스트한다.
-- 성능 개선은 빌드 결과나 런타임 측정값을 남긴다.
+## Next Candidates
+
+현재 로드맵 범위는 완료했다. 이후 개선은 다음 별도 이슈로 분리하는 것이 좋다.
+
+- `ReportPage` JSX를 섹션 컴포넌트로 더 세분화
+- QR 스캔 카메라 제어 로직 분리
+- 실제 운영 번들 기준 시각화 도구 추가
+- UI 문구 전체 i18n 또는 copy catalog 도입
