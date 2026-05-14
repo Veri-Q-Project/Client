@@ -30,6 +30,28 @@ describe('toResultPageData', () => {
 
     const resultPageData = toResultPageData(session, 'safe');
 
+    expect(resultPageData.riskLevel).toBe('safe');
     expect(resultPageData.siteMeta).toBe('SSL 인증서 유효하지 않음 · 발급자 정보 없음');
+  });
+
+  it('uses score-derived risk level even when fallback route tone is lower', () => {
+    const session: ScanSessionSnapshot = {
+      analysisDetail: {
+        riskLevel: 'safe',
+        score: 85,
+      },
+      decodedUrl: 'https://testsafebrowsing.appspot.com/s/phishing.html',
+      finalResult: null,
+      historySelection: null,
+      isUrl: true,
+      riskLevel: null,
+      scanResponse: null,
+      schemeType: 'WEB',
+    };
+
+    const resultPageData = toResultPageData(session, 'warning');
+
+    expect(resultPageData.riskLevel).toBe('critical');
+    expect(resultPageData.trustScore).toBe(85);
   });
 });

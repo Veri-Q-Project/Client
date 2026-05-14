@@ -37,6 +37,7 @@ describe('createResultPageFetcher', () => {
     const { fetchResultPageData } = createResultPageFetcher('safe');
 
     await expect(fetchResultPageData()).resolves.toMatchObject({
+      riskLevel: 'safe',
       siteName: 'http://naver-login-check.xyz',
       siteUrl: 'http://naver-login-check.xyz',
       trustScore: 23,
@@ -58,6 +59,7 @@ describe('createResultPageFetcher', () => {
 
     await expect(fetchResultPageData()).resolves.toMatchObject({
       detailUnavailable: true,
+      riskLevel: 'warning',
       siteMeta: DETAIL_UNAVAILABLE_MESSAGE,
       siteName: 'https://www.daum.net/',
       siteUrl: 'https://www.daum.net/',

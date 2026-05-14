@@ -44,7 +44,9 @@ export function useResultPage(tone: ResultTone): UseResultPageReturn {
       return;
     }
 
-    if (tone === 'critical') {
+    const resolvedTone = resultData.riskLevel;
+
+    if (resolvedTone === 'critical') {
       modal.error({
         centered: true,
         content: '이 URL은 악성 위협이 높아 접속을 차단했습니다.',
@@ -54,7 +56,7 @@ export function useResultPage(tone: ResultTone): UseResultPageReturn {
       return;
     }
 
-    if (tone === 'warning') {
+    if (resolvedTone === 'warning') {
       modal.confirm({
         cancelText: '취소',
         centered: true,
@@ -69,10 +71,10 @@ export function useResultPage(tone: ResultTone): UseResultPageReturn {
     }
 
     openExternalLink(resultData.visitUrl);
-  }, [modal, resultData, tone]);
+  }, [modal, resultData]);
 
   const handleReport = useCallback(() => {
-    if (tone !== 'critical') {
+    if (resultData?.riskLevel !== 'critical') {
       return;
     }
 
@@ -87,7 +89,7 @@ export function useResultPage(tone: ResultTone): UseResultPageReturn {
         message.success('신고가 접수되었습니다. 빠르게 확인하겠습니다.');
       },
     });
-  }, [message, modal, tone]);
+  }, [message, modal, resultData?.riskLevel]);
 
   return {
     handleReport,

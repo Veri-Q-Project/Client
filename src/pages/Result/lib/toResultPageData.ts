@@ -156,6 +156,7 @@ export function toResultPageData(
   return {
     detailUnavailable: false,
     previewUrl: resolvedPreviewUrl,
+    riskLevel: resolvedTone,
     siteMeta: buildSiteMeta(sources),
     siteName: resolvedOriginalUrl,
     siteUrl: resolvedFinalUrl,
