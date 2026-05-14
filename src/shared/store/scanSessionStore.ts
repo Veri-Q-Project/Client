@@ -7,14 +7,14 @@ import type {
   BackendSseFinalPayload,
 } from '@/shared/api/types';
 import { normalizeScanSchemeTypeAlias } from '@/shared/lib/scan-session/scanClassification';
-import {
-  normalizeScanResult,
-  resolveScanDecodedUrl,
-  resolveScanIsUrl,
-  resolveScanRiskLevel,
-  resolveScanSchemeType,
-} from '@/shared/lib/scan-session/scanResultNormalization';
 import type { ResultTone } from '@/shared/types/resultTone';
+
+import {
+  buildAnalysisDetailPatch,
+  buildFinalResultPatch,
+  buildHistorySelectionPatch,
+  buildScanResponsePatch,
+} from './scanSessionTransitions';
 
 export type ScanHistorySelection = {
   isUrl: boolean | null;
@@ -118,68 +118,16 @@ export const useScanSessionStore = create<ScanSessionState>()(
         });
       },
       setAnalysisDetail: (analysisDetail) => {
-        const normalizedResult = normalizeScanResult(analysisDetail);
-
-        set((state) => {
-          const nextDecodedUrl = normalizedResult.decodedUrl ?? state.decodedUrl;
-          const schemeType =
-            normalizedResult.schemeType ?? resolveScanSchemeType(analysisDetail, nextDecodedUrl);
-          const nextSchemeType = schemeType ?? state.schemeType;
-
-          return {
-            analysisDetail,
-            decodedUrl: nextDecodedUrl,
-            isUrl: resolveScanIsUrl(analysisDetail, nextDecodedUrl, nextSchemeType) ?? state.isUrl,
-            riskLevel: normalizedResult.riskLevel ?? state.riskLevel,
-            schemeType: nextSchemeType,
-          };
-        });
+        set((state) => buildAnalysisDetailPatch(state, analysisDetail));
       },
       setFinalResult: (finalResult) => {
-        const normalizedResult = normalizeScanResult(finalResult);
-
-        set((state) => ({
-          decodedUrl: normalizedResult.decodedUrl ?? state.decodedUrl,
-          finalResult,
-          historySelection: state.historySelection,
-          isUrl:
-            resolveScanIsUrl(
-              finalResult,
-              normalizedResult.decodedUrl ?? state.decodedUrl,
-              normalizedResult.schemeType ?? state.schemeType,
-            ) ?? state.isUrl,
-          riskLevel: normalizedResult.riskLevel ?? state.riskLevel,
-          schemeType: normalizedResult.schemeType ?? state.schemeType,
-        }));
+        set((state) => buildFinalResultPatch(state, finalResult));
       },
       setHistorySelection: (historySelection) => {
-        const schemeType = resolveScanSchemeType(historySelection, historySelection.url);
-
-        set({
-          analysisDetail: null,
-          decodedUrl: historySelection.url,
-          finalResult: null,
-          historySelection,
-          isUrl: resolveScanIsUrl(historySelection, historySelection.url, schemeType),
-          riskLevel: historySelection.riskLevel,
-          scanResponse: null,
-          schemeType,
-        });
+        set(buildHistorySelectionPatch(historySelection));
       },
       setScanResponse: (scanResponse) => {
-        const decodedUrl = resolveScanDecodedUrl(scanResponse);
-        const schemeType = resolveScanSchemeType(scanResponse, decodedUrl);
-
-        set({
-          analysisDetail: null,
-          decodedUrl,
-          finalResult: null,
-          historySelection: null,
-          isUrl: resolveScanIsUrl(scanResponse, decodedUrl, schemeType),
-          riskLevel: resolveScanRiskLevel(scanResponse),
-          scanResponse,
-          schemeType,
-        });
+        set(buildScanResponsePatch(scanResponse));
       },
     }),
     {
