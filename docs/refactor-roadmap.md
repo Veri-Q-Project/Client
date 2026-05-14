@@ -9,6 +9,11 @@
 - 타입 체크: `pnpm typecheck` 통과
 - 빌드: `pnpm build` 통과
 
+## 진행 기록
+
+- 2026-05-14: P0 CI 안정성 보강 완료. `typecheck` 스크립트와 CI 단계를 추가했다.
+- 2026-05-14: P1 비 URL 실행 보안 1차 보강 완료. 실행 가능한 스킴을 제한하고, 실행 전 확인 단계를 추가했다.
+
 ## 관찰 결과
 
 - `vite build`만으로는 TypeScript 타입 오류가 잡히지 않는다. 실제로 `ResultNonUrlPage`의 존재하지 않는 필드 접근이 `tsc --noEmit`에서만 발견됐다.
