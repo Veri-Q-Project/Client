@@ -1,3 +1,4 @@
+import { App } from 'antd';
 import { useState } from 'react';
 
 import { ResultActionButtons } from '@/shared/component';
@@ -31,6 +32,7 @@ const nonUrlActionLabelByType: Record<NonUrlActionType, string> = {
 };
 
 export default function ResultNonUrlPage() {
+  const { modal } = App.useApp();
   const { handleRescan, handleShareResult, resultNonUrlPageData } = useResultNonUrlPage();
   const [executionFeedbackMessage, setExecutionFeedbackMessage] = useState<string | null>(null);
 
@@ -50,16 +52,32 @@ export default function ResultNonUrlPage() {
     }
 
     const executionPlan = resolveNonUrlActionExecution(displayedActionType, displayedTargetValue);
-    setExecutionFeedbackMessage(executionPlan.message);
 
-    if (executionPlan.kind === 'open') {
-      openExternalLink(executionPlan.url);
+    if (executionPlan.kind === 'unsupported') {
+      setExecutionFeedbackMessage(executionPlan.message);
       return;
     }
 
-    if (executionPlan.kind === 'navigate') {
-      window.location.href = executionPlan.href;
-    }
+    modal.confirm({
+      cancelText: '취소',
+      centered: true,
+      content: executionPlan.confirmationContent,
+      okText: '실행',
+      onOk: () => {
+        if (executionPlan.kind === 'open') {
+          const opened = openExternalLink(executionPlan.url);
+
+          setExecutionFeedbackMessage(
+            opened ? executionPlan.message : '안전하지 않은 링크라 실행하지 않았습니다.',
+          );
+          return;
+        }
+
+        setExecutionFeedbackMessage(executionPlan.message);
+        window.location.href = executionPlan.href;
+      },
+      title: executionPlan.confirmationTitle,
+    });
   };
 
   return (
