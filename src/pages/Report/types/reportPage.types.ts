@@ -3,9 +3,8 @@ import type { ResultTone } from '@/shared/types/resultTone';
 export type ReportStatusTone = 'error' | 'success' | 'warning';
 
 export type ReportReputationSummary = {
-  malwareCount: number;
-  phishingCount: number;
-  spamCount: number;
+  domainAgeText: string;
+  reportCount: number;
 };
 
 export type ReportServerInfo = {

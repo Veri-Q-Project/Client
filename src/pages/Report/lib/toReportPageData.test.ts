@@ -22,9 +22,8 @@ describe('toReportPageData', () => {
           providerName: 'Google Safe Browsing',
           providerStatusText: 'checked',
           summary: {
-            malwareCount: 1,
-            phishingCount: 2,
-            spamCount: 0,
+            domainAge: '120',
+            reportCount: 2,
           },
         },
         riskLevel: 'HIGH',
@@ -52,7 +51,8 @@ describe('toReportPageData', () => {
     expect(reportPageData.riskLevel).toBe('critical');
     expect(reportPageData.trustScore).toBe(83);
     expect(reportPageData.urlAnalysis.destinationUrl).toBe('https://danger.example');
-    expect(reportPageData.reputation.summary.phishingCount).toBe(2);
+    expect(reportPageData.reputation.summary.reportCount).toBe(2);
+    expect(reportPageData.reputation.summary.domainAgeText).toBe('120일');
     expect(reportPageData.serverInfo.certificateStatusTone).toBe('error');
   });
 
@@ -65,8 +65,10 @@ describe('toReportPageData', () => {
           provider: 'Google Safe Browsing',
           result: 'False',
         },
+        blockCount: null,
+        domainAge: '4055',
         internalDb: {
-          blockCount: 0,
+          blockCount: null,
           exists: false,
           reportCount: 0,
         },
@@ -75,6 +77,7 @@ describe('toReportPageData', () => {
           threats: ['dummy_ml_threat'],
         },
         originalUrl: 'https://malware.testing.google/',
+        reportCount: 0,
         redirect: {
           finalUrl: 'https://malware.testing.google/',
           redirectCount: 0,
@@ -110,6 +113,10 @@ describe('toReportPageData', () => {
     expect(reportPageData.urlAnalysis.destinationUrl).toBe('https://malware.testing.google/');
     expect(reportPageData.detectedRiskTypes).toContain('dummy_ml_threat');
     expect(reportPageData.reputation.providerName).toBe('Google Safe Browsing');
+    expect(reportPageData.reputation.summary).toEqual({
+      domainAgeText: '4,055일',
+      reportCount: 0,
+    });
     expect(reportPageData.serverInfo.certificateStatusTone).toBe('error');
   });
 

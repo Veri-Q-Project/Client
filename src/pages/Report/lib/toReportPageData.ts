@@ -1,7 +1,6 @@
 import {
   asRecord,
   pickBoolean,
-  pickNumber,
   pickRecord,
   pickSourceNumber,
   pickSourceRecord,
@@ -189,16 +188,36 @@ function resolveExternalApiStatus(
   return `검사 결과: ${result}`;
 }
 
-function resolveSummaryCount(
-  primaryRecord: Record<string, unknown> | null,
-  primaryKeys: string[],
-  fallbackRecord?: Record<string, unknown> | null,
-  fallbackKeys?: string[],
-): number {
-  return clampCount(
-    pickNumber(primaryRecord, primaryKeys) ??
-      (fallbackRecord && fallbackKeys ? pickNumber(fallbackRecord, fallbackKeys) : null),
-  );
+function resolveSummaryCount(sources: unknown[], keys: string[]): number {
+  return clampCount(pickSourceNumber(sources, keys));
+}
+
+function formatDomainAgeText(rawValue: string | number | null): string {
+  if (rawValue === null) {
+    return missingReportInfoLabel;
+  }
+
+  const valueText = `${rawValue}`.trim();
+
+  if (!valueText) {
+    return missingReportInfoLabel;
+  }
+
+  if (/^\d+(?:\.\d+)?$/u.test(valueText)) {
+    return `${Math.max(0, Math.round(Number(valueText))).toLocaleString('ko-KR')}일`;
+  }
+
+  return valueText;
+}
+
+function resolveDomainAgeText(sources: unknown[]): string {
+  const stringValue = pickSourceString(sources, ['domainAge', 'domain_age']);
+
+  if (stringValue) {
+    return formatDomainAgeText(stringValue);
+  }
+
+  return formatDomainAgeText(pickSourceNumber(sources, ['domainAge', 'domain_age']));
 }
 
 function resolveServerInfoRecord(rawServerInfoRecord: Record<string, unknown> | null) {
@@ -258,9 +277,11 @@ function buildDomainComparison(
 function buildReputation(
   reputationRecord: Record<string, unknown> | null,
   internalDbRecord: Record<string, unknown> | null,
+  sources: unknown[],
 ): ReportPageData['reputation'] {
   const reputationSummaryRecord =
     pickRecord(reputationRecord, ['summary']) ?? asRecord(reputationRecord);
+  const metricSources = [reputationSummaryRecord, reputationRecord, internalDbRecord, ...sources];
 
   return {
     detailDescription:
@@ -274,19 +295,13 @@ function buildReputation(
       resolveExternalApiStatus(reputationRecord) ??
       '검사 완료',
     summary: {
-      malwareCount: resolveSummaryCount(
-        reputationSummaryRecord,
-        ['malwareCount', 'malware_count'],
-        internalDbRecord,
-        ['blockCount', 'block_count'],
-      ),
-      phishingCount: resolveSummaryCount(
-        reputationSummaryRecord,
-        ['phishingCount', 'phishing_count'],
-        internalDbRecord,
-        ['reportCount', 'report_count'],
-      ),
-      spamCount: resolveSummaryCount(reputationSummaryRecord, ['spamCount', 'spam_count']),
+      domainAgeText: resolveDomainAgeText(metricSources),
+      reportCount: resolveSummaryCount(metricSources, [
+        'reportCount',
+        'report_count',
+        'phishingCount',
+        'phishing_count',
+      ]),
     },
   };
 }
@@ -339,7 +354,7 @@ export function toReportPageData(session: ScanSessionSnapshot): ReportPageData {
   return {
     detectedRiskTypes: resolveDetectedRiskTypes(sources, riskLevel),
     domainComparison: buildDomainComparison(domainComparisonRecord, riskLevel, urls),
-    reputation: buildReputation(reputationRecord, internalDbRecord),
+    reputation: buildReputation(reputationRecord, internalDbRecord, sources),
     reportTitle: '상세 분석 리포트',
     riskDescription: reportFallbackCopyByTone[riskLevel].riskDescription,
     riskLevel,
