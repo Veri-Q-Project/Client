@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { showApiError } from '@/shared/lib/feedback/showApiError';
 import { isWebScanTarget } from '@/shared/lib/scan-session/scanClassification';
+import { normalizeScanResult } from '@/shared/lib/scan-session/scanResultNormalization';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 import { useScanSessionStore } from '@/shared/store/scanSessionStore';
 
@@ -138,29 +139,9 @@ async function requestCameraStream() {
 }
 
 function isNonWebScanResponse(scanResponse: Record<string, unknown>): boolean {
-  const rawSchemeType =
-    typeof scanResponse.schemeType === 'string'
-      ? scanResponse.schemeType
-      : scanResponse.scheme_type;
-  const targetValue =
-    typeof scanResponse.typeInfo === 'string'
-      ? scanResponse.typeInfo
-      : typeof scanResponse.type_info === 'string'
-        ? scanResponse.type_info
-        : typeof scanResponse.decodedUrl === 'string'
-          ? scanResponse.decodedUrl
-          : typeof scanResponse.decoded_url === 'string'
-            ? scanResponse.decoded_url
-            : typeof scanResponse.url === 'string'
-              ? scanResponse.url
-              : null;
-  const rawIsUrl = scanResponse.isUrl !== undefined ? scanResponse.isUrl : scanResponse.is_url;
+  const normalizedResult = normalizeScanResult(scanResponse);
 
-  return !isWebScanTarget({
-    isUrl: typeof rawIsUrl === 'boolean' ? rawIsUrl : null,
-    schemeType: typeof rawSchemeType === 'string' ? rawSchemeType : null,
-    url: targetValue,
-  });
+  return !isWebScanTarget(normalizedResult);
 }
 
 function isWebHistoryItem(item: ScanHistoryItem): boolean {
