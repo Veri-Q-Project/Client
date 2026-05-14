@@ -1,52 +1,54 @@
 import { pickSourceString } from '@/shared/api/responseAccess/payloadAccess';
+import {
+  isHttpUrl,
+  normalizeScanSchemeTypeAlias,
+} from '@/shared/lib/scan-session/scanClassification';
 import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
+
+import { resolveNonUrlSectionCopy } from '../constants/nonUrlActionText';
 
 import type { NonUrlActionType, ResultNonUrlPageData } from '../types/resultNonUrlPage.types';
 
-type NonUrlCopy = Pick<ResultNonUrlPageData, 'sectionDescription' | 'sectionTitle'>;
-
-const actionMatchers: Array<{
-  actionType: NonUrlActionType;
-  keywords: string[];
-}> = [
-  { actionType: 'wifi', keywords: ['wifi'] },
-  { actionType: 'bitcoin', keywords: ['bitcoin', 'btc'] },
-  { actionType: 'telSms', keywords: ['sms', 'tel'] },
-  { actionType: 'appStore', keywords: ['store', 'market'] },
-  { actionType: 'appLaunch', keywords: ['app', 'intent'] },
-];
-
-const nonUrlCopyByActionType: Record<NonUrlActionType, NonUrlCopy> = {
-  appLaunch: {
-    sectionDescription:
-      '특정 앱 실행을 요청하는 QR 코드입니다. 사용자가 예상한 앱이 맞는지 먼저 확인해야 합니다.',
-    sectionTitle: '탐지된 앱 실행 정보',
-  },
-  appStore: {
-    sectionDescription:
-      '앱 스토어 이동이 포함된 QR 코드입니다. 앱 이름과 개발사를 확인하기 전에는 설치를 진행하지 않는 편이 안전합니다.',
-    sectionTitle: '탐지된 앱 스토어 이동 정보',
-  },
-  bitcoin: {
-    sectionDescription:
-      '가상자산 지갑 주소 또는 결제 요청이 포함된 QR 코드입니다. 송금 전 주소와 요청 맥락을 다시 확인해야 합니다.',
-    sectionTitle: '탐지된 비트코인 지갑 정보',
-  },
-  telSms: {
-    sectionDescription:
-      '전화 또는 문자 앱 실행을 유도하는 QR 코드입니다. 의도하지 않은 발신이 발생하지 않도록 번호를 먼저 검토해야 합니다.',
-    sectionTitle: '탐지된 전화·문자 실행 정보',
-  },
-  unknown: {
-    sectionDescription:
-      '정확한 실행 방식을 식별하지 못했습니다. 어떤 동작이 수행되는지 불명확하므로 직접 실행은 피하는 편이 안전합니다.',
-    sectionTitle: '탐지된 비 URL 실행 정보',
-  },
-  wifi: {
-    sectionDescription:
-      'Wi-Fi 연결 정보를 포함한 QR 코드입니다. 네트워크 제공 주체를 확인한 뒤 연결 여부를 결정해야 합니다.',
-    sectionTitle: '탐지된 Wi-Fi 연결 정보',
-  },
+const schemeTypeAliasToActionType: Record<string, NonUrlActionType> = {
+  APP: 'DEEP_LINK',
+  APP_LAUNCH: 'DEEP_LINK',
+  APP_STORE: 'APP_STORE',
+  APPSTORE: 'APP_STORE',
+  BITCOIN: 'CRYPTO',
+  BIT_LY: 'SHORT_URL',
+  BITLY: 'SHORT_URL',
+  BTC: 'CRYPTO',
+  CALL: 'TEL',
+  CONTACT: 'CONTACT',
+  CRYPTO: 'CRYPTO',
+  DEEP_LINK: 'DEEP_LINK',
+  DEEPLINK: 'DEEP_LINK',
+  EMAIL: 'EMAIL',
+  INTENT: 'DEEP_LINK',
+  MAIL: 'EMAIL',
+  MAILTO: 'EMAIL',
+  MARKET: 'APP_STORE',
+  MECARD: 'CONTACT',
+  MFA: 'OTP',
+  NON_WEB: 'OTHER',
+  OTP: 'OTP',
+  OTPAUTH: 'OTP',
+  OTHER: 'OTHER',
+  PHONE: 'TEL',
+  PLAY_STORE: 'APP_STORE',
+  PLAYSTORE: 'APP_STORE',
+  SHORT_LINK: 'SHORT_URL',
+  SHORT_URL: 'SHORT_URL',
+  SHORTURL: 'SHORT_URL',
+  SMS: 'SMS',
+  SMSTO: 'SMS',
+  STORE: 'APP_STORE',
+  TEL: 'TEL',
+  TEXT: 'OTHER',
+  UNKNOWN: 'OTHER',
+  VCARD: 'CONTACT',
+  WEB: 'WEB',
+  WIFI: 'WIFI',
 };
 
 const targetValueKeys = [
@@ -61,20 +63,108 @@ const targetValueKeys = [
   'app_name',
   'walletAddress',
   'wallet_address',
+  'email',
+  'emailAddress',
+  'email_address',
+  'typeInfo',
+  'type_info',
   'url',
 ];
 
-function resolveNonUrlActionType(rawActionType: string | null): NonUrlActionType {
-  const normalizedActionType = rawActionType?.trim().toLowerCase() ?? '';
+const appStoreUrlPattern =
+  /^https?:\/\/(?:play\.google\.com\/store|apps\.apple\.com\/|itunes\.apple\.com\/)/iu;
+const shortUrlPattern =
+  /^https?:\/\/(?:bit\.ly|t\.co|tinyurl\.com|goo\.gl|rebrand\.ly|cutt\.ly|ow\.ly|buff\.ly|tiny\.one|is\.gd|soo\.gd)\b/iu;
+const cryptoSchemePattern =
+  /^(bitcoin|ethereum|eth|solana|sol|tron|trx|litecoin|ltc|dogecoin|doge|xrp|walletconnect):/iu;
+const genericSchemePattern = /^([a-z][a-z0-9+.-]*):/iu;
+
+function canonicalizeSchemeType(rawActionType: string): string {
+  return rawActionType
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function resolveActionTypeFromScheme(rawActionType: string | null): NonUrlActionType | null {
+  const normalizedActionType = normalizeScanSchemeTypeAlias(rawActionType);
 
   if (!normalizedActionType) {
-    return 'unknown';
+    return null;
   }
 
+  return schemeTypeAliasToActionType[canonicalizeSchemeType(normalizedActionType)] ?? null;
+}
+
+function inferActionTypeFromTargetValue(targetValue: string | null): NonUrlActionType | null {
+  const normalizedTargetValue = targetValue?.trim();
+
+  if (!normalizedTargetValue) {
+    return null;
+  }
+
+  if (appStoreUrlPattern.test(normalizedTargetValue)) {
+    return 'APP_STORE';
+  }
+
+  if (shortUrlPattern.test(normalizedTargetValue)) {
+    return 'SHORT_URL';
+  }
+
+  if (isHttpUrl(normalizedTargetValue)) {
+    return 'WEB';
+  }
+
+  if (/^otpauth:/iu.test(normalizedTargetValue)) {
+    return 'OTP';
+  }
+
+  if (cryptoSchemePattern.test(normalizedTargetValue)) {
+    return 'CRYPTO';
+  }
+
+  if (/^(smsto|sms):/iu.test(normalizedTargetValue)) {
+    return 'SMS';
+  }
+
+  if (/^wifi:/iu.test(normalizedTargetValue)) {
+    return 'WIFI';
+  }
+
+  if (/^(begin:vcard|mecard:)/iu.test(normalizedTargetValue)) {
+    return 'CONTACT';
+  }
+
+  if (/^tel:/iu.test(normalizedTargetValue)) {
+    return 'TEL';
+  }
+
+  if (/^mailto:/iu.test(normalizedTargetValue)) {
+    return 'EMAIL';
+  }
+
+  if (/^intent:/iu.test(normalizedTargetValue)) {
+    return 'DEEP_LINK';
+  }
+
+  const schemeMatch = normalizedTargetValue.match(genericSchemePattern);
+
+  if (schemeMatch && !['http', 'https'].includes(schemeMatch[1].toLowerCase())) {
+    return 'DEEP_LINK';
+  }
+
+  return null;
+}
+
+function resolveNonUrlActionType(
+  rawActionType: string | null,
+  targetValue: string | null,
+): NonUrlActionType {
   return (
-    actionMatchers.find(({ keywords }) =>
-      keywords.some((keyword) => normalizedActionType.includes(keyword)),
-    )?.actionType ?? 'unknown'
+    resolveActionTypeFromScheme(rawActionType) ??
+    inferActionTypeFromTargetValue(targetValue) ??
+    'OTHER'
   );
 }
 
@@ -85,16 +175,18 @@ export function toResultNonUrlPageData(session: ScanSessionSnapshot): ResultNonU
     session.scanResponse,
     session.historySelection,
   ];
-  const actionType = resolveNonUrlActionType(
-    pickSourceString(sources, ['actionType', 'action_type', 'schemeType', 'scheme_type']),
-  );
-  const copy = nonUrlCopyByActionType[actionType];
+  const targetValue = pickSourceString(sources, targetValueKeys) ?? session.decodedUrl;
+  const rawActionType =
+    pickSourceString(sources, ['actionType', 'action_type', 'schemeType', 'scheme_type']) ??
+    session.schemeType;
+  const actionType = resolveNonUrlActionType(rawActionType, targetValue);
+  const copy = resolveNonUrlSectionCopy(actionType);
 
   return {
     detectedActionType: actionType,
     sectionDescription: copy.sectionDescription,
     sectionNumber: '1',
     sectionTitle: copy.sectionTitle,
-    targetValue: pickSourceString(sources, targetValueKeys) ?? undefined,
+    targetValue: targetValue ?? undefined,
   };
 }
