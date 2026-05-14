@@ -182,7 +182,7 @@ export const threatTextCatalog: RiskDetectionCatalogItem[] = [
     description:
       'bit.ly, tinyurl처럼 최종 목적지를 바로 확인하기 어려운 단축 URL 서비스가 사용되었습니다.',
     englishLabel: 'SHORTENED URL',
-    names: ['SHORTENED_URL', 'shortened_url', 'short_url', 'url_shortener'],
+    names: ['SHORTENED_URL'],
     risk: '실제 목적지를 숨긴 뒤 피싱 사이트나 악성 파일 배포지로 이동시키는 데 자주 사용됩니다.',
     title: '단축 URL 감지',
   },

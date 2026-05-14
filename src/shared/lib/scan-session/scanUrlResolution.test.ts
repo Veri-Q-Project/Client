@@ -52,4 +52,16 @@ describe('resolveScanUrls', () => {
       scannedUrl: 'https://history.example/path',
     });
   });
+
+  it('returns empty strings when all URL resolution attempts fail', () => {
+    expect(
+      resolveScanUrls({
+        sources: [{ unrelatedField: 'value' }],
+      }),
+    ).toMatchObject({
+      destinationUrl: '',
+      originalUrl: '',
+      scannedUrl: '',
+    });
+  });
 });

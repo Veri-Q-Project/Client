@@ -30,6 +30,7 @@ const DEFAULT_LOADING_PAGE_DATA: LoadingPageData = {
 };
 
 function openResultRouteForCurrentSession() {
+  // Keep a full reload here so lazy result pages initialize from the persisted scan session and URL query after SSE completion.
   window.location.assign(resolveScanResultRoute(getScanSessionSnapshot()).href);
 }
 
@@ -157,19 +158,9 @@ export function useLoadingPage(): UseLoadingPageReturn {
       const hasResolvedRiskLevel = resolveResultToneFromSources([payload], null) !== null;
 
       if (!hasResolvedRiskLevel) {
-        let isResolved = false;
-
         try {
-          isResolved = await resolveDetailAndOpenResult();
+          await resolveDetailAndOpenResult();
         } catch {
-          return;
-        }
-
-        if (isResolved) {
-          return;
-        }
-
-        if (detailResolutionFailedRef.current) {
           return;
         }
 

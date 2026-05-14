@@ -1,4 +1,5 @@
 import { isApiError } from '@/shared/api/errors/apiError';
+import { ScanSessionRequiredError } from '@/shared/lib/scan-session/scanSessionErrors';
 
 export const DETAIL_RETRY_DELAY_MS = 2_000;
 export const DETAIL_RETRY_MAX = 60;
@@ -8,6 +9,7 @@ export const DETAIL_RESOLUTION_TIMEOUT_MESSAGE =
   'Analysis detail was not ready in time. Please retry.';
 
 export type LoadingDetailResolutionStatus =
+  | 'error'
   | 'inactive'
   | 'resolved'
   | 'session-required'
@@ -57,13 +59,13 @@ export async function resolveLoadingDetailWithRetry({
         return 'inactive';
       }
 
-      if (error instanceof Error && error.message === 'SCAN_SESSION_REQUIRED') {
+      if (error instanceof ScanSessionRequiredError) {
         return 'session-required';
       }
 
       if (!isApiError(error) || error.statusCode !== 404) {
         onFailure(error instanceof Error ? error.message : DETAIL_RESOLUTION_ERROR_MESSAGE);
-        throw error;
+        return 'error';
       }
 
       await delay(retryDelayMs);

@@ -44,7 +44,7 @@ src/
 pnpm install
 ```
 
-`postinstall`이 없으면 `.env.local`과 `.env.server.local`을 예시 파일에서 생성합니다.
+설치 중 `postinstall` 스크립트가 실행되며 예시 파일을 기준으로 `.env.local`과 `.env.server.local`을 생성합니다.
 
 필요한 환경 파일:
 

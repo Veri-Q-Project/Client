@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/shared/api/errors/apiError';
+import { ScanSessionRequiredError } from '@/shared/lib/scan-session/scanSessionErrors';
 
 import {
   DETAIL_RESOLUTION_TIMEOUT_MESSAGE,
@@ -59,7 +60,7 @@ describe('loadingDetailResolution', () => {
 
     await expect(
       resolveLoadingDetailWithRetry({
-        ensureDetail: vi.fn().mockRejectedValue(new Error('SCAN_SESSION_REQUIRED')),
+        ensureDetail: vi.fn().mockRejectedValue(new ScanSessionRequiredError()),
         isActive: () => true,
         onFailure,
         onResolved: vi.fn(),
@@ -70,7 +71,7 @@ describe('loadingDetailResolution', () => {
     expect(onFailure).not.toHaveBeenCalled();
   });
 
-  it('fails and rethrows non-404 errors', async () => {
+  it('fails and returns error for non-404 errors', async () => {
     const onFailure = vi.fn();
 
     await expect(
@@ -81,7 +82,7 @@ describe('loadingDetailResolution', () => {
         onResolved: vi.fn(),
         retryMax: 1,
       }),
-    ).rejects.toThrow('network failed');
+    ).resolves.toBe('error');
 
     expect(onFailure).toHaveBeenCalledWith('network failed');
   });
