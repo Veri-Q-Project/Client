@@ -2,7 +2,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { App } from 'antd';
 import { useCallback, useEffect, useRef } from 'react';
 
-import { isApiError } from '@/shared/api/errors/apiError';
 import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
 import { ensureScanDetail } from '@/shared/lib/scan-session/ensureScanDetail';
 import { isSameScanSource } from '@/shared/lib/scan-session/scanIdentity';
@@ -12,6 +11,11 @@ import { useGuestStore } from '@/shared/store/guestStore';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 import { getScanSessionSnapshot, useScanSessionStore } from '@/shared/store/scanSessionStore';
 
+import { startLoadingDetailPolling } from '../lib/loadingDetailPolling';
+import {
+  DETAIL_RESOLUTION_TIMEOUT_MESSAGE,
+  resolveLoadingDetailWithRetry,
+} from '../lib/loadingDetailResolution';
 import { shouldResolveDetailAfterTerminalProgress } from '../lib/loadingProgressResolution';
 import { getLoadingSteps } from '../loadingScenario';
 
@@ -21,12 +25,6 @@ type UseLoadingPageReturn = {
   loadingPageData: LoadingPageData;
 };
 
-const DETAIL_RETRY_DELAY_MS = 2_000;
-const DETAIL_RETRY_MAX = 60;
-const DETAIL_POLL_MAX_ATTEMPTS = 1;
-const DETAIL_POLL_START_DELAY_MS = 5_000;
-const DETAIL_RESOLUTION_ERROR_MESSAGE = 'Analysis detail could not be loaded. Please try again.';
-const DETAIL_RESOLUTION_TIMEOUT_MESSAGE = 'Analysis detail was not ready in time. Please retry.';
 const DEFAULT_LOADING_PAGE_DATA: LoadingPageData = {
   steps: getLoadingSteps(),
 };
@@ -50,7 +48,6 @@ export function useLoadingPage(): UseLoadingPageReturn {
   const detailResolutionFailedRef = useRef(false);
   const detailResolutionStartedRef = useRef(false);
   const isMountedRef = useRef(true);
-  const pollAttemptCountRef = useRef(0);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -73,7 +70,6 @@ export function useLoadingPage(): UseLoadingPageReturn {
     resetProgress();
     detailResolutionFailedRef.current = false;
     detailResolutionStartedRef.current = false;
-    pollAttemptCountRef.current = 0;
     setConnecting();
   }, [finalResult, navigate, resetProgress, scanResponse, setConnecting]);
 
@@ -98,42 +94,21 @@ export function useLoadingPage(): UseLoadingPageReturn {
 
     detailResolutionStartedRef.current = true;
 
-    for (let attempt = 0; attempt < DETAIL_RETRY_MAX; attempt += 1) {
-      try {
-        await ensureScanDetail();
-
-        if (!isMountedRef.current) {
-          return false;
-        }
-
+    const resolutionStatus = await resolveLoadingDetailWithRetry({
+      ensureDetail: ensureScanDetail,
+      isActive: () => isMountedRef.current,
+      onFailure: failDetailResolution,
+      onResolved: () => {
         setCompleted();
         openResultRouteForCurrentSession();
-        return true;
-      } catch (error) {
-        if (!isMountedRef.current) {
-          return false;
-        }
+      },
+    });
 
-        if (error instanceof Error && error.message === 'SCAN_SESSION_REQUIRED') {
-          detailResolutionStartedRef.current = false;
-          return false;
-        }
-
-        if (!isApiError(error) || error.statusCode !== 404) {
-          failDetailResolution(
-            error instanceof Error ? error.message : DETAIL_RESOLUTION_ERROR_MESSAGE,
-          );
-          throw error;
-        }
-
-        await new Promise<void>((resolve) => {
-          window.setTimeout(() => resolve(), DETAIL_RETRY_DELAY_MS);
-        });
-      }
+    if (resolutionStatus === 'session-required') {
+      detailResolutionStartedRef.current = false;
     }
 
-    failDetailResolution(DETAIL_RESOLUTION_TIMEOUT_MESSAGE);
-    return false;
+    return resolutionStatus === 'resolved';
   }, [failDetailResolution, setCompleted]);
 
   const tryResolveDetailAfterTerminalProgress = useCallback(
@@ -162,54 +137,11 @@ export function useLoadingPage(): UseLoadingPageReturn {
       return;
     }
 
-    let isDisposed = false;
-    let pollTimerId: number | null = null;
-
-    const startPolling = async () => {
-      if (
-        isDisposed ||
-        detailResolutionFailedRef.current ||
-        detailResolutionStartedRef.current ||
-        pollAttemptCountRef.current >= DETAIL_POLL_MAX_ATTEMPTS
-      ) {
-        return;
-      }
-
-      pollAttemptCountRef.current += 1;
-
-      let isResolved = false;
-
-      try {
-        isResolved = await resolveDetailAndOpenResult();
-      } catch {
-        return;
-      }
-
-      if (isDisposed || isResolved || detailResolutionFailedRef.current) {
-        return;
-      }
-
-      if (pollAttemptCountRef.current >= DETAIL_POLL_MAX_ATTEMPTS) {
-        failDetailResolution(DETAIL_RESOLUTION_TIMEOUT_MESSAGE);
-        return;
-      }
-
-      pollTimerId = window.setTimeout(() => {
-        void startPolling();
-      }, DETAIL_POLL_START_DELAY_MS);
-    };
-
-    pollTimerId = window.setTimeout(() => {
-      void startPolling();
-    }, DETAIL_POLL_START_DELAY_MS);
-
-    return () => {
-      isDisposed = true;
-
-      if (pollTimerId !== null) {
-        window.clearTimeout(pollTimerId);
-      }
-    };
+    return startLoadingDetailPolling({
+      canPoll: () => !detailResolutionFailedRef.current && !detailResolutionStartedRef.current,
+      onTimeout: () => failDetailResolution(DETAIL_RESOLUTION_TIMEOUT_MESSAGE),
+      resolveDetail: resolveDetailAndOpenResult,
+    });
   }, [failDetailResolution, finalResult, resolveDetailAndOpenResult, scanResponse]);
 
   useScanSubscription({
