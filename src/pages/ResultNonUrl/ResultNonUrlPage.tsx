@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { ResultActionButtons } from '@/shared/component';
 import { qrIconByTone } from '@/shared/icon/resultIcons';
@@ -7,48 +7,25 @@ import AppHeader from '@/shared/ui/app-header';
 import ResultHero from '@/shared/ui/resultHero';
 import { resultPageStyles } from '@/shared/ui/resultPage';
 
-import { nonUrlActionPreviewItems, resolveNonUrlSectionCopy } from './constants/nonUrlActionText';
+import { resolveNonUrlSectionCopy } from './constants/nonUrlActionText';
 import { useResultNonUrlPage } from './hooks/useResultNonUrlPage';
 import { resolveNonUrlActionExecution } from './lib/resolveNonUrlActionExecution';
 import * as styles from './styles/resultNonUrlPage.css';
 import DetectedNonUrlActionSection from './ui/DetectedNonUrlActionSection';
 
-import type { NonUrlActionType } from './types/resultNonUrlPage.types';
-
 export default function ResultNonUrlPage() {
   const { handleRescan, handleShareResult, resultNonUrlPageData } = useResultNonUrlPage();
-  const [selectedPreviewActionType, setSelectedPreviewActionType] =
-    useState<NonUrlActionType | null>(null);
   const [executionFeedbackMessage, setExecutionFeedbackMessage] = useState<string | null>(null);
-
-  const selectedPreviewItem = useMemo(
-    () =>
-      selectedPreviewActionType
-        ? (nonUrlActionPreviewItems.find((item) => item.actionType === selectedPreviewActionType) ??
-          null)
-        : null,
-    [selectedPreviewActionType],
-  );
 
   if (!resultNonUrlPageData) {
     return null;
   }
 
-  const displayedActionType =
-    selectedPreviewItem?.actionType ?? resultNonUrlPageData.detectedActionType;
-  const displayedActionLabel =
-    selectedPreviewItem?.label ??
-    nonUrlActionPreviewItems.find((item) => item.actionType === displayedActionType)?.label ??
-    displayedActionType;
+  const displayedActionType = resultNonUrlPageData.detectedActionType;
+  const displayedActionLabel = resultNonUrlPageData.detectedActionLabel;
   const displayedSectionCopy = resolveNonUrlSectionCopy(displayedActionType);
-  const displayedTargetValue =
-    displayedActionType === resultNonUrlPageData.detectedActionType
-      ? resultNonUrlPageData.targetValue
-      : undefined;
-  const isExecutable =
-    displayedActionType === resultNonUrlPageData.detectedActionType &&
-    displayedTargetValue !== undefined &&
-    displayedTargetValue !== null;
+  const displayedTargetValue = resultNonUrlPageData.targetValue;
+  const isExecutable = displayedTargetValue !== undefined && displayedTargetValue !== null;
 
   const handleExecuteAction = () => {
     if (!isExecutable) {
@@ -115,31 +92,6 @@ export default function ResultNonUrlPage() {
                 void handleShareResult();
               }}
             />
-
-            <section className={styles.previewSection}>
-              <h2 className={styles.previewTitle}>전체 URL 스키마 타입 보기</h2>
-
-              <div className={styles.previewButtonList}>
-                {nonUrlActionPreviewItems.map((previewItem) => (
-                  <button
-                    aria-pressed={displayedActionType === previewItem.actionType}
-                    className={`${styles.previewButton} ${
-                      displayedActionType === previewItem.actionType
-                        ? styles.previewButtonActive
-                        : ''
-                    }`}
-                    key={previewItem.actionType}
-                    onClick={() => {
-                      setSelectedPreviewActionType(previewItem.actionType);
-                      setExecutionFeedbackMessage(null);
-                    }}
-                    type="button"
-                  >
-                    {previewItem.label}
-                  </button>
-                ))}
-              </div>
-            </section>
           </section>
         </section>
       </div>

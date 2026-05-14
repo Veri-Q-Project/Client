@@ -15,11 +15,7 @@ const nonUrlPalette = {
   detailText: '#B28300',
   executionButtonShadow: '0 14px 32px rgba(242, 223, 13, 0.18)',
   focusRing: 'rgba(0, 106, 228, 0.24)',
-  previewActiveText: '#3D3200',
-  previewBackground: '#FFFBEF',
-  previewBorder: 'rgba(242, 223, 13, 0.28)',
   previewText: '#7D6200',
-  previewValueText: '#6F5A00',
   sectionBackground: '#FFFDF6',
   sectionBorder: 'rgba(242, 223, 13, 0.45)',
   sectionNumberBackground: '#FFF1B8',
@@ -224,71 +220,4 @@ export const executionFeedback = style({
   fontSize: vars.font.size.sm,
   lineHeight: 1.6,
   textAlign: 'center',
-});
-
-export const previewSection = style({
-  display: 'grid',
-  gap: vars.spacing.sm,
-  padding: vars.spacing.md,
-  borderRadius: vars.radius.lg,
-  border: `1px solid ${nonUrlPalette.previewBorder}`,
-  backgroundColor: nonUrlPalette.previewBackground,
-});
-
-export const previewTitle = style({
-  margin: 0,
-  color: nonUrlPalette.previewText,
-  fontSize: vars.font.size.md,
-  fontWeight: vars.font.weight.semibold,
-  lineHeight: 1.5,
-});
-
-export const previewButtonList = style({
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: vars.spacing.sm,
-});
-
-export const previewButton = style({
-  border: `1px solid ${nonUrlPalette.sectionBorder}`,
-  borderRadius: '999px',
-  backgroundColor: vars.colors.white,
-  color: nonUrlPalette.previewValueText,
-  padding: '8px 14px',
-  fontSize: vars.font.size.sm,
-  fontWeight: vars.font.weight.medium,
-  lineHeight: 1.2,
-  cursor: 'pointer',
-  selectors: {
-    '&:focus-visible': {
-      outline: `2px solid ${vars.colors.main}`,
-      outlineOffset: '2px',
-      boxShadow: `0 0 0 4px ${nonUrlPalette.focusRing}`,
-    },
-    '&:disabled': {
-      opacity: 0.55,
-      cursor: 'not-allowed',
-      pointerEvents: 'none',
-      boxShadow: 'none',
-    },
-  },
-});
-
-export const previewButtonActive = style({
-  backgroundColor: vars.colors.warning,
-  borderColor: nonUrlPalette.accentEnd,
-  color: nonUrlPalette.previewActiveText,
-  selectors: {
-    '&:focus-visible': {
-      outline: `2px solid ${vars.colors.main}`,
-      outlineOffset: '2px',
-      boxShadow: `0 0 0 4px ${nonUrlPalette.focusRing}`,
-    },
-    '&:disabled': {
-      opacity: 0.55,
-      cursor: 'not-allowed',
-      pointerEvents: 'none',
-      boxShadow: 'none',
-    },
-  },
 });
