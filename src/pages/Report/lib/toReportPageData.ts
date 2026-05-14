@@ -1,20 +1,16 @@
 import {
-  asRecord,
   pickBoolean,
-  pickRecord,
   pickSourceNumber,
   pickSourceRecord,
   pickSourceString,
   pickSourceStringArray,
 } from '@/shared/api/responseAccess/payloadAccess';
-import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
-import {
-  resolveScanUrls,
-  type ResolvedScanUrls,
-} from '@/shared/lib/scan-session/scanUrlResolution';
+import type { ResolvedScanUrls } from '@/shared/lib/scan-session/scanUrlResolution';
 import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
 import type { ResultTone } from '@/shared/types/resultTone';
 
+import { createReportPageDataContext } from './reportPageDataContext';
+import { buildReportReputation } from './reportReputationData';
 import {
   missingReportInfoLabel,
   reportFallbackCopyByTone,
@@ -23,25 +19,12 @@ import {
 
 import type { ReportPageData } from '../types/reportPage.types';
 
-function clampCount(value: number | null): number {
-  return value === null ? 0 : Math.max(0, Math.round(value));
-}
-
 function clampTrustScore(value: number | null, riskLevel: ResultTone): number {
   if (value === null) {
     return trustScoreFallbackByTone[riskLevel];
   }
 
   return Math.max(0, Math.min(100, Math.round(value)));
-}
-
-function getSessionSources(session: ScanSessionSnapshot): unknown[] {
-  return [
-    session.analysisDetail,
-    session.finalResult,
-    session.scanResponse,
-    session.historySelection,
-  ];
 }
 
 function formatDateLabel(rawDate: string | null, fallbackLabel = '분석 시각 정보 없음'): string {
@@ -128,50 +111,6 @@ function resolveUrlComparisonSummary({ destinationUrl, originalUrl }: ResolvedSc
   return '스캔된 QR URL과 최종 목적지가 동일합니다.';
 }
 
-function resolveExternalApiStatus(
-  externalApiRecord: Record<string, unknown> | null,
-): string | null {
-  const result = pickSourceString([externalApiRecord], ['result', 'status']);
-
-  if (!result) {
-    return null;
-  }
-
-  return `검사 결과: ${result}`;
-}
-
-function resolveSummaryCount(sources: unknown[], keys: string[]): number {
-  return clampCount(pickSourceNumber(sources, keys));
-}
-
-function formatDomainAgeText(rawValue: string | number | null): string {
-  if (rawValue === null) {
-    return missingReportInfoLabel;
-  }
-
-  const valueText = `${rawValue}`.trim();
-
-  if (!valueText) {
-    return missingReportInfoLabel;
-  }
-
-  if (/^\d+(?:\.\d+)?$/u.test(valueText)) {
-    return `${Math.max(0, Math.round(Number(valueText))).toLocaleString('ko-KR')}일`;
-  }
-
-  return valueText;
-}
-
-function resolveDomainAgeText(sources: unknown[]): string {
-  const stringValue = pickSourceString(sources, ['domainAge', 'domain_age']);
-
-  if (stringValue) {
-    return formatDomainAgeText(stringValue);
-  }
-
-  return formatDomainAgeText(pickSourceNumber(sources, ['domainAge', 'domain_age']));
-}
-
 function resolveServerInfoRecord(rawServerInfoRecord: Record<string, unknown> | null) {
   if (!rawServerInfoRecord) {
     return {
@@ -226,38 +165,6 @@ function buildDomainComparison(
   };
 }
 
-function buildReputation(
-  reputationRecord: Record<string, unknown> | null,
-  internalDbRecord: Record<string, unknown> | null,
-  sources: unknown[],
-): ReportPageData['reputation'] {
-  const reputationSummaryRecord =
-    pickRecord(reputationRecord, ['summary']) ?? asRecord(reputationRecord);
-  const metricSources = [reputationSummaryRecord, reputationRecord, internalDbRecord, ...sources];
-
-  return {
-    detailDescription:
-      pickSourceString([reputationRecord], ['detailDescription', 'detail_description']) ??
-      '평판 상세 설명이 제공되지 않았습니다.',
-    providerName:
-      pickSourceString([reputationRecord], ['providerName', 'provider_name', 'provider']) ??
-      'Google Safe Browsing',
-    providerStatusText:
-      pickSourceString([reputationRecord], ['providerStatusText', 'provider_status_text']) ??
-      resolveExternalApiStatus(reputationRecord) ??
-      '검사 완료',
-    summary: {
-      domainAgeText: resolveDomainAgeText(metricSources),
-      reportCount: resolveSummaryCount(metricSources, [
-        'reportCount',
-        'report_count',
-        'phishingCount',
-        'phishing_count',
-      ]),
-    },
-  };
-}
-
 function buildServerInfo(
   serverInfoRecord: Record<string, unknown> | null,
   certificateRecord: Record<string, unknown> | null,
@@ -288,30 +195,21 @@ function buildServerInfo(
 }
 
 export function toReportPageData(session: ScanSessionSnapshot): ReportPageData {
-  const sources = getSessionSources(session);
-  const riskLevel = resolveResultToneFromSources(sources, session.riskLevel) ?? 'warning';
-  const urls = resolveScanUrls({
-    decodedUrl: session.decodedUrl,
-    historyScannedAt: session.historySelection?.scannedAt,
-    historyUrl: session.historySelection?.url,
+  const {
+    domainComparisonRecord,
+    internalDbRecord,
+    reputationRecord,
+    riskLevel,
+    serverInfoRecord: rawServerInfoRecord,
     sources,
-  });
-  const reputationRecord = pickSourceRecord(sources, [
-    'reputation',
-    'reputationSummary',
-    'externalApi',
-    'external_api',
-  ]);
-  const domainComparisonRecord = pickSourceRecord(sources, ['domainComparison', 'domain_compare']);
-  const internalDbRecord = pickSourceRecord(sources, ['internalDb', 'internal_db']);
-  const { certificateRecord, serverInfoRecord } = resolveServerInfoRecord(
-    pickSourceRecord(sources, ['serverInfo', 'server_info']),
-  );
+    urls,
+  } = createReportPageDataContext(session);
+  const { certificateRecord, serverInfoRecord } = resolveServerInfoRecord(rawServerInfoRecord);
 
   return {
     detectedRiskTypes: resolveDetectedRiskTypes(sources, riskLevel),
     domainComparison: buildDomainComparison(domainComparisonRecord, riskLevel, urls),
-    reputation: buildReputation(reputationRecord, internalDbRecord, sources),
+    reputation: buildReportReputation(reputationRecord, internalDbRecord, sources),
     reportTitle: '상세 분석 리포트',
     riskDescription: reportFallbackCopyByTone[riskLevel].riskDescription,
     riskLevel,
