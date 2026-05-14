@@ -54,4 +54,29 @@ describe('toResultPageData', () => {
     expect(resultPageData.riskLevel).toBe('critical');
     expect(resultPageData.trustScore).toBe(85);
   });
+
+  it('keeps scanned and destination URLs distinct for redirects', () => {
+    const session: ScanSessionSnapshot = {
+      analysisDetail: {
+        originalUrl: 'https://short.example/a',
+        redirect: {
+          finalUrl: 'https://final.example/path',
+        },
+        score: 45,
+      },
+      decodedUrl: null,
+      finalResult: null,
+      historySelection: null,
+      isUrl: true,
+      riskLevel: null,
+      scanResponse: null,
+      schemeType: 'WEB',
+    };
+
+    const resultPageData = toResultPageData(session, 'warning');
+
+    expect(resultPageData.siteName).toBe('https://short.example/a');
+    expect(resultPageData.siteUrl).toBe('https://final.example/path');
+    expect(resultPageData.visitUrl).toBe('https://final.example/path');
+  });
 });

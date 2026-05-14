@@ -8,6 +8,10 @@ import {
   pickSourceStringArray,
 } from '@/shared/api/responseAccess/payloadAccess';
 import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
+import {
+  resolveScanUrls,
+  type ResolvedScanUrls,
+} from '@/shared/lib/scan-session/scanUrlResolution';
 import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
 import type { ResultTone } from '@/shared/types/resultTone';
 
@@ -18,27 +22,6 @@ import {
 } from '../constants/reportText';
 
 import type { ReportPageData } from '../types/reportPage.types';
-
-type ReportUrls = {
-  destinationUrl: string;
-  originalUrl: string;
-  scannedAt: string | null;
-  scannedUrl: string;
-};
-
-const scannedUrlKeys = [
-  'decodedUrl',
-  'decoded_url',
-  'originalUrl',
-  'original_url',
-  'scannedUrl',
-  'scanned_url',
-  'url',
-];
-
-const scannedUrlFallbackKeys = ['finalUrl', 'final_url', 'destinationUrl', 'destination_url'];
-
-const destinationUrlKeys = ['finalUrl', 'final_url', 'destinationUrl', 'destination_url'];
 
 function clampCount(value: number | null): number {
   return value === null ? 0 : Math.max(0, Math.round(value));
@@ -127,37 +110,6 @@ function resolveCertificateTone(
   return 'warning';
 }
 
-function resolveReportUrls(session: ScanSessionSnapshot, sources: unknown[]): ReportUrls {
-  const scannedUrl =
-    pickSourceString(sources, scannedUrlKeys) ??
-    session.decodedUrl ??
-    session.historySelection?.url ??
-    pickSourceString(sources, scannedUrlFallbackKeys) ??
-    '';
-  const originalUrl =
-    pickSourceString(sources, ['originalUrl', 'original_url', 'sourceUrl', 'source_url']) ??
-    scannedUrl;
-  const destinationUrl = pickSourceString(sources, destinationUrlKeys) ?? scannedUrl;
-  const scannedAt =
-    pickSourceString(sources, [
-      'analysisTime',
-      'analysis_time',
-      'scannedAt',
-      'scanned_at',
-      'createdAt',
-      'created_at',
-    ]) ??
-    session.historySelection?.scannedAt ??
-    null;
-
-  return {
-    destinationUrl,
-    originalUrl,
-    scannedAt,
-    scannedUrl,
-  };
-}
-
 function resolveDetectedRiskTypes(sources: unknown[], riskLevel: ResultTone): string[] {
   const riskTypes = pickSourceStringArray(
     sources,
@@ -168,7 +120,7 @@ function resolveDetectedRiskTypes(sources: unknown[], riskLevel: ResultTone): st
   return riskTypes.length > 0 ? riskTypes : reportFallbackCopyByTone[riskLevel].detectedRiskTypes;
 }
 
-function resolveUrlComparisonSummary({ destinationUrl, originalUrl }: ReportUrls): string {
+function resolveUrlComparisonSummary({ destinationUrl, originalUrl }: ResolvedScanUrls): string {
   if (originalUrl && destinationUrl && originalUrl !== destinationUrl) {
     return '스캔된 QR URL이 최종 목적지와 다른 주소로 리다이렉트됩니다.';
   }
@@ -256,7 +208,7 @@ function resolveServerInfoRecord(rawServerInfoRecord: Record<string, unknown> | 
 function buildDomainComparison(
   domainComparisonRecord: Record<string, unknown> | null,
   riskLevel: ResultTone,
-  urls: ReportUrls,
+  urls: ResolvedScanUrls,
 ): ReportPageData['domainComparison'] {
   return {
     officialUrl:
@@ -338,7 +290,12 @@ function buildServerInfo(
 export function toReportPageData(session: ScanSessionSnapshot): ReportPageData {
   const sources = getSessionSources(session);
   const riskLevel = resolveResultToneFromSources(sources, session.riskLevel) ?? 'warning';
-  const urls = resolveReportUrls(session, sources);
+  const urls = resolveScanUrls({
+    decodedUrl: session.decodedUrl,
+    historyScannedAt: session.historySelection?.scannedAt,
+    historyUrl: session.historySelection?.url,
+    sources,
+  });
   const reputationRecord = pickSourceRecord(sources, [
     'reputation',
     'reputationSummary',
