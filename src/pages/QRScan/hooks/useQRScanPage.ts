@@ -6,6 +6,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { showApiError } from '@/shared/lib/feedback/showApiError';
 import { isWebScanTarget } from '@/shared/lib/scan-session/scanClassification';
+import { normalizeScanResult } from '@/shared/lib/scan-session/scanResultNormalization';
+import {
+  buildScanResultHref,
+  nonUrlResultRoute,
+  resolveScanResultRouteByRiskLevel,
+} from '@/shared/lib/scan-session/scanResultRoute';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 import { useScanSessionStore } from '@/shared/store/scanSessionStore';
 
@@ -13,10 +19,7 @@ import {
   fetchRecentScanHistoryData,
   getInitialScanHistoryData,
 } from '@/features/scan-history/api/fetchScanHistoryData';
-import type {
-  ScanHistoryItem,
-  ScanHistoryStatus,
-} from '@/features/scan-history/types/scanHistory.types';
+import type { ScanHistoryItem } from '@/features/scan-history/types/scanHistory.types';
 import { submitQrImage } from '@/features/scan-url/api/submitQrImage';
 import { isCaptchaRequiredUploadError } from '@/features/scan-url/api/uploadErrors';
 
@@ -46,16 +49,6 @@ type UseQRScanPageReturn = {
   isFlashVisible: boolean;
   recentScanItem: ScanHistoryItem | null;
   videoRef: RefObject<HTMLVideoElement | null>;
-};
-
-type ResultRoute = '/result/critical' | '/result/non-url' | '/result/safe' | '/result/warning';
-
-const nonUrlResultRoute = '/result/non-url';
-
-const resultRouteByStatus: Record<ScanHistoryStatus, ResultRoute> = {
-  safe: '/result/safe',
-  warning: '/result/warning',
-  critical: '/result/critical',
 };
 
 function formatCapturedAt(date: Date) {
@@ -138,42 +131,9 @@ async function requestCameraStream() {
 }
 
 function isNonWebScanResponse(scanResponse: Record<string, unknown>): boolean {
-  const rawSchemeType =
-    typeof scanResponse.schemeType === 'string'
-      ? scanResponse.schemeType
-      : scanResponse.scheme_type;
-  const targetValue =
-    typeof scanResponse.typeInfo === 'string'
-      ? scanResponse.typeInfo
-      : typeof scanResponse.type_info === 'string'
-        ? scanResponse.type_info
-        : typeof scanResponse.decodedUrl === 'string'
-          ? scanResponse.decodedUrl
-          : typeof scanResponse.decoded_url === 'string'
-            ? scanResponse.decoded_url
-            : typeof scanResponse.url === 'string'
-              ? scanResponse.url
-              : null;
-  const rawIsUrl = scanResponse.isUrl !== undefined ? scanResponse.isUrl : scanResponse.is_url;
+  const normalizedResult = normalizeScanResult(scanResponse);
 
-  return !isWebScanTarget({
-    isUrl: typeof rawIsUrl === 'boolean' ? rawIsUrl : null,
-    schemeType: typeof rawSchemeType === 'string' ? rawSchemeType : null,
-    url: targetValue,
-  });
-}
-
-function isWebHistoryItem(item: ScanHistoryItem): boolean {
-  return isWebScanTarget(item);
-}
-
-function openResultPage(route: ResultRoute, url: string) {
-  if (route === nonUrlResultRoute) {
-    window.location.assign(route);
-    return;
-  }
-
-  window.location.assign(`${route}?url=${encodeURIComponent(url)}`);
+  return !isWebScanTarget(normalizedResult);
 }
 
 export function useQRScanPage(): UseQRScanPageReturn {
@@ -328,7 +288,7 @@ export function useQRScanPage(): UseQRScanPageReturn {
         message.success(onSuccessMessage);
 
         if (isNonWebScanResponse(scanResponse)) {
-          void navigate({ to: '/result/non-url' });
+          void navigate({ to: nonUrlResultRoute });
           return;
         }
 
@@ -436,11 +396,11 @@ export function useQRScanPage(): UseQRScanPageReturn {
       schemeType: recentScanItem.schemeType,
       url: recentScanItem.url,
     });
-    const route = isWebHistoryItem(recentScanItem)
-      ? resultRouteByStatus[recentScanItem.status]
+    const route = isWebScanTarget(recentScanItem)
+      ? resolveScanResultRouteByRiskLevel(recentScanItem.status)
       : nonUrlResultRoute;
 
-    openResultPage(route, recentScanItem.url);
+    window.location.assign(buildScanResultHref(route, recentScanItem.url));
   }, [recentScanItem, setHistorySelection]);
 
   const handleCapturePhoto = useCallback(async () => {

@@ -111,13 +111,14 @@ export default function ResultPage({ tone }: ResultPageProps) {
     handleVisit,
     resultData,
   } = useResultPage(tone);
-  const config = resultViewConfig[tone];
-  const isDetailUnavailable = resultData?.detailUnavailable === true;
-  const resolvedTone: ResultTone = isDetailUnavailable ? 'warning' : tone;
 
   if (!resultData) {
     return null;
   }
+
+  const isDetailUnavailable = resultData.detailUnavailable === true;
+  const resolvedTone: ResultTone = isDetailUnavailable ? 'warning' : resultData.riskLevel;
+  const config = resultViewConfig[resolvedTone];
 
   return (
     <ResultStatusPage

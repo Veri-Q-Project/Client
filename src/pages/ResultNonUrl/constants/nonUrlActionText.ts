@@ -6,13 +6,7 @@ type NonUrlActionCatalogItem = NonUrlSectionCopy & {
   buildDescription: (targetValue?: string) => string;
   caution: string;
   englishLabel: string;
-  previewLabel: string;
   title: string;
-};
-
-type NonUrlActionPreviewItem = {
-  actionType: NonUrlActionType;
-  label: string;
 };
 
 type ResolvedNonUrlActionContent = {
@@ -21,21 +15,6 @@ type ResolvedNonUrlActionContent = {
   englishLabel: string;
   title: string;
 };
-
-const nonUrlActionTypeOrder: NonUrlActionType[] = [
-  'WEB',
-  'SHORT_URL',
-  'OTP',
-  'CRYPTO',
-  'SMS',
-  'WIFI',
-  'CONTACT',
-  'DEEP_LINK',
-  'TEL',
-  'EMAIL',
-  'APP_STORE',
-  'OTHER',
-];
 
 const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
   WEB: {
@@ -46,7 +25,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '공식 사이트와 비슷한 주소를 사용한 피싱 페이지일 수 있습니다. 로그인 정보, 카드 정보, 계정 인증번호 같은 민감한 정보를 입력하기 전에는 도메인을 먼저 확인하세요.',
     englishLabel: 'WEB LINK',
-    previewLabel: '웹',
     sectionDescription:
       '일반적인 웹사이트 주소로 연결되는 QR 코드입니다. 브라우저에서 페이지가 열리며 로그인, 결제, 다운로드, 개인정보 입력 같은 후속 행동이 이어질 수 있으니 접속 전에 도메인과 목적을 먼저 확인하세요.',
     sectionTitle: '탐지된 웹사이트 이동 정보',
@@ -60,7 +38,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '단축 URL은 최종 목적지가 숨겨져 있어 바로 신뢰하기 어렵습니다. 출처가 명확하지 않다면 즉시 열지 말고, 가능한 경우 목적지를 먼저 확인하세요.',
     englishLabel: 'SHORT URL',
-    previewLabel: '단축 URL',
     sectionDescription:
       'bit.ly 등 단축 URL 서비스로 연결되는 QR 코드입니다. 실제 최종 도착 주소가 가려져 있을 수 있어서, 사용자는 스캔 전에는 어디로 이동하는지 정확히 알기 어렵습니다.',
     sectionTitle: '탐지된 단축 URL 정보',
@@ -74,7 +51,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '본인이 직접 등록하려던 계정이 아니라면 추가하지 마세요. 잘못된 OTP를 등록하면 계정 관리 과정에 혼선이 생기거나, 공격자가 안내하는 인증 절차에 끌려갈 수 있습니다.',
     englishLabel: 'OTP SETUP',
-    previewLabel: 'OTP',
     sectionDescription:
       '2단계 인증용 일회용 비밀번호 설정 정보가 포함된 QR 코드입니다. 인증 앱에 새 계정이 추가될 수 있으므로 어떤 서비스의 계정을 등록하는지 먼저 확인해야 합니다.',
     sectionTitle: '탐지된 OTP 등록 정보',
@@ -88,7 +64,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '가상자산 전송은 되돌리기 어렵습니다. 주소, 네트워크, 금액, 요청한 상대가 모두 맞는지 직접 확인하기 전에는 승인하지 마세요.',
     englishLabel: 'CRYPTO PAYMENT',
-    previewLabel: '가상자산',
     sectionDescription:
       '가상자산 지갑 주소 및 송금 요청을 담은 QR 코드입니다. 스캔 후 지갑 앱이 열리거나 송금 화면이 표시될 수 있으며, 주소와 금액이 자동으로 채워질 수 있습니다.',
     sectionTitle: '탐지된 가상자산 지갑 정보',
@@ -102,7 +77,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '자동 입력된 번호나 문구를 그대로 보내면 비용 발생, 인증 우회 시도 대응, 스미싱 회신으로 이어질 수 있습니다. 전송 전 수신자와 본문을 모두 확인하세요.',
     englishLabel: 'SMS ACTION',
-    previewLabel: '문자',
     sectionDescription:
       '문자 메시지 작성 또는 발송 화면을 여는 QR 코드입니다. 수신자 번호와 본문이 자동 입력될 수 있어서, 사용자가 의도하지 않은 메시지를 보내도록 유도할 수 있습니다.',
     sectionTitle: '탐지된 문자 발송 정보',
@@ -116,7 +90,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '모르는 Wi-Fi에 연결하면 통신 내용 가로채기, 가짜 인증 페이지, 악성 설정 유도로 이어질 수 있습니다. 네트워크 이름과 제공 주체를 먼저 확인하세요.',
     englishLabel: 'WIFI CONFIGURATION',
-    previewLabel: 'Wi-Fi',
     sectionDescription:
       '와이파이 네트워크에 자동 연결할 수 있는 설정 정보가 담긴 QR 코드입니다. SSID, 보안 방식, 비밀번호가 포함될 수 있으므로 신뢰할 수 있는 네트워크인지 먼저 확인한 뒤 연결해야 합니다.',
     sectionTitle: '탐지된 Wi-Fi 연결 정보',
@@ -130,7 +103,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '저장 전 이름, 전화번호, 이메일, 회사명이 실제로 맞는지 확인하세요. 허위 연락처를 저장하면 이후 사칭 연락을 더 쉽게 믿게 될 수 있습니다.',
     englishLabel: 'CONTACT VCARD',
-    previewLabel: '연락처',
     sectionDescription:
       '연락처(vCard) 정보를 담은 QR 코드입니다. 이름, 전화번호, 이메일, 회사명 등이 주소록에 저장될 수 있으므로 저장 전에 정보의 진위를 확인하는 것이 좋습니다.',
     sectionTitle: '탐지된 연락처 저장 정보',
@@ -144,7 +116,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '딥링크는 송금, 로그인, 친구추가, 결제 같은 민감한 화면으로 바로 연결될 수 있습니다. 어떤 앱이 열리는지와 왜 그 화면으로 가는지를 먼저 확인하세요.',
     englishLabel: 'APP DEEP LINK',
-    previewLabel: '딥링크',
     sectionDescription:
       '특정 앱의 특정 화면을 바로 여는 딥링크입니다. 예를 들어 instagram://, kakaotalk://, kakaopay/money/remit 같은 형식으로 앱 내부 기능까지 직접 열 수 있습니다.',
     sectionTitle: '탐지된 앱 딥링크 정보',
@@ -158,7 +129,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '모르는 번호나 고가 요금 번호로 연결될 수 있습니다. 발신 전에 번호와 안내한 주체가 실제로 맞는지 확인하세요.',
     englishLabel: 'PHONE CALL',
-    previewLabel: '전화',
     sectionDescription:
       '전화 걸기 화면으로 이동하는 QR 코드입니다. 번호가 자동 입력될 수 있어서 사용자가 의도하지 않은 상대에게 바로 발신하도록 유도할 수 있습니다.',
     sectionTitle: '탐지된 전화 걸기 정보',
@@ -172,7 +142,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '자동 입력된 수신자, 제목, 본문을 그대로 신뢰하지 마세요. 보내기 전에 이메일 주소와 요청 내용이 적절한지 다시 확인하세요.',
     englishLabel: 'EMAIL ACTION',
-    previewLabel: '이메일',
     sectionDescription:
       '이메일 작성 화면을 여는 QR 코드입니다. 받는 사람, 제목, 본문이 미리 입력될 수 있어 사용자가 특정 주소로 바로 메일을 보내도록 유도할 수 있습니다.',
     sectionTitle: '탐지된 이메일 작성 정보',
@@ -186,7 +155,6 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '앱 이름이 비슷하다고 같은 앱은 아닙니다. 설치 전 개발사명, 다운로드 수, 리뷰, 권한 요청 내용을 확인하세요.',
     englishLabel: 'APP STORE LINK',
-    previewLabel: '앱 마켓',
     sectionDescription:
       '앱 마켓(Play Store, App Store)의 설치 또는 업데이트 페이지로 이동하는 QR 코드입니다. 검색 없이 바로 앱 페이지로 이동하므로 개발사와 앱 정보를 꼭 확인해야 합니다.',
     sectionTitle: '탐지된 앱 마켓 이동 정보',
@@ -200,20 +168,12 @@ const nonUrlActionTextMap: Record<NonUrlActionType, NonUrlActionCatalogItem> = {
     caution:
       '정확한 동작을 알 수 없는 QR 코드는 자동 실행하지 않는 편이 안전합니다. 필요한 경우 내용을 먼저 검토하고, 신뢰할 수 있는 출처인지 확인한 뒤 판단하세요.',
     englishLabel: 'OTHER / UNKNOWN',
-    previewLabel: '기타',
     sectionDescription:
       '기타 텍스트 및 미분류 타입입니다. 현재 규칙으로는 동작을 명확히 설명하기 어려우며, 특정 앱이나 환경에서만 해석되는 값일 수 있으니 바로 실행하지 않는 것이 안전합니다.',
     sectionTitle: '탐지된 기타 스키마 정보',
     title: '기타 스키마 감지',
   },
 };
-
-export const nonUrlActionPreviewItems: NonUrlActionPreviewItem[] = nonUrlActionTypeOrder.map(
-  (actionType) => ({
-    actionType,
-    label: nonUrlActionTextMap[actionType].previewLabel,
-  }),
-);
 
 export function resolveNonUrlSectionCopy(actionType: NonUrlActionType): NonUrlSectionCopy {
   const catalogItem = nonUrlActionTextMap[actionType];

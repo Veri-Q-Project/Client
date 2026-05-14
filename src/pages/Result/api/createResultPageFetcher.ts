@@ -36,6 +36,7 @@ function createDetailUnavailableResultPageData(url: string): ResultPageData {
   return {
     detailUnavailable: true,
     previewUrl: url,
+    riskLevel: 'warning',
     siteMeta: DETAIL_UNAVAILABLE_MESSAGE,
     siteName: url,
     siteUrl: url,

@@ -62,10 +62,7 @@ export default function ReportPage() {
     window.print();
   };
 
-  const totalReputationCount =
-    reportPageData.reputation.summary.phishingCount +
-    reportPageData.reputation.summary.malwareCount +
-    reportPageData.reputation.summary.spamCount;
+  const reputationReportCount = reportPageData.reputation.summary.reportCount;
 
   const originalProtocolTone = resolveProtocolTone(reportPageData.urlAnalysis.originalUrl);
   const destinationProtocolTone = resolveProtocolTone(reportPageData.urlAnalysis.destinationUrl);
@@ -73,8 +70,8 @@ export default function ReportPage() {
   const hasInsecureProtocol =
     originalProtocolTone !== 'secure' || destinationProtocolTone !== 'secure';
 
-  const reputationBadgeTone = totalReputationCount === 0 ? 'clean' : 'warning';
-  const providerStatusTone = totalReputationCount === 0 ? 'safe' : reportPageData.riskLevel;
+  const reputationBadgeTone = reputationReportCount === 0 ? 'clean' : 'warning';
+  const providerStatusTone = reputationReportCount === 0 ? 'safe' : reportPageData.riskLevel;
 
   const detectedRiskCards = reportPageData.detectedRiskTypes.map((riskType, index) => ({
     ...resolveRiskDetectionContent(riskType, reportPageData.riskLevel),
@@ -197,9 +194,9 @@ export default function ReportPage() {
                   {sectionNumber.reputation}
                 </span>
                 <div>
-                  <h2 className={styles.sectionTitle}>평판 및 차단 기록 조회</h2>
+                  <h2 className={styles.sectionTitle}>평판 및 도메인 정보 조회</h2>
                   <p className={styles.sectionSubtitle}>
-                    글로벌 블랙리스트 및 위협 정보 기준 조회 결과입니다.
+                    신고 이력과 도메인 생성 정보를 기준으로 조회한 결과입니다.
                   </p>
                 </div>
               </div>
@@ -213,23 +210,16 @@ export default function ReportPage() {
 
             <div className={styles.reputationStatGrid}>
               <article className={styles.reputationStatCard}>
-                <p className={styles.reputationStatLabel}>피싱 사이트</p>
+                <p className={styles.reputationStatLabel}>신고 건수</p>
                 <p className={styles.reputationStatValue}>
-                  {reportPageData.reputation.summary.phishingCount}건
+                  {reportPageData.reputation.summary.reportCount}건
                 </p>
               </article>
 
               <article className={styles.reputationStatCard}>
-                <p className={styles.reputationStatLabel}>악성코드 유포</p>
+                <p className={styles.reputationStatLabel}>도메인 생성일</p>
                 <p className={styles.reputationStatValue}>
-                  {reportPageData.reputation.summary.malwareCount}건
-                </p>
-              </article>
-
-              <article className={styles.reputationStatCard}>
-                <p className={styles.reputationStatLabel}>스팸 기록</p>
-                <p className={styles.reputationStatValue}>
-                  {reportPageData.reputation.summary.spamCount}건
+                  {reportPageData.reputation.summary.domainAgeText}
                 </p>
               </article>
             </div>

@@ -1,16 +1,22 @@
+import { isSafeExternalUrl } from '@/shared/lib/security/isSafeExternalUrl';
+
 import type { NonUrlActionType } from '../types/resultNonUrlPage.types';
 
-type NonUrlActionExecutionPlan =
-  | {
+type NonUrlActionExecutablePlanBase = {
+  confirmationContent: string;
+  confirmationTitle: string;
+  message: string;
+};
+
+export type NonUrlActionExecutionPlan =
+  | ({
       href: string;
       kind: 'navigate';
-      message: string;
-    }
-  | {
+    } & NonUrlActionExecutablePlanBase)
+  | ({
       kind: 'open';
-      message: string;
       url: string;
-    }
+    } & NonUrlActionExecutablePlanBase)
   | {
       kind: 'unsupported';
       message: string;
@@ -19,6 +25,44 @@ type NonUrlActionExecutionPlan =
 const httpUrlPattern = /^https?:\/\//iu;
 const genericSchemePattern = /^[a-z][a-z0-9+.-]*:/iu;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
+const blockedSchemeNames = new Set([
+  'about',
+  'blob',
+  'chrome',
+  'chrome-extension',
+  'data',
+  'file',
+  'filesystem',
+  'javascript',
+  'vbscript',
+]);
+const allowedCryptoSchemeNames = new Set([
+  'bitcoin',
+  'doge',
+  'dogecoin',
+  'eth',
+  'ethereum',
+  'litecoin',
+  'ltc',
+  'sol',
+  'solana',
+  'tron',
+  'trx',
+  'walletconnect',
+  'xrp',
+]);
+const allowedDeepLinkSchemeNames = new Set([
+  'instagram',
+  'kakaopay',
+  'kakaotalk',
+  'line',
+  'naversearchapp',
+]);
+const appExecutionConfirmation = {
+  confirmationContent:
+    'QR 코드가 외부 앱 또는 브라우저를 열려고 합니다. 대상 값을 다시 확인한 뒤 실행하세요.',
+  confirmationTitle: 'QR 동작 실행 확인',
+};
 
 function normalizePhoneNumber(targetValue?: string): string {
   if (!targetValue) {
@@ -32,6 +76,42 @@ function isValidPhoneNumber(targetValue: string): boolean {
   return /^\+?\d{7,15}$/u.test(targetValue);
 }
 
+function getSchemeName(targetValue: string): string | null {
+  const schemeMatch = targetValue.match(/^([a-z][a-z0-9+.-]*):/iu);
+  return schemeMatch ? schemeMatch[1].toLowerCase() : null;
+}
+
+function stripSchemePrefix(targetValue: string, schemeName: string): string {
+  return targetValue.slice(schemeName.length + 1);
+}
+
+function stripQueryAndFragment(targetValue: string): string {
+  return targetValue.split(/[?#]/u, 1)[0] ?? '';
+}
+
+function resolveAllowedSchemeHref(
+  targetValue: string | undefined,
+  allowedSchemeNames: Set<string>,
+): string | null {
+  const normalizedTargetValue = targetValue?.trim();
+
+  if (!normalizedTargetValue || !genericSchemePattern.test(normalizedTargetValue)) {
+    return null;
+  }
+
+  const schemeName = getSchemeName(normalizedTargetValue);
+
+  if (!schemeName || blockedSchemeNames.has(schemeName) || !allowedSchemeNames.has(schemeName)) {
+    return null;
+  }
+
+  return normalizedTargetValue;
+}
+
+function isSafeCryptoAddress(targetValue: string): boolean {
+  return /^[A-Za-z0-9][A-Za-z0-9._~:/?#@!$&'()*+,;=%-]{2,511}$/u.test(targetValue);
+}
+
 function normalizeHttpUrl(targetValue?: string): string | null {
   const normalizedTargetValue = targetValue?.trim();
 
@@ -40,11 +120,12 @@ function normalizeHttpUrl(targetValue?: string): string | null {
   }
 
   if (httpUrlPattern.test(normalizedTargetValue)) {
-    return normalizedTargetValue;
+    return isSafeExternalUrl(normalizedTargetValue) ? normalizedTargetValue : null;
   }
 
   if (/^[\w.-]+\.[a-z]{2,}(?:[/?#].*)?$/iu.test(normalizedTargetValue)) {
-    return `https://${normalizedTargetValue}`;
+    const url = `https://${normalizedTargetValue}`;
+    return isSafeExternalUrl(url) ? url : null;
   }
 
   return null;
@@ -57,11 +138,16 @@ function resolveTelHref(targetValue?: string): string | null {
     return null;
   }
 
-  if (/^tel:/iu.test(normalizedTargetValue)) {
-    return normalizedTargetValue;
+  const schemeName = getSchemeName(normalizedTargetValue);
+
+  if (schemeName && schemeName !== 'tel') {
+    return null;
   }
 
-  const normalizedPhoneNumber = normalizePhoneNumber(normalizedTargetValue);
+  const phoneValue = schemeName
+    ? stripSchemePrefix(normalizedTargetValue, schemeName)
+    : normalizedTargetValue;
+  const normalizedPhoneNumber = normalizePhoneNumber(stripQueryAndFragment(phoneValue));
 
   return isValidPhoneNumber(normalizedPhoneNumber) ? `tel:${normalizedPhoneNumber}` : null;
 }
@@ -73,11 +159,16 @@ function resolveSmsHref(targetValue?: string): string | null {
     return null;
   }
 
-  if (/^(smsto|sms):/iu.test(normalizedTargetValue)) {
-    return normalizedTargetValue;
+  const schemeName = getSchemeName(normalizedTargetValue);
+
+  if (schemeName && schemeName !== 'sms' && schemeName !== 'smsto') {
+    return null;
   }
 
-  const normalizedPhoneNumber = normalizePhoneNumber(normalizedTargetValue);
+  const phoneValue = schemeName
+    ? stripSchemePrefix(normalizedTargetValue, schemeName)
+    : normalizedTargetValue;
+  const normalizedPhoneNumber = normalizePhoneNumber(stripQueryAndFragment(phoneValue));
 
   return isValidPhoneNumber(normalizedPhoneNumber) ? `smsto:${normalizedPhoneNumber}` : null;
 }
@@ -89,21 +180,34 @@ function resolveMailtoHref(targetValue?: string): string | null {
     return null;
   }
 
-  if (/^mailto:/iu.test(normalizedTargetValue)) {
-    return normalizedTargetValue;
-  }
+  const schemeName = getSchemeName(normalizedTargetValue);
 
-  return emailPattern.test(normalizedTargetValue) ? `mailto:${normalizedTargetValue}` : null;
-}
-
-function resolveSchemeHref(targetValue?: string): string | null {
-  const normalizedTargetValue = targetValue?.trim();
-
-  if (!normalizedTargetValue || !genericSchemePattern.test(normalizedTargetValue)) {
+  if (schemeName && schemeName !== 'mailto') {
     return null;
   }
 
-  return normalizedTargetValue;
+  const emailValue = schemeName
+    ? stripSchemePrefix(normalizedTargetValue, schemeName)
+    : normalizedTargetValue;
+  const normalizedEmail = stripQueryAndFragment(emailValue);
+
+  return emailPattern.test(normalizedEmail) ? `mailto:${normalizedEmail}` : null;
+}
+
+function resolveCryptoHref(targetValue?: string): string | null {
+  const normalizedTargetValue = targetValue?.trim();
+
+  if (!normalizedTargetValue) {
+    return null;
+  }
+
+  const schemeName = getSchemeName(normalizedTargetValue);
+
+  if (schemeName) {
+    return resolveAllowedSchemeHref(normalizedTargetValue, allowedCryptoSchemeNames);
+  }
+
+  return isSafeCryptoAddress(normalizedTargetValue) ? `bitcoin:${normalizedTargetValue}` : null;
 }
 
 export function resolveNonUrlActionExecution(
@@ -124,6 +228,7 @@ export function resolveNonUrlActionExecution(
       return {
         kind: 'open',
         message: '웹페이지를 열고 있습니다.',
+        ...appExecutionConfirmation,
         url,
       };
     }
@@ -141,6 +246,7 @@ export function resolveNonUrlActionExecution(
       return {
         kind: 'open',
         message: '단축 URL을 열고 있습니다. 최종 이동 주소를 다시 확인하세요.',
+        ...appExecutionConfirmation,
         url,
       };
     }
@@ -158,6 +264,7 @@ export function resolveNonUrlActionExecution(
       return {
         href,
         kind: 'navigate',
+        ...appExecutionConfirmation,
         message: '전화 앱 실행을 시도합니다.',
       };
     }
@@ -175,6 +282,7 @@ export function resolveNonUrlActionExecution(
       return {
         href,
         kind: 'navigate',
+        ...appExecutionConfirmation,
         message: '문자 앱 실행을 시도합니다.',
       };
     }
@@ -192,6 +300,7 @@ export function resolveNonUrlActionExecution(
       return {
         href,
         kind: 'navigate',
+        ...appExecutionConfirmation,
         message: '메일 앱 실행을 시도합니다.',
       };
     }
@@ -203,6 +312,7 @@ export function resolveNonUrlActionExecution(
       return {
         kind: 'open',
         message: '앱 마켓 페이지를 열고 있습니다.',
+        ...appExecutionConfirmation,
         url:
           url ??
           `https://play.google.com/store/search?c=apps&q=${encodeURIComponent(keyword || 'app')}`,
@@ -210,7 +320,7 @@ export function resolveNonUrlActionExecution(
     }
 
     case 'DEEP_LINK': {
-      const href = resolveSchemeHref(targetValue);
+      const href = resolveAllowedSchemeHref(targetValue, allowedDeepLinkSchemeNames);
 
       if (!href) {
         return {
@@ -222,14 +332,13 @@ export function resolveNonUrlActionExecution(
       return {
         href,
         kind: 'navigate',
+        ...appExecutionConfirmation,
         message: '앱 딥링크 실행을 시도합니다.',
       };
     }
 
     case 'CRYPTO': {
-      const href =
-        resolveSchemeHref(targetValue) ??
-        ((targetValue ?? '').trim() ? `bitcoin:${targetValue?.trim()}` : null);
+      const href = resolveCryptoHref(targetValue);
 
       if (!href) {
         return {
@@ -241,6 +350,7 @@ export function resolveNonUrlActionExecution(
       return {
         href,
         kind: 'navigate',
+        ...appExecutionConfirmation,
         message: '지갑 또는 결제 앱 실행을 시도합니다.',
       };
     }

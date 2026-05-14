@@ -791,7 +791,7 @@ export const reputationStatGrid = style({
   gap: vars.spacing.sm,
   '@media': {
     [bpTablet]: {
-      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     },
   },
 });

@@ -1,10 +1,9 @@
 import { pickBoolean, pickString } from '@/shared/api/responseAccess/payloadAccess';
-import { normalizeRiskLevel } from '@/shared/api/risk/normalizeRiskLevel';
+import { resolveResultToneFromSource } from '@/shared/api/risk/resolveResultTone';
 import type { ResultTone } from '@/shared/types/resultTone';
 
 const historyIdKeys = ['id', 'scanId', 'scan_id', 'uuid', 'scanUuid', 'scan_uuid'];
 const historyScannedAtKeys = ['scannedAt', 'scanned_at', 'createdAt', 'created_at'];
-const historyRiskLevelKeys = ['riskLevel', 'risk_level', 'status', 'result'];
 const historySchemeTypeKeys = ['schemeType', 'scheme_type'];
 const historyTargetValueKeys = [
   'typeInfo',
@@ -32,7 +31,7 @@ export function pickHistoryScannedAt(source: unknown): string | null {
 }
 
 export function pickHistoryRiskLevel(source: unknown): ResultTone | null {
-  return normalizeRiskLevel(pickString(source, historyRiskLevelKeys));
+  return resolveResultToneFromSource(source);
 }
 
 export function pickHistorySchemeType(source: unknown): string | null {

@@ -1,18 +1,20 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 
-import { pickBoolean, pickString } from '@/shared/api/responseAccess/payloadAccess';
-import { resolveResultToneFromSource } from '@/shared/api/risk/resolveResultTone';
 import type {
   BackendAnalysisDetailResponse,
   BackendScanResponse,
   BackendSseFinalPayload,
 } from '@/shared/api/types';
-import {
-  isHttpUrl,
-  normalizeScanSchemeTypeAlias,
-} from '@/shared/lib/scan-session/scanClassification';
+import { normalizeScanSchemeTypeAlias } from '@/shared/lib/scan-session/scanClassification';
 import type { ResultTone } from '@/shared/types/resultTone';
+
+import {
+  buildAnalysisDetailPatch,
+  buildFinalResultPatch,
+  buildHistorySelectionPatch,
+  buildScanResponsePatch,
+} from './scanSessionTransitions';
 
 export type ScanHistorySelection = {
   isUrl: boolean | null;
@@ -96,70 +98,6 @@ function mergePersistedLightSession(
   };
 }
 
-function resolveDecodedUrl(source: unknown): string | null {
-  return pickString(source, [
-    'decodedUrl',
-    'decoded_url',
-    'destinationUrl',
-    'destination_url',
-    'finalUrl',
-    'final_url',
-    'scannedUrl',
-    'scanned_url',
-    'typeInfo',
-    'type_info',
-    'targetValue',
-    'target_value',
-    'url',
-  ]);
-}
-
-function resolveSchemeType(source: unknown, decodedUrl: string | null): string | null {
-  const explicitSchemeType = normalizeScanSchemeTypeAlias(
-    pickString(source, ['schemeType', 'scheme_type']),
-  );
-
-  if (explicitSchemeType) {
-    return explicitSchemeType;
-  }
-
-  if (!decodedUrl) {
-    return null;
-  }
-
-  if (isHttpUrl(decodedUrl)) {
-    return 'WEB';
-  }
-
-  return 'NON_WEB';
-}
-
-function resolveIsUrl(
-  source: unknown,
-  decodedUrl: string | null,
-  schemeType: string | null,
-): boolean | null {
-  const explicitIsUrl = pickBoolean(source, ['isUrl', 'is_url']);
-
-  if (schemeType) {
-    return schemeType === 'WEB';
-  }
-
-  if (isHttpUrl(decodedUrl)) {
-    return true;
-  }
-
-  if (explicitIsUrl !== null) {
-    return explicitIsUrl;
-  }
-
-  return null;
-}
-
-function resolveRiskLevel(source: unknown): ResultTone | null {
-  return resolveResultToneFromSource(source);
-}
-
 export const useScanSessionStore = create<ScanSessionState>()(
   persist(
     (set) => ({
@@ -180,68 +118,16 @@ export const useScanSessionStore = create<ScanSessionState>()(
         });
       },
       setAnalysisDetail: (analysisDetail) => {
-        const decodedUrl = resolveDecodedUrl(analysisDetail);
-
-        set((state) => {
-          const nextDecodedUrl = decodedUrl ?? state.decodedUrl;
-          const schemeType = resolveSchemeType(analysisDetail, nextDecodedUrl);
-          const nextSchemeType = schemeType ?? state.schemeType;
-
-          return {
-            analysisDetail,
-            decodedUrl: nextDecodedUrl,
-            isUrl: resolveIsUrl(analysisDetail, nextDecodedUrl, nextSchemeType) ?? state.isUrl,
-            riskLevel: resolveRiskLevel(analysisDetail) ?? state.riskLevel,
-            schemeType: nextSchemeType,
-          };
-        });
+        set((state) => buildAnalysisDetailPatch(state, analysisDetail));
       },
       setFinalResult: (finalResult) => {
-        const decodedUrl = resolveDecodedUrl(finalResult);
-        const schemeType = resolveSchemeType(finalResult, decodedUrl);
-
-        set((state) => ({
-          decodedUrl: decodedUrl ?? state.decodedUrl,
-          finalResult,
-          historySelection: state.historySelection,
-          isUrl:
-            resolveIsUrl(
-              finalResult,
-              decodedUrl ?? state.decodedUrl,
-              schemeType ?? state.schemeType,
-            ) ?? state.isUrl,
-          riskLevel: resolveRiskLevel(finalResult) ?? state.riskLevel,
-          schemeType: schemeType ?? state.schemeType,
-        }));
+        set((state) => buildFinalResultPatch(state, finalResult));
       },
       setHistorySelection: (historySelection) => {
-        const schemeType = resolveSchemeType(historySelection, historySelection.url);
-
-        set({
-          analysisDetail: null,
-          decodedUrl: historySelection.url,
-          finalResult: null,
-          historySelection,
-          isUrl: resolveIsUrl(historySelection, historySelection.url, schemeType),
-          riskLevel: historySelection.riskLevel,
-          scanResponse: null,
-          schemeType,
-        });
+        set(buildHistorySelectionPatch(historySelection));
       },
       setScanResponse: (scanResponse) => {
-        const decodedUrl = resolveDecodedUrl(scanResponse);
-        const schemeType = resolveSchemeType(scanResponse, decodedUrl);
-
-        set({
-          analysisDetail: null,
-          decodedUrl,
-          finalResult: null,
-          historySelection: null,
-          isUrl: resolveIsUrl(scanResponse, decodedUrl, schemeType),
-          riskLevel: resolveRiskLevel(scanResponse),
-          scanResponse,
-          schemeType,
-        });
+        set(buildScanResponsePatch(scanResponse));
       },
     }),
     {

@@ -5,6 +5,7 @@ import {
   pickSourceString,
 } from '@/shared/api/responseAccess/payloadAccess';
 import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
+import { resolveScanUrls } from '@/shared/lib/scan-session/scanUrlResolution';
 import type { ScanSessionSnapshot } from '@/shared/store/scanSessionStore';
 import type { ResultTone } from '@/shared/types/resultTone';
 
@@ -117,37 +118,12 @@ export function toResultPageData(
     session.historySelection,
   ];
 
-  const resolvedOriginalUrl =
-    pickSourceString(sources, [
-      'originalUrl',
-      'original_url',
-      'sourceUrl',
-      'source_url',
-      'scannedUrl',
-      'scanned_url',
-      'decodedUrl',
-      'decoded_url',
-      'url',
-    ]) ??
-    session.decodedUrl ??
-    session.historySelection?.url ??
-    '';
-
-  const redirectRecord = pickSourceRecord(sources, ['redirect']);
-  const resolvedFinalUrl =
-    pickSourceString([redirectRecord], ['finalUrl', 'final_url']) ??
-    pickSourceString(sources, [
-      'finalUrl',
-      'final_url',
-      'destinationUrl',
-      'destination_url',
-      'visitUrl',
-      'visit_url',
-    ]) ??
-    resolvedOriginalUrl;
-
-  const resolvedPreviewUrl =
-    pickSourceString(sources, ['previewUrl', 'preview_url']) ?? resolvedFinalUrl;
+  const urls = resolveScanUrls({
+    decodedUrl: session.decodedUrl,
+    historyScannedAt: session.historySelection?.scannedAt,
+    historyUrl: session.historySelection?.url,
+    sources,
+  });
   const resolvedTone = resolveResultToneFromSources(sources, session.riskLevel) ?? fallbackTone;
   const resolvedTrustScore =
     pickSourceNumber(sources, ['trustScore', 'trust_score', 'score']) ??
@@ -155,11 +131,12 @@ export function toResultPageData(
 
   return {
     detailUnavailable: false,
-    previewUrl: resolvedPreviewUrl,
+    previewUrl: urls.previewUrl,
+    riskLevel: resolvedTone,
     siteMeta: buildSiteMeta(sources),
-    siteName: resolvedOriginalUrl,
-    siteUrl: resolvedFinalUrl,
+    siteName: urls.scannedUrl,
+    siteUrl: urls.destinationUrl,
     trustScore: clampTrustScore(resolvedTrustScore),
-    visitUrl: resolvedFinalUrl,
+    visitUrl: urls.destinationUrl,
   };
 }

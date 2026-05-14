@@ -1,6 +1,8 @@
 import { fetchScanDetail } from '@/shared/api/fetchScanDetail';
 import { getScanSessionSnapshot, useScanSessionStore } from '@/shared/store/scanSessionStore';
 
+import { ScanSessionRequiredError } from './scanSessionErrors';
+
 export function resolveRequestedUrlFromSearch(): string | null {
   if (typeof window === 'undefined') {
     return null;
@@ -21,7 +23,7 @@ export async function ensureScanDetail(): Promise<ReturnType<typeof getScanSessi
     session.decodedUrl ?? session.historySelection?.url ?? resolveRequestedUrlFromSearch();
 
   if (!requestedUrl) {
-    throw new Error('SCAN_SESSION_REQUIRED');
+    throw new ScanSessionRequiredError();
   }
 
   const detail = await fetchScanDetail(requestedUrl);

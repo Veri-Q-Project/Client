@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { App } from 'antd';
+import { useState } from 'react';
 
 import { ResultActionButtons } from '@/shared/component';
 import { qrIconByTone } from '@/shared/icon/resultIcons';
@@ -7,7 +8,7 @@ import AppHeader from '@/shared/ui/app-header';
 import ResultHero from '@/shared/ui/resultHero';
 import { resultPageStyles } from '@/shared/ui/resultPage';
 
-import { nonUrlActionPreviewItems, resolveNonUrlSectionCopy } from './constants/nonUrlActionText';
+import { resolveNonUrlSectionCopy } from './constants/nonUrlActionText';
 import { useResultNonUrlPage } from './hooks/useResultNonUrlPage';
 import { resolveNonUrlActionExecution } from './lib/resolveNonUrlActionExecution';
 import * as styles from './styles/resultNonUrlPage.css';
@@ -15,40 +16,35 @@ import DetectedNonUrlActionSection from './ui/DetectedNonUrlActionSection';
 
 import type { NonUrlActionType } from './types/resultNonUrlPage.types';
 
-export default function ResultNonUrlPage() {
-  const { handleRescan, handleShareResult, resultNonUrlPageData } = useResultNonUrlPage();
-  const [selectedPreviewActionType, setSelectedPreviewActionType] =
-    useState<NonUrlActionType | null>(null);
-  const [executionFeedbackMessage, setExecutionFeedbackMessage] = useState<string | null>(null);
+const nonUrlActionLabelByType: Record<NonUrlActionType, string> = {
+  APP_STORE: '앱 마켓',
+  CONTACT: '연락처',
+  CRYPTO: '가상자산',
+  DEEP_LINK: '딥링크',
+  EMAIL: '이메일',
+  OTHER: '기타',
+  OTP: 'OTP',
+  SHORT_URL: '단축 URL',
+  SMS: '문자',
+  TEL: '전화',
+  WEB: '웹',
+  WIFI: 'Wi-Fi',
+};
 
-  const selectedPreviewItem = useMemo(
-    () =>
-      selectedPreviewActionType
-        ? (nonUrlActionPreviewItems.find((item) => item.actionType === selectedPreviewActionType) ??
-          null)
-        : null,
-    [selectedPreviewActionType],
-  );
+export default function ResultNonUrlPage() {
+  const { modal } = App.useApp();
+  const { handleRescan, handleShareResult, resultNonUrlPageData } = useResultNonUrlPage();
+  const [executionFeedbackMessage, setExecutionFeedbackMessage] = useState<string | null>(null);
 
   if (!resultNonUrlPageData) {
     return null;
   }
 
-  const displayedActionType =
-    selectedPreviewItem?.actionType ?? resultNonUrlPageData.detectedActionType;
-  const displayedActionLabel =
-    selectedPreviewItem?.label ??
-    nonUrlActionPreviewItems.find((item) => item.actionType === displayedActionType)?.label ??
-    displayedActionType;
+  const displayedActionType = resultNonUrlPageData.detectedActionType;
+  const displayedActionLabel = nonUrlActionLabelByType[displayedActionType];
   const displayedSectionCopy = resolveNonUrlSectionCopy(displayedActionType);
-  const displayedTargetValue =
-    displayedActionType === resultNonUrlPageData.detectedActionType
-      ? resultNonUrlPageData.targetValue
-      : undefined;
-  const isExecutable =
-    displayedActionType === resultNonUrlPageData.detectedActionType &&
-    displayedTargetValue !== undefined &&
-    displayedTargetValue !== null;
+  const displayedTargetValue = resultNonUrlPageData.targetValue;
+  const isExecutable = displayedTargetValue !== undefined && displayedTargetValue !== null;
 
   const handleExecuteAction = () => {
     if (!isExecutable) {
@@ -56,16 +52,32 @@ export default function ResultNonUrlPage() {
     }
 
     const executionPlan = resolveNonUrlActionExecution(displayedActionType, displayedTargetValue);
-    setExecutionFeedbackMessage(executionPlan.message);
 
-    if (executionPlan.kind === 'open') {
-      openExternalLink(executionPlan.url);
+    if (executionPlan.kind === 'unsupported') {
+      setExecutionFeedbackMessage(executionPlan.message);
       return;
     }
 
-    if (executionPlan.kind === 'navigate') {
-      window.location.href = executionPlan.href;
-    }
+    modal.confirm({
+      cancelText: '취소',
+      centered: true,
+      content: executionPlan.confirmationContent,
+      okText: '실행',
+      onOk: () => {
+        if (executionPlan.kind === 'open') {
+          const opened = openExternalLink(executionPlan.url);
+
+          setExecutionFeedbackMessage(
+            opened ? executionPlan.message : '안전하지 않은 링크라 실행하지 않았습니다.',
+          );
+          return;
+        }
+
+        setExecutionFeedbackMessage(executionPlan.message);
+        window.location.href = executionPlan.href;
+      },
+      title: executionPlan.confirmationTitle,
+    });
   };
 
   return (
@@ -115,31 +127,6 @@ export default function ResultNonUrlPage() {
                 void handleShareResult();
               }}
             />
-
-            <section className={styles.previewSection}>
-              <h2 className={styles.previewTitle}>전체 URL 스키마 타입 보기</h2>
-
-              <div className={styles.previewButtonList}>
-                {nonUrlActionPreviewItems.map((previewItem) => (
-                  <button
-                    aria-pressed={displayedActionType === previewItem.actionType}
-                    className={`${styles.previewButton} ${
-                      displayedActionType === previewItem.actionType
-                        ? styles.previewButtonActive
-                        : ''
-                    }`}
-                    key={previewItem.actionType}
-                    onClick={() => {
-                      setSelectedPreviewActionType(previewItem.actionType);
-                      setExecutionFeedbackMessage(null);
-                    }}
-                    type="button"
-                  >
-                    {previewItem.label}
-                  </button>
-                ))}
-              </div>
-            </section>
           </section>
         </section>
       </div>

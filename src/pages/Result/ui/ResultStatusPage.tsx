@@ -23,6 +23,7 @@ type ResultActionOptions = Pick<
 >;
 
 type ResultStatusPageData = {
+  riskLevel: ResultTone;
   siteMeta: string;
   siteName: string;
   siteUrl: string;
