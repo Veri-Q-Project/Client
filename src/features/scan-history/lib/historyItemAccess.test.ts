@@ -30,6 +30,17 @@ describe('historyItemAccess', () => {
     );
   });
 
+  it('uses score before riskLevel for history status labels', () => {
+    expect(
+      pickHistoryRiskLevel({
+        riskLevel: 'warning',
+        scannedAt: '2026-05-14 10:20:30',
+        score: 85,
+        typeInfo: 'https://testsafebrowsing.appspot.com/s/phishing.html',
+      }),
+    ).toBe('critical');
+  });
+
   it('sorts backend timestamp labels by recency', () => {
     expect(resolveHistoryTimestamp('2026-04-21 02:57:53')).toBeGreaterThan(
       resolveHistoryTimestamp('2026-04-21 02:50:44'),
