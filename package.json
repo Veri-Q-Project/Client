@@ -32,6 +32,7 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "test-code": "node src/test-code/generate-qr-png.mjs",
     "test-code:": "node src/test-code/generate-qr-png.mjs",
     "security:check": "secretlint \"**/*\" && pnpm audit --audit-level high"
