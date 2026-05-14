@@ -3,16 +3,16 @@ import { App } from 'antd';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { isApiError } from '@/shared/api/errors/apiError';
-import { pickString } from '@/shared/api/responseAccess/payloadAccess';
 import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
-import { mapSseStepId } from '@/shared/api/sse/sseStepMapper';
 import { ensureScanDetail } from '@/shared/lib/scan-session/ensureScanDetail';
-import { isWebScanTarget } from '@/shared/lib/scan-session/scanClassification';
+import { isSameScanSource } from '@/shared/lib/scan-session/scanIdentity';
+import { resolveScanResultRoute } from '@/shared/lib/scan-session/scanResultRoute';
 import { useScanSubscription } from '@/shared/lib/sse/useScanSubscription';
 import { useGuestStore } from '@/shared/store/guestStore';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 import { getScanSessionSnapshot, useScanSessionStore } from '@/shared/store/scanSessionStore';
 
+import { shouldResolveDetailAfterTerminalProgress } from '../lib/loadingProgressResolution';
 import { getLoadingSteps } from '../loadingScenario';
 
 import type { LoadingPageData } from '../types/loadingPage.types';
@@ -32,49 +32,7 @@ const DEFAULT_LOADING_PAGE_DATA: LoadingPageData = {
 };
 
 function openResultRouteForCurrentSession() {
-  const session = getScanSessionSnapshot();
-  const currentTargetUrl = session.decodedUrl ?? session.historySelection?.url ?? null;
-
-  if (
-    !isWebScanTarget({
-      isUrl: session.isUrl,
-      schemeType: session.schemeType,
-      url: currentTargetUrl,
-    })
-  ) {
-    window.location.assign('/result/non-url');
-    return;
-  }
-
-  const riskLevel =
-    resolveResultToneFromSources(
-      [session.analysisDetail, session.finalResult, session.scanResponse, session.historySelection],
-      session.riskLevel,
-    ) ?? 'warning';
-  const routeByRiskLevel = {
-    critical: '/result/critical',
-    safe: '/result/safe',
-    warning: '/result/warning',
-  } as const;
-  const route = routeByRiskLevel[riskLevel];
-
-  if (currentTargetUrl) {
-    window.location.assign(`${route}?url=${encodeURIComponent(currentTargetUrl)}`);
-    return;
-  }
-
-  window.location.assign(route);
-}
-
-function resolveScanIdentifier(source: unknown): string | null {
-  return pickString(source, ['scanId', 'scan_id', 'id']);
-}
-
-function isSameScanFinalResult(finalResult: unknown, scanResponse: unknown): boolean {
-  const finalResultId = resolveScanIdentifier(finalResult);
-  const scanResponseId = resolveScanIdentifier(scanResponse);
-
-  return Boolean(finalResultId && scanResponseId && finalResultId === scanResponseId);
+  window.location.assign(resolveScanResultRoute(getScanSessionSnapshot()).href);
 }
 
 export function useLoadingPage(): UseLoadingPageReturn {
@@ -108,7 +66,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
       return;
     }
 
-    if (finalResult && scanResponse && isSameScanFinalResult(finalResult, scanResponse)) {
+    if (finalResult && scanResponse && isSameScanSource(finalResult, scanResponse)) {
       return;
     }
 
@@ -180,19 +138,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
 
   const tryResolveDetailAfterTerminalProgress = useCallback(
     async (payload: Record<string, unknown>) => {
-      const rawStatus = pickString(payload, ['status', 'state'])?.trim().toLowerCase();
-      const rawStep = pickString(payload, [
-        'currentStepId',
-        'current_step_id',
-        'step',
-        'stepId',
-        'step_id',
-      ]);
-      const mappedStepId = mapSseStepId(rawStep);
-      const isTerminalStep =
-        mappedStepId === 'riskScore' || mappedStepId === 'report' || mappedStepId === 'completed';
-
-      if (rawStatus !== 'completed' || !isTerminalStep) {
+      if (!shouldResolveDetailAfterTerminalProgress(payload)) {
         return;
       }
 
