@@ -2,6 +2,10 @@ type UnknownRecord = Record<string, unknown>;
 
 const nestedRecordKeys = [
   'analysis',
+  'analysisResponse',
+  'analysis_response',
+  'analysisResult',
+  'analysis_result',
   'certificate',
   'data',
   'detail',
@@ -28,6 +32,10 @@ const nestedRecordKeys = [
   'server_info',
   'shortUrl',
   'short_url',
+  'threatIntel',
+  'threat_intel',
+  'urlAnalysis',
+  'url_analysis',
 ] as const;
 
 function pushUniqueRecord(records: UnknownRecord[], candidate: UnknownRecord | null) {
