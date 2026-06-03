@@ -25,12 +25,18 @@ vi.mock('@/shared/store/guestStore', () => ({
 const mockedFetchScanHistory = vi.mocked(fetchScanHistory);
 const mockedFetchScanDetail = vi.mocked(fetchScanDetail);
 
+function waitForBackgroundTasks(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
 describe('fetchScanHistoryData', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('enriches history risk labels with detail risk data', async () => {
+  it('returns recent history immediately and enriches risk labels in the background', async () => {
     mockedFetchScanHistory.mockResolvedValue([
       {
         isUrl: true,
@@ -44,10 +50,21 @@ describe('fetchScanHistoryData', () => {
       riskLevel: 'danger',
       score: 88,
     });
+    const onItemsEnriched = vi.fn();
 
-    const data = await fetchRecentScanHistoryData();
+    const data = await fetchRecentScanHistoryData({
+      onItemsEnriched,
+    });
 
-    expect(data.items[0]?.status).toBe('critical');
+    expect(data.items[0]?.status).toBe('warning');
+
+    await waitForBackgroundTasks();
+
+    expect(onItemsEnriched).toHaveBeenCalledWith([
+      expect.objectContaining({
+        status: 'critical',
+      }),
+    ]);
   });
 
   it('keeps the history risk label when detail enrichment fails', async () => {
@@ -61,10 +78,17 @@ describe('fetchScanHistoryData', () => {
       },
     ]);
     mockedFetchScanDetail.mockRejectedValue(new Error('detail unavailable'));
+    const onItemsEnriched = vi.fn();
 
-    const data = await fetchRecentScanHistoryData();
+    const data = await fetchRecentScanHistoryData({
+      onItemsEnriched,
+    });
 
     expect(data.items[0]?.status).toBe('warning');
+
+    await waitForBackgroundTasks();
+
+    expect(onItemsEnriched).not.toHaveBeenCalled();
   });
 
   it('does not call detail enrichment for the full history list by default', async () => {

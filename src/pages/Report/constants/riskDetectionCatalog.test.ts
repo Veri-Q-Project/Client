@@ -104,6 +104,17 @@ describe('resolveRiskDetectionContent', () => {
     });
   });
 
+  it('keeps certificate timeout aliases mapped to their canonical timeout entry', () => {
+    expect(resolveRiskDetectionContent('certificate_timeout', 'warning')).toMatchObject({
+      englishLabel: 'CERT TIMEOUT',
+      title: '인증서 검증 시간 초과 감지',
+    });
+    expect(resolveRiskDetectionContent('certificate_request_timeout', 'warning')).toMatchObject({
+      englishLabel: 'CERTIFICATE REQUEST TIMEOUT',
+      title: '인증서 요청 시간 초과 감지',
+    });
+  });
+
   it('uses user-facing copy for unknown threat fallbacks', () => {
     const content = resolveRiskDetectionContent('NEW_BACKEND_SIGNAL', 'critical');
 

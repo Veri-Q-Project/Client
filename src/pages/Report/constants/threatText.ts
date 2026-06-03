@@ -541,7 +541,7 @@ export const threatTextCatalog: RiskDetectionCatalogItem[] = [
   {
     description: '인증서 정보를 확인하는 요청이 제한 시간 안에 완료되지 않았습니다.',
     englishLabel: 'CERTIFICATE REQUEST TIMEOUT',
-    names: ['certificate_request_timeout', 'certificate_timeout', 'tls_certificate_timeout'],
+    names: ['certificate_request_timeout'],
     risk: 'HTTPS 인증 상태를 충분히 검증하지 못해 서버 신뢰성을 판단하기 어렵고, 불안정하거나 은폐된 서버일 수 있습니다.',
     title: '인증서 요청 시간 초과 감지',
   },

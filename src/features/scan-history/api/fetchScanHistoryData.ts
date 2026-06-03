@@ -22,6 +22,7 @@ const maxRecentScanHistoryItemCount = 5;
 type FetchScanHistoryDataOptions = {
   enrichRiskFromDetail?: boolean;
   limit?: number;
+  onItemsEnriched?: (items: ScanHistoryItem[]) => void;
 };
 
 type HistoryItemWithTargetValue = {
@@ -102,6 +103,36 @@ async function enrichHistoryItemRiskLevel(item: ScanHistoryItem): Promise<ScanHi
   };
 }
 
+function startHistoryItemRiskEnrichment(
+  historyItems: ScanHistoryItem[],
+  onItemsEnriched: (items: ScanHistoryItem[]) => void,
+): void {
+  setTimeout(() => {
+    void Promise.allSettled(historyItems.map((item) => enrichHistoryItemRiskLevel(item))).then(
+      (results) => {
+        const enrichedItemsById = new Map<string, ScanHistoryItem>();
+
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            enrichedItemsById.set(historyItems[index].id, result.value);
+          }
+        });
+
+        const enrichedHistoryItems = historyItems.map(
+          (item) => enrichedItemsById.get(item.id) ?? item,
+        );
+        const hasStatusUpdate = enrichedHistoryItems.some(
+          (item, index) => item !== historyItems[index],
+        );
+
+        if (hasStatusUpdate) {
+          onItemsEnriched(enrichedHistoryItems);
+        }
+      },
+    );
+  }, 0);
+}
+
 export async function fetchScanHistoryData(
   options: FetchScanHistoryDataOptions = {},
 ): Promise<ScanHistoryData> {
@@ -122,20 +153,23 @@ export async function fetchScanHistoryData(
       url: targetValue,
     };
   });
-  const enrichedHistoryItems = options.enrichRiskFromDetail
-    ? await Promise.all(historyItems.map((item) => enrichHistoryItemRiskLevel(item)))
-    : historyItems;
+  if (options.enrichRiskFromDetail && options.onItemsEnriched) {
+    startHistoryItemRiskEnrichment(historyItems, options.onItemsEnriched);
+  }
 
   return {
-    items: enrichedHistoryItems,
+    items: historyItems,
     uuid,
   };
 }
 
-export async function fetchRecentScanHistoryData(): Promise<ScanHistoryData> {
+export async function fetchRecentScanHistoryData(
+  options: Pick<FetchScanHistoryDataOptions, 'onItemsEnriched'> = {},
+): Promise<ScanHistoryData> {
   return fetchScanHistoryData({
     enrichRiskFromDetail: true,
     limit: maxRecentScanHistoryItemCount,
+    onItemsEnriched: options.onItemsEnriched,
   });
 }
 

@@ -75,12 +75,18 @@ export function useLoadingPage(): UseLoadingPageReturn {
     if (finalResult && scanResponse && isSameScanSource(finalResult, scanResponse)) {
       return;
     }
+  }, [finalResult, navigate, pendingTextScanUrl, scanResponse]);
+
+  useEffect(() => {
+    if (!pendingTextScanUrl || finalResult) {
+      return;
+    }
 
     resetProgress();
     detailResolutionFailedRef.current = false;
     detailResolutionStartedRef.current = false;
     setConnecting();
-  }, [finalResult, navigate, pendingTextScanUrl, resetProgress, scanResponse, setConnecting]);
+  }, [finalResult, pendingTextScanUrl, resetProgress, setConnecting]);
 
   const failDetailResolution = useCallback(
     (errorMessage: string) => {

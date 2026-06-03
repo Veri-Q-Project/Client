@@ -140,14 +140,16 @@ function isNonWebScanResponse(scanResponse: Record<string, unknown>): boolean {
   return !isWebScanTarget(normalizedResult);
 }
 
-function normalizeUrlInput(rawValue: string): string | null {
+const urlSchemePattern = /^[a-zA-Z][\w+.-]*:\/\//u;
+
+export function normalizeUrlInput(rawValue: string): string | null {
   const trimmedValue = rawValue.trim();
 
   if (!trimmedValue) {
     return null;
   }
 
-  const candidateUrl = /^https?:\/\//iu.test(trimmedValue)
+  const candidateUrl = urlSchemePattern.test(trimmedValue)
     ? trimmedValue
     : `https://${trimmedValue}`;
 
@@ -356,35 +358,32 @@ export function useQRScanPage(): UseQRScanPageReturn {
   useEffect(() => {
     let isMounted = true;
 
+    const applyRecentScanItems = (items: ScanHistoryItem[]) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setScanHistoryItems(items);
+      setCurrentHistoryIndex((previousIndex) => {
+        if (items.length === 0) {
+          return 0;
+        }
+
+        return Math.min(previousIndex, items.length - 1);
+      });
+    };
+
     const loadRecentScanItems = async () => {
       try {
-        const response = await fetchRecentScanHistoryData();
+        const response = await fetchRecentScanHistoryData({
+          onItemsEnriched: applyRecentScanItems,
+        });
 
-        if (isMounted) {
-          setScanHistoryItems(response.items);
-          setCurrentHistoryIndex((previousIndex) => {
-            if (response.items.length === 0) {
-              return 0;
-            }
-
-            return Math.min(previousIndex, response.items.length - 1);
-          });
-        }
+        applyRecentScanItems(response.items);
       } catch (error) {
         console.error('Failed to load latest scan list items.', error);
 
-        if (isMounted) {
-          const fallbackItems = getInitialScanHistoryData().items;
-
-          setScanHistoryItems(fallbackItems);
-          setCurrentHistoryIndex((previousIndex) => {
-            if (fallbackItems.length === 0) {
-              return 0;
-            }
-
-            return Math.min(previousIndex, fallbackItems.length - 1);
-          });
-        }
+        applyRecentScanItems(getInitialScanHistoryData().items);
       }
     };
 

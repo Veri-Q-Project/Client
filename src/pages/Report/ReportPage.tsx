@@ -2,6 +2,7 @@ import { RiskLevelCard, TrustScoreCard } from '@/shared/component';
 import googleSafeBrowsingIcon from '@/shared/icon/Google Safe Browsing.svg';
 import { qrIconByTone, statusMarkIconByTone } from '@/shared/icon/resultIcons';
 import { openExternalLink } from '@/shared/lib/browser/openExternalLink';
+import { isSafeExternalUrl } from '@/shared/lib/security/isSafeExternalUrl';
 import AppHeader from '@/shared/ui/app-header';
 
 import { resolveRiskDetectionContent } from './constants/riskDetectionCatalog';
@@ -54,7 +55,12 @@ const certificateStatusClassNameByTone: Record<ReportStatusTone, string> = {
 };
 
 const DEFAULT_V3_INSTALL_URL = 'https://www.ahnlab.com/product/v3-lite';
-const V3_INSTALL_URL = import.meta.env.VITE_V3_INSTALL_URL?.trim() || DEFAULT_V3_INSTALL_URL;
+const configuredV3InstallUrl = import.meta.env.VITE_V3_INSTALL_URL?.trim();
+const V3_INSTALL_URL =
+  configuredV3InstallUrl && isSafeExternalUrl(configuredV3InstallUrl)
+    ? configuredV3InstallUrl
+    : DEFAULT_V3_INSTALL_URL;
+const isV3InstallUrlSafe = isSafeExternalUrl(V3_INSTALL_URL);
 
 export default function ReportPage() {
   const { handleRescan, reportPageData } = useReportPage();
@@ -68,6 +74,10 @@ export default function ReportPage() {
   };
 
   const handleOpenV3Install = () => {
+    if (!isV3InstallUrlSafe) {
+      return;
+    }
+
     openExternalLink(V3_INSTALL_URL);
   };
 
@@ -469,7 +479,7 @@ export default function ReportPage() {
             <button
               aria-label="V3 설치 페이지로 이동"
               className={styles.v3InstallButton}
-              disabled={!V3_INSTALL_URL}
+              disabled={!isV3InstallUrlSafe}
               onClick={handleOpenV3Install}
               type="button"
             >

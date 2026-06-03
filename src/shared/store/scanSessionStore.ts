@@ -94,6 +94,8 @@ function mergePersistedLightSession(
     decodedUrl: typeof persisted.decodedUrl === 'string' ? persisted.decodedUrl : null,
     historySelection: persisted.historySelection ?? null,
     isUrl: typeof persisted.isUrl === 'boolean' ? persisted.isUrl : null,
+    pendingTextScanUrl:
+      typeof persisted.pendingTextScanUrl === 'string' ? persisted.pendingTextScanUrl : null,
     riskLevel: persisted.riskLevel ?? null,
     schemeType:
       typeof persisted.schemeType === 'string'
@@ -157,6 +159,7 @@ export const useScanSessionStore = create<ScanSessionState>()(
         decodedUrl: state.decodedUrl,
         historySelection: state.historySelection,
         isUrl: state.isUrl,
+        pendingTextScanUrl: state.pendingTextScanUrl,
         riskLevel: state.riskLevel,
         schemeType: state.schemeType,
       }),
