@@ -359,6 +359,100 @@ export const secondaryButton = style([
   },
 ]);
 
+export const urlSearchForm = style({
+  width: '100%',
+  minHeight: '56px',
+  boxSizing: 'border-box',
+  borderRadius: '999px',
+  border: '1px solid rgba(11, 11, 11, 0.08)',
+  backgroundColor: vars.colors.white,
+  boxShadow: '0 10px 20px rgba(15, 23, 42, 0.04)',
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr) auto',
+  alignItems: 'center',
+  gap: vars.spacing.xs,
+  padding: '6px 6px 6px 18px',
+  transition: 'border-color 160ms ease, box-shadow 160ms ease',
+  selectors: {
+    '&:focus-within': {
+      borderColor: 'rgba(17, 212, 131, 0.36)',
+      boxShadow: '0 0 0 3px rgba(17, 212, 131, 0.12)',
+    },
+  },
+});
+
+export const urlInputLabel = style({
+  minWidth: 0,
+  display: 'block',
+});
+
+export const urlInput = style({
+  width: '100%',
+  minWidth: 0,
+  border: 'none',
+  outline: 'none',
+  background: 'transparent',
+  color: vars.colors.black,
+  fontSize: vars.font.size.md,
+  fontWeight: vars.font.weight.medium,
+  lineHeight: 1.4,
+  selectors: {
+    '&::placeholder': {
+      color: '#9CA3AF',
+    },
+    '&:disabled': {
+      cursor: 'wait',
+      opacity: 0.72,
+    },
+  },
+});
+
+export const urlSearchButton = style({
+  minWidth: '112px',
+  minHeight: '44px',
+  border: 'none',
+  borderRadius: '999px',
+  backgroundColor: vars.colors.success,
+  color: vars.colors.white,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '6px',
+  padding: '0 14px',
+  fontSize: vars.font.size.sm,
+  fontWeight: vars.font.weight.semibold,
+  lineHeight: 1,
+  whiteSpace: 'nowrap',
+  cursor: 'pointer',
+  transition: 'background-color 160ms ease, transform 120ms ease',
+  selectors: {
+    '&:hover:not(:disabled)': {
+      backgroundColor: '#0fbe75',
+      transform: 'translateY(-1px)',
+    },
+    '&:focus-visible': {
+      outline: `3px solid ${vars.colors.mainLightHover}`,
+      outlineOffset: '2px',
+    },
+    '&:disabled': {
+      opacity: 0.7,
+      cursor: 'wait',
+    },
+  },
+});
+
+export const visuallyHidden = style({
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: 0,
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+});
+
 export const buttonIcon = style({
   width: '18px',
   height: '18px',

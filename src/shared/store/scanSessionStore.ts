@@ -30,17 +30,20 @@ export type ScanSessionSnapshot = {
   finalResult: BackendSseFinalPayload | null;
   historySelection: ScanHistorySelection | null;
   isUrl: boolean | null;
+  pendingTextScanUrl: string | null;
   riskLevel: ResultTone | null;
   scanResponse: BackendScanResponse | null;
   schemeType: string | null;
 };
 
 type ScanSessionState = ScanSessionSnapshot & {
+  clearPendingTextScanUrl: () => void;
   clearSession: () => void;
   resetForNewScan: () => void;
   setAnalysisDetail: (detail: BackendAnalysisDetailResponse) => void;
   setFinalResult: (finalResult: BackendSseFinalPayload) => void;
   setHistorySelection: (historySelection: ScanHistorySelection) => void;
+  setPendingTextScanUrl: (url: string) => void;
   setScanResponse: (scanResponse: BackendScanResponse) => void;
 };
 
@@ -70,6 +73,7 @@ const initialState: ScanSessionSnapshot = {
   finalResult: null,
   historySelection: null,
   isUrl: null,
+  pendingTextScanUrl: null,
   riskLevel: null,
   scanResponse: null,
   schemeType: null,
@@ -102,6 +106,9 @@ export const useScanSessionStore = create<ScanSessionState>()(
   persist(
     (set) => ({
       ...initialState,
+      clearPendingTextScanUrl: () => {
+        set({ pendingTextScanUrl: null });
+      },
       clearSession: () => {
         set(initialState);
       },
@@ -112,6 +119,7 @@ export const useScanSessionStore = create<ScanSessionState>()(
           finalResult: null,
           historySelection: null,
           isUrl: null,
+          pendingTextScanUrl: null,
           riskLevel: null,
           scanResponse: null,
           schemeType: null,
@@ -126,8 +134,21 @@ export const useScanSessionStore = create<ScanSessionState>()(
       setHistorySelection: (historySelection) => {
         set(buildHistorySelectionPatch(historySelection));
       },
+      setPendingTextScanUrl: (url) => {
+        set({
+          analysisDetail: null,
+          decodedUrl: url,
+          finalResult: null,
+          historySelection: null,
+          isUrl: true,
+          pendingTextScanUrl: url,
+          riskLevel: null,
+          scanResponse: null,
+          schemeType: 'WEB',
+        });
+      },
       setScanResponse: (scanResponse) => {
-        set(buildScanResponsePatch(scanResponse));
+        set((state) => buildScanResponsePatch(scanResponse, state));
       },
     }),
     {
@@ -154,6 +175,7 @@ export function getScanSessionSnapshot(): ScanSessionSnapshot {
     finalResult: state.finalResult,
     historySelection: state.historySelection,
     isUrl: state.isUrl,
+    pendingTextScanUrl: state.pendingTextScanUrl,
     riskLevel: state.riskLevel,
     scanResponse: state.scanResponse,
     schemeType: state.schemeType,

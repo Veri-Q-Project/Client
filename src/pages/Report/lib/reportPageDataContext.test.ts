@@ -11,6 +11,7 @@ function createSession(overrides: Partial<ScanSessionSnapshot> = {}): ScanSessio
     finalResult: null,
     historySelection: null,
     isUrl: true,
+    pendingTextScanUrl: null,
     riskLevel: null,
     scanResponse: null,
     schemeType: 'WEB',

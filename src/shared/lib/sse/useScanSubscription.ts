@@ -9,6 +9,7 @@ type UseScanSubscriptionParams = {
   guestUuid: string | null;
   onError?: (errorMessage: string) => void;
   onFinal?: (payload: Record<string, unknown>) => void;
+  onOpen?: () => void;
   onProgress?: (payload: Record<string, unknown>) => void;
 };
 
@@ -73,17 +74,20 @@ export function useScanSubscription({
   guestUuid,
   onError,
   onFinal,
+  onOpen,
   onProgress,
 }: UseScanSubscriptionParams): void {
   const callbacksRef = useRef({
     onError,
     onFinal,
+    onOpen,
     onProgress,
   });
 
   callbacksRef.current = {
     onError,
     onFinal,
+    onOpen,
     onProgress,
   };
 
@@ -204,6 +208,7 @@ export function useScanSubscription({
 
       nextEventSource.onopen = () => {
         resetInactivityTimer();
+        callbacksRef.current.onOpen?.();
         clearStabilityTimer();
         stabilityTimerId = window.setTimeout(() => {
           reconnectAttempts = 0;

@@ -16,6 +16,7 @@ function createSnapshot(overrides: Partial<ScanSessionSnapshot> = {}): ScanSessi
     finalResult: null,
     historySelection: null,
     isUrl: true,
+    pendingTextScanUrl: null,
     riskLevel: 'warning',
     scanResponse: null,
     schemeType: 'WEB',

@@ -66,4 +66,17 @@ describe('scanSessionStore', () => {
     expect(state.schemeType).toBe('WEB');
     expect(state.isUrl).toBe(true);
   });
+
+  it('keeps the pending text scan URL when the accepted response omits URL fields', () => {
+    useScanSessionStore.getState().setPendingTextScanUrl('https://example.com/text-scan');
+    useScanSessionStore.getState().setScanResponse({
+      status: 'accepted',
+    });
+
+    const state = useScanSessionStore.getState();
+
+    expect(state.decodedUrl).toBe('https://example.com/text-scan');
+    expect(state.isUrl).toBe(true);
+    expect(state.pendingTextScanUrl).toBeNull();
+  });
 });

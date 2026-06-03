@@ -3,6 +3,7 @@ import { App } from 'antd';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { resolveResultToneFromSources } from '@/shared/api/risk/resolveResultTone';
+import { showApiError } from '@/shared/lib/feedback/showApiError';
 import { ensureScanDetail } from '@/shared/lib/scan-session/ensureScanDetail';
 import { isSameScanSource } from '@/shared/lib/scan-session/scanIdentity';
 import { resolveScanResultRoute } from '@/shared/lib/scan-session/scanResultRoute';
@@ -10,6 +11,9 @@ import { useScanSubscription } from '@/shared/lib/sse/useScanSubscription';
 import { useGuestStore } from '@/shared/store/guestStore';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 import { getScanSessionSnapshot, useScanSessionStore } from '@/shared/store/scanSessionStore';
+
+import { submitScanUrl } from '@/features/scan-url/api/submitScanUrl';
+import { isCaptchaRequiredUploadError } from '@/features/scan-url/api/uploadErrors';
 
 import { startLoadingDetailPolling } from '../lib/loadingDetailPolling';
 import {
@@ -39,8 +43,11 @@ export function useLoadingPage(): UseLoadingPageReturn {
   const navigate = useNavigate();
   const guestUuid = useGuestStore((state) => state.guestUuid);
   const finalResult = useScanSessionStore((state) => state.finalResult);
+  const pendingTextScanUrl = useScanSessionStore((state) => state.pendingTextScanUrl);
   const scanResponse = useScanSessionStore((state) => state.scanResponse);
+  const clearPendingTextScanUrl = useScanSessionStore((state) => state.clearPendingTextScanUrl);
   const setFinalResult = useScanSessionStore((state) => state.setFinalResult);
+  const setScanResponse = useScanSessionStore((state) => state.setScanResponse);
   const resetProgress = useScanProgressStore((state) => state.reset);
   const setCompleted = useScanProgressStore((state) => state.setCompleted);
   const setConnecting = useScanProgressStore((state) => state.setConnecting);
@@ -49,6 +56,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
   const detailResolutionFailedRef = useRef(false);
   const detailResolutionStartedRef = useRef(false);
   const isMountedRef = useRef(true);
+  const submittedTextScanUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -59,7 +67,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
   }, []);
 
   useEffect(() => {
-    if (!scanResponse && !finalResult) {
+    if (!pendingTextScanUrl && !scanResponse && !finalResult) {
       void navigate({ to: '/' });
       return;
     }
@@ -72,7 +80,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
     detailResolutionFailedRef.current = false;
     detailResolutionStartedRef.current = false;
     setConnecting();
-  }, [finalResult, navigate, resetProgress, scanResponse, setConnecting]);
+  }, [finalResult, navigate, pendingTextScanUrl, resetProgress, scanResponse, setConnecting]);
 
   const failDetailResolution = useCallback(
     (errorMessage: string) => {
@@ -127,6 +135,37 @@ export function useLoadingPage(): UseLoadingPageReturn {
     [resolveDetailAndOpenResult],
   );
 
+  const submitPendingTextScan = useCallback(() => {
+    if (!pendingTextScanUrl || submittedTextScanUrlRef.current === pendingTextScanUrl) {
+      return;
+    }
+
+    submittedTextScanUrlRef.current = pendingTextScanUrl;
+
+    void submitScanUrl({
+      url: pendingTextScanUrl,
+    })
+      .then((nextScanResponse) => {
+        setScanResponse(nextScanResponse);
+        clearPendingTextScanUrl();
+        message.success('URL 분석을 시작했습니다.');
+      })
+      .catch((error) => {
+        clearPendingTextScanUrl();
+        submittedTextScanUrlRef.current = null;
+
+        if (isCaptchaRequiredUploadError(error)) {
+          message.warning('요청 횟수를 초과했습니다. 캡차 인증 후 다시 검사해 주세요.');
+          void navigate({ to: '/captcha' });
+          return;
+        }
+
+        console.error('Failed to submit URL scan.', error);
+        setError('URL 분석 요청에 실패했습니다.');
+        showApiError(message, error, 'URL 분석 요청에 실패했습니다.');
+      });
+  }, [clearPendingTextScanUrl, message, navigate, pendingTextScanUrl, setError, setScanResponse]);
+
   useEffect(() => {
     if (finalResult || !scanResponse) {
       return;
@@ -146,7 +185,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
   }, [failDetailResolution, finalResult, resolveDetailAndOpenResult, scanResponse]);
 
   useScanSubscription({
-    enabled: Boolean(guestUuid) && Boolean(scanResponse || finalResult),
+    enabled: Boolean(guestUuid) && Boolean(pendingTextScanUrl || scanResponse || finalResult),
     guestUuid,
     onError: (errorMessage) => {
       setError(errorMessage);
@@ -171,6 +210,7 @@ export function useLoadingPage(): UseLoadingPageReturn {
       setCompleted();
       openResultRouteForCurrentSession();
     },
+    onOpen: submitPendingTextScan,
     onProgress: (payload) => {
       updateFromProgressEvent(payload);
       void tryResolveDetailAfterTerminalProgress(payload);

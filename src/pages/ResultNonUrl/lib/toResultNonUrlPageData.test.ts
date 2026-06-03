@@ -12,6 +12,7 @@ const baseSession: ScanSessionSnapshot = {
   finalResult: null,
   historySelection: null,
   isUrl: false,
+  pendingTextScanUrl: null,
   riskLevel: null,
   scanResponse: null,
   schemeType: null,
