@@ -1,10 +1,12 @@
 import { RiskLevelCard, TrustScoreCard } from '@/shared/component';
 import googleSafeBrowsingIcon from '@/shared/icon/Google Safe Browsing.svg';
 import { qrIconByTone, statusMarkIconByTone } from '@/shared/icon/resultIcons';
+import { openExternalLink } from '@/shared/lib/browser/openExternalLink';
 import AppHeader from '@/shared/ui/app-header';
 
 import { resolveRiskDetectionContent } from './constants/riskDetectionCatalog';
 import { useReportPage } from './hooks/useReportPage';
+import { resolveAnalysisFailureNotice } from './lib/analysisFailureNotice';
 import * as styles from './styles/reportPage.css';
 
 import type { ReportStatusTone } from './types/reportPage.types';
@@ -51,6 +53,9 @@ const certificateStatusClassNameByTone: Record<ReportStatusTone, string> = {
   warning: styles.certificateWarning,
 };
 
+const DEFAULT_V3_INSTALL_URL = 'https://www.ahnlab.com/product/v3-lite';
+const V3_INSTALL_URL = import.meta.env.VITE_V3_INSTALL_URL?.trim() || DEFAULT_V3_INSTALL_URL;
+
 export default function ReportPage() {
   const { handleRescan, reportPageData } = useReportPage();
 
@@ -60,6 +65,10 @@ export default function ReportPage() {
 
   const handlePrintPdf = () => {
     window.print();
+  };
+
+  const handleOpenV3Install = () => {
+    openExternalLink(V3_INSTALL_URL);
   };
 
   const reputationReportCount = reportPageData.reputation.summary.reportCount;
@@ -77,6 +86,7 @@ export default function ReportPage() {
     ...resolveRiskDetectionContent(riskType, reportPageData.riskLevel),
     key: `${riskType}-${index}`,
   }));
+  const analysisFailureNotice = resolveAnalysisFailureNotice(reportPageData.detectedRiskTypes);
 
   const toneKey = reportPageData.riskLevel;
 
@@ -136,6 +146,36 @@ export default function ReportPage() {
               tone={reportPageData.riskLevel}
             />
           </section>
+
+          {analysisFailureNotice.hasFailureAlert ? (
+            <section className={styles.analysisFailureNotice} role="alert">
+              <div className={styles.analysisFailureNoticeHeader}>
+                <span aria-hidden className={styles.analysisFailureNoticeIcon}>
+                  !
+                </span>
+                <div className={styles.analysisFailureNoticeTitleBlock}>
+                  <h2 className={styles.analysisFailureNoticeTitle}>
+                    {analysisFailureNotice.isOnlyAnalysisFailures
+                      ? '분석 결과가 제한되었습니다'
+                      : '일부 분석이 제한되었습니다'}
+                  </h2>
+                  <p className={styles.analysisFailureNoticeSummary}>
+                    {analysisFailureNotice.isOnlyAnalysisFailures
+                      ? '여러 검사 모듈이 정상적으로 완료되지 않아, 이 결과를 안전하다는 의미로 해석하면 안 됩니다.'
+                      : '일부 검사 모듈이 정상적으로 완료되지 않아, 아래 결과에는 확인하지 못한 영역이 남아 있습니다.'}
+                  </p>
+                </div>
+              </div>
+
+              <p className={styles.analysisFailureNoticeText}>
+                실패한 검사: {analysisFailureNotice.labels.join(', ')}
+              </p>
+              <p className={styles.analysisFailureNoticeText}>
+                공식 사이트인지 직접 확인하기 전에는 로그인, 결제, 개인정보 입력, 파일 다운로드를
+                진행하지 마세요.
+              </p>
+            </section>
+          ) : null}
 
           <section className={`${styles.sectionCard} ${styles.sectionCardTone[toneKey]}`}>
             <div className={styles.sectionHeader}>
@@ -404,24 +444,41 @@ export default function ReportPage() {
           </section>
         </section>
 
-        <div className={styles.exportActionWrap}>
-          <button
-            aria-label="PDF 출력"
-            className={`${styles.printButton} ${styles.printButtonTone[toneKey]}`}
-            onClick={handlePrintPdf}
-            type="button"
-          >
-            PDF 출력
-          </button>
+        <div className={styles.exportArea}>
+          <div className={styles.exportActionWrap}>
+            <button
+              aria-label="PDF 출력"
+              className={`${styles.printButton} ${styles.printButtonTone[toneKey]}`}
+              onClick={handlePrintPdf}
+              type="button"
+            >
+              PDF 출력
+            </button>
 
-          <button
-            aria-label="다시 스캔하기"
-            className={styles.rescanButton}
-            onClick={handleRescan}
-            type="button"
-          >
-            다시 스캔하기
-          </button>
+            <button
+              aria-label="다시 스캔하기"
+              className={styles.rescanButton}
+              onClick={handleRescan}
+              type="button"
+            >
+              다시 스캔하기
+            </button>
+          </div>
+
+          <div className={styles.v3InstallWrap}>
+            <button
+              aria-label="V3 설치 페이지로 이동"
+              className={styles.v3InstallButton}
+              disabled={!V3_INSTALL_URL}
+              onClick={handleOpenV3Install}
+              type="button"
+            >
+              V3 설치하기
+            </button>
+            <p className={styles.v3InstallHelpText}>
+              설치하면 접속 전 보호 기능이 추가되어 조금 더 안전하게 이용할 수 있습니다.
+            </p>
+          </div>
         </div>
       </div>
     </main>
