@@ -525,6 +525,38 @@ export const threatTextCatalog: RiskDetectionCatalogItem[] = [
     title: '위험 점수 산정 실패 감지',
   },
   {
+    description:
+      'XGBoost 모델이 URL 길이, 특수문자 사용, 숫자와 영문 조합, 경로 구성 같은 특징에서 의심스러운 패턴을 확인했습니다.',
+    englishLabel: 'XGB SUSPICIOUS URL FEATURES',
+    names: [
+      'XGB_SUSPICIOUS_URL_FEATURES',
+      'xgb_suspicious_url_features',
+      'xgboost_suspicious_url_features',
+    ],
+    risk: '정상 사이트에서도 일부 특징이 겹칠 수 있지만, 피싱이나 악성 URL은 주소를 복잡하게 만들거나 사용자를 속이는 문자열 조합을 자주 사용합니다. 공식 주소인지 다시 확인해야 합니다.',
+    title: 'XGB URL 특징 의심 신호 감지',
+  },
+  {
+    description:
+      'XGBoost 모델이 URL의 여러 특징을 종합했을 때 고위험 주소일 가능성이 높다고 판단했습니다.',
+    englishLabel: 'XGB HIGH RISK URL',
+    names: ['XGB_HIGH_RISK_URL', 'xgb_high_risk_url', 'xgboost_high_risk_url'],
+    risk: '주소 구조와 패턴이 위험 사이트와 유사하게 나타난 상태입니다. 로그인, 결제, 개인정보 입력, 파일 다운로드를 진행하지 말고 공식 경로로 다시 접속하는 것이 안전합니다.',
+    title: 'XGB 고위험 URL 감지',
+  },
+  {
+    description:
+      'CharCNN 모델이 URL 문자열 자체의 글자 배열에서 피싱이나 악성 주소에서 자주 보이는 의심 패턴을 확인했습니다.',
+    englishLabel: 'CHARCNN SUSPICIOUS URL PATTERN',
+    names: [
+      'CHARCNN_SUSPICIOUS_URL_PATTERN',
+      'charcnn_suspicious_url_pattern',
+      'char_cnn_suspicious_url_pattern',
+    ],
+    risk: '사람이 보기에는 정상 주소처럼 보여도 글자 단위 패턴이 위장 도메인, 난독화 주소, 유사 도메인과 닮아 있을 수 있습니다. 민감한 정보를 입력하기 전에 반드시 공식 주소와 비교해야 합니다.',
+    title: 'CharCNN URL 패턴 의심 신호 감지',
+  },
+  {
     description: 'URL에서 접속 대상 호스트명을 확인하지 못했거나 DNS 해석에 실패한 신호입니다.',
     englishLabel: 'HOSTNAME MISSING',
     names: [
