@@ -1,3 +1,6 @@
+import { fetchScanDetail } from '@/shared/api/fetchScanDetail';
+import { resolveResultToneFromSource } from '@/shared/api/risk/resolveResultTone';
+import { isWebScanTarget } from '@/shared/lib/scan-session/scanClassification';
 import { useGuestStore } from '@/shared/store/guestStore';
 
 import { fetchScanHistory } from './fetchScanHistory';
@@ -12,11 +15,12 @@ import {
   resolveHistoryTimestamp,
 } from '../lib/historyItemAccess';
 
-import type { ScanHistoryData } from '../types/scanHistory.types';
+import type { ScanHistoryData, ScanHistoryItem } from '../types/scanHistory.types';
 
 const maxRecentScanHistoryItemCount = 5;
 
 type FetchScanHistoryDataOptions = {
+  enrichRiskFromDetail?: boolean;
   limit?: number;
 };
 
@@ -72,6 +76,32 @@ function formatScannedAt(rawScannedAt: string | null): string {
   return `${year}.${month}.${day}`;
 }
 
+async function resolveDetailRiskLevel(item: ScanHistoryItem): Promise<ScanHistoryItem['status']> {
+  if (!isWebScanTarget(item)) {
+    return item.status;
+  }
+
+  try {
+    const detail = await fetchScanDetail(item.url);
+    return resolveResultToneFromSource(detail) ?? item.status;
+  } catch {
+    return item.status;
+  }
+}
+
+async function enrichHistoryItemRiskLevel(item: ScanHistoryItem): Promise<ScanHistoryItem> {
+  const status = await resolveDetailRiskLevel(item);
+
+  if (status === item.status) {
+    return item;
+  }
+
+  return {
+    ...item,
+    status,
+  };
+}
+
 export async function fetchScanHistoryData(
   options: FetchScanHistoryDataOptions = {},
 ): Promise<ScanHistoryData> {
@@ -82,23 +112,29 @@ export async function fetchScanHistoryData(
     options.limit,
   );
 
+  const historyItems: ScanHistoryItem[] = visibleItems.map(({ item, targetValue }, index) => {
+    return {
+      id: buildHistoryItemId(item, index),
+      isUrl: pickHistoryIsUrl(item),
+      scannedAt: formatScannedAt(pickHistoryScannedAt(item)),
+      schemeType: pickHistorySchemeType(item),
+      status: pickHistoryRiskLevel(item) ?? 'warning',
+      url: targetValue,
+    };
+  });
+  const enrichedHistoryItems = options.enrichRiskFromDetail
+    ? await Promise.all(historyItems.map((item) => enrichHistoryItemRiskLevel(item)))
+    : historyItems;
+
   return {
-    items: visibleItems.map(({ item, targetValue }, index) => {
-      return {
-        id: buildHistoryItemId(item, index),
-        isUrl: pickHistoryIsUrl(item),
-        scannedAt: formatScannedAt(pickHistoryScannedAt(item)),
-        schemeType: pickHistorySchemeType(item),
-        status: pickHistoryRiskLevel(item) ?? 'warning',
-        url: targetValue,
-      };
-    }),
+    items: enrichedHistoryItems,
     uuid,
   };
 }
 
 export async function fetchRecentScanHistoryData(): Promise<ScanHistoryData> {
   return fetchScanHistoryData({
+    enrichRiskFromDetail: true,
     limit: maxRecentScanHistoryItemCount,
   });
 }
