@@ -49,6 +49,9 @@ const backendThreatCodes = [
   'XGB_FAILED',
   'ML_FAILED',
   'SCORING_FAILED',
+  'XGB_SUSPICIOUS_URL_FEATURES',
+  'XGB_HIGH_RISK_URL',
+  'CHARCNN_SUSPICIOUS_URL_PATTERN',
 ] as const;
 
 describe('resolveRiskDetectionContent', () => {
@@ -112,6 +115,21 @@ describe('resolveRiskDetectionContent', () => {
     expect(resolveRiskDetectionContent('certificate_request_timeout', 'warning')).toMatchObject({
       englishLabel: 'CERTIFICATE REQUEST TIMEOUT',
       title: '인증서 요청 시간 초과 감지',
+    });
+  });
+
+  it('maps newly added ML model risk signals to user-facing descriptions', () => {
+    expect(resolveRiskDetectionContent('XGB_SUSPICIOUS_URL_FEATURES', 'warning')).toMatchObject({
+      englishLabel: 'XGB SUSPICIOUS URL FEATURES',
+      title: 'XGB URL 특징 의심 신호 감지',
+    });
+    expect(resolveRiskDetectionContent('XGB_HIGH_RISK_URL', 'critical')).toMatchObject({
+      englishLabel: 'XGB HIGH RISK URL',
+      title: 'XGB 고위험 URL 감지',
+    });
+    expect(resolveRiskDetectionContent('CHARCNN_SUSPICIOUS_URL_PATTERN', 'warning')).toMatchObject({
+      englishLabel: 'CHARCNN SUSPICIOUS URL PATTERN',
+      title: 'CharCNN URL 패턴 의심 신호 감지',
     });
   });
 
