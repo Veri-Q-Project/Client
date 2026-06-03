@@ -1,4 +1,4 @@
-import type { ChangeEvent, RefObject } from 'react';
+import type { ChangeEvent, FormEvent, RefObject } from 'react';
 
 import { useNavigate } from '@tanstack/react-router';
 import { App } from 'antd';
@@ -12,6 +12,7 @@ import {
   nonUrlResultRoute,
   resolveScanResultRouteByRiskLevel,
 } from '@/shared/lib/scan-session/scanResultRoute';
+import { useGuestStore } from '@/shared/store/guestStore';
 import { useScanProgressStore } from '@/shared/store/scanProgressStore';
 import { useScanSessionStore } from '@/shared/store/scanSessionStore';
 
@@ -45,9 +46,12 @@ type UseQRScanPageReturn = {
   handleOpenRecentScanResult: () => void;
   handleShowNextHistoryItem: () => void;
   handleShowPreviousHistoryItem: () => void;
+  handleSubmitUrlScan: (event: FormEvent<HTMLFormElement>) => void;
+  handleUrlInputChange: (event: ChangeEvent<HTMLInputElement>) => void;
   isCapturing: boolean;
   isFlashVisible: boolean;
   recentScanItem: ScanHistoryItem | null;
+  urlInputValue: string;
   videoRef: RefObject<HTMLVideoElement | null>;
 };
 
@@ -136,12 +140,40 @@ function isNonWebScanResponse(scanResponse: Record<string, unknown>): boolean {
   return !isWebScanTarget(normalizedResult);
 }
 
+const urlSchemePattern = /^[a-zA-Z][\w+.-]*:\/\//u;
+
+export function normalizeUrlInput(rawValue: string): string | null {
+  const trimmedValue = rawValue.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  const candidateUrl = urlSchemePattern.test(trimmedValue)
+    ? trimmedValue
+    : `https://${trimmedValue}`;
+
+  try {
+    const parsedUrl = new URL(candidateUrl);
+
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return null;
+    }
+
+    return parsedUrl.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function useQRScanPage(): UseQRScanPageReturn {
   const { message } = App.useApp();
   const navigate = useNavigate();
+  const ensureGuestUuid = useGuestStore((state) => state.ensureGuestUuid);
   const resetScanProgress = useScanProgressStore((state) => state.reset);
   const resetForNewScan = useScanSessionStore((state) => state.resetForNewScan);
   const setHistorySelection = useScanSessionStore((state) => state.setHistorySelection);
+  const setPendingTextScanUrl = useScanSessionStore((state) => state.setPendingTextScanUrl);
   const setScanResponse = useScanSessionStore((state) => state.setScanResponse);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -155,6 +187,7 @@ export function useQRScanPage(): UseQRScanPageReturn {
   const [captureRecord, setCaptureRecord] = useState<CaptureRecord | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isFlashVisible, setIsFlashVisible] = useState(false);
+  const [urlInputValue, setUrlInputValue] = useState('');
   const [scanHistoryItems, setScanHistoryItems] = useState<ScanHistoryItem[]>(() => {
     return getInitialScanHistoryData().items;
   });
@@ -325,35 +358,32 @@ export function useQRScanPage(): UseQRScanPageReturn {
   useEffect(() => {
     let isMounted = true;
 
+    const applyRecentScanItems = (items: ScanHistoryItem[]) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setScanHistoryItems(items);
+      setCurrentHistoryIndex((previousIndex) => {
+        if (items.length === 0) {
+          return 0;
+        }
+
+        return Math.min(previousIndex, items.length - 1);
+      });
+    };
+
     const loadRecentScanItems = async () => {
       try {
-        const response = await fetchRecentScanHistoryData();
+        const response = await fetchRecentScanHistoryData({
+          onItemsEnriched: applyRecentScanItems,
+        });
 
-        if (isMounted) {
-          setScanHistoryItems(response.items);
-          setCurrentHistoryIndex((previousIndex) => {
-            if (response.items.length === 0) {
-              return 0;
-            }
-
-            return Math.min(previousIndex, response.items.length - 1);
-          });
-        }
+        applyRecentScanItems(response.items);
       } catch (error) {
         console.error('Failed to load latest scan list items.', error);
 
-        if (isMounted) {
-          const fallbackItems = getInitialScanHistoryData().items;
-
-          setScanHistoryItems(fallbackItems);
-          setCurrentHistoryIndex((previousIndex) => {
-            if (fallbackItems.length === 0) {
-              return 0;
-            }
-
-            return Math.min(previousIndex, fallbackItems.length - 1);
-          });
-        }
+        applyRecentScanItems(getInitialScanHistoryData().items);
       }
     };
 
@@ -535,6 +565,48 @@ export function useQRScanPage(): UseQRScanPageReturn {
     [beginScanSubmission, finishScanSubmission, message, submitScanFile, updateCaptureRecord],
   );
 
+  const handleUrlInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setUrlInputValue(event.target.value);
+  }, []);
+
+  const handleSubmitUrlScan = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+
+      const normalizedUrl = normalizeUrlInput(urlInputValue);
+
+      if (!normalizedUrl) {
+        message.warning('검사할 URL을 올바르게 입력해 주세요.');
+        return;
+      }
+
+      if (!beginScanSubmission()) {
+        return;
+      }
+
+      resetForNewScan();
+      resetScanProgress();
+      ensureGuestUuid();
+      setPendingTextScanUrl(normalizedUrl);
+      setUrlInputValue(normalizedUrl);
+
+      void navigate({ to: '/loading' }).finally(() => {
+        finishScanSubmission();
+      });
+    },
+    [
+      beginScanSubmission,
+      ensureGuestUuid,
+      finishScanSubmission,
+      message,
+      navigate,
+      resetForNewScan,
+      resetScanProgress,
+      setPendingTextScanUrl,
+      urlInputValue,
+    ],
+  );
+
   return {
     cameraStatus,
     cameraStatusText,
@@ -547,9 +619,12 @@ export function useQRScanPage(): UseQRScanPageReturn {
     handleOpenRecentScanResult,
     handleShowNextHistoryItem,
     handleShowPreviousHistoryItem,
+    handleSubmitUrlScan,
+    handleUrlInputChange,
     isCapturing,
     isFlashVisible,
     recentScanItem,
+    urlInputValue,
     videoRef,
   };
 }

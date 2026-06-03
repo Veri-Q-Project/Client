@@ -34,6 +34,20 @@ function UploadGlyphIcon() {
   );
 }
 
+function SearchGlyphIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+      <path
+        d="m20 20-4.2-4.2m1.7-4.3a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
 function ViewGlyphIcon() {
   return (
     <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
@@ -101,9 +115,12 @@ export default function QRScanPage() {
     handleOpenRecentScanResult,
     handleShowNextHistoryItem,
     handleShowPreviousHistoryItem,
+    handleSubmitUrlScan,
+    handleUrlInputChange,
     isCapturing,
     isFlashVisible,
     recentScanItem,
+    urlInputValue,
     videoRef,
   } = useQRScanPage();
 
@@ -214,6 +231,32 @@ export default function QRScanPage() {
             </span>
             갤러리에서 업로드
           </button>
+
+          <form className={styles.urlSearchForm} onSubmit={handleSubmitUrlScan}>
+            <label className={styles.urlInputLabel}>
+              <span className={styles.visuallyHidden}>검사할 URL</span>
+              <input
+                autoCapitalize="none"
+                autoComplete="url"
+                autoCorrect="off"
+                className={styles.urlInput}
+                disabled={isCapturing}
+                inputMode="url"
+                onChange={handleUrlInputChange}
+                placeholder="https://example.com"
+                spellCheck={false}
+                type="text"
+                value={urlInputValue}
+              />
+            </label>
+
+            <button className={styles.urlSearchButton} disabled={isCapturing} type="submit">
+              <span aria-hidden className={styles.buttonIcon}>
+                <SearchGlyphIcon />
+              </span>
+              {isCapturing ? '검색 중...' : 'URL 검색'}
+            </button>
+          </form>
 
           <input
             accept="image/*"

@@ -223,6 +223,72 @@ export const metricsGrid = style({
   },
 });
 
+export const analysisFailureNotice = style({
+  borderRadius: vars.radius.lg,
+  border: '1px solid #F4C56E',
+  backgroundColor: '#FFF8E8',
+  padding: vars.spacing.lg,
+  display: 'grid',
+  gap: vars.spacing.sm,
+  boxShadow: '0 8px 18px rgba(138, 89, 0, 0.08)',
+  '@media': {
+    print: {
+      breakInside: 'avoid',
+      boxShadow: 'none',
+    },
+  },
+});
+
+export const analysisFailureNoticeHeader = style({
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: vars.spacing.sm,
+});
+
+export const analysisFailureNoticeIcon = style({
+  width: '30px',
+  height: '30px',
+  borderRadius: '999px',
+  backgroundColor: '#D97706',
+  color: vars.colors.white,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  fontSize: vars.font.size.md,
+  fontWeight: vars.font.weight.bold,
+  lineHeight: 1,
+});
+
+export const analysisFailureNoticeTitleBlock = style({
+  display: 'grid',
+  gap: '4px',
+});
+
+export const analysisFailureNoticeTitle = style({
+  margin: 0,
+  color: '#7C3F00',
+  fontSize: vars.font.size.xl,
+  fontWeight: vars.font.weight.bold,
+  lineHeight: 1.35,
+});
+
+export const analysisFailureNoticeSummary = style({
+  margin: 0,
+  color: '#8A5A12',
+  fontSize: vars.font.size.sm,
+  fontWeight: vars.font.weight.semibold,
+  lineHeight: 1.6,
+});
+
+export const analysisFailureNoticeText = style({
+  margin: 0,
+  color: '#5F4824',
+  fontSize: vars.font.size.sm,
+  fontWeight: vars.font.weight.medium,
+  lineHeight: 1.65,
+});
+
 export const sectionCard = style({
   borderRadius: vars.radius.lg,
   border: '1px solid #F0E4BE',
@@ -990,10 +1056,22 @@ export const certificateError = style({
   color: vars.colors.error,
 });
 
-export const exportActionWrap = style({
+export const exportArea = style({
   width: '100%',
   maxWidth: '860px',
   margin: '0 auto',
+  display: 'grid',
+  justifyItems: 'center',
+  gap: vars.spacing.md,
+  '@media': {
+    print: {
+      display: 'none',
+    },
+  },
+});
+
+export const exportActionWrap = style({
+  width: '100%',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -1004,6 +1082,61 @@ export const exportActionWrap = style({
       display: 'none',
     },
   },
+});
+
+export const v3InstallWrap = style({
+  width: '100%',
+  display: 'grid',
+  justifyItems: 'center',
+  gap: vars.spacing.xs,
+});
+
+export const v3InstallButton = style({
+  minWidth: '220px',
+  minHeight: '44px',
+  borderRadius: vars.radius.md,
+  border: '1px solid rgba(37, 99, 235, 0.22)',
+  backgroundColor: '#2563EB',
+  color: vars.colors.white,
+  fontSize: vars.font.size.md,
+  fontWeight: vars.font.weight.semibold,
+  lineHeight: 1,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: `0 ${vars.spacing.lg}`,
+  cursor: 'pointer',
+  transition: 'background-color 160ms ease, box-shadow 160ms ease, transform 120ms ease',
+  boxShadow: '0 6px 14px rgba(17, 29, 48, 0.12)',
+  selectors: {
+    '&:hover:not(:disabled)': {
+      backgroundColor: '#1D4ED8',
+      boxShadow: '0 8px 16px rgba(37, 99, 235, 0.22)',
+      transform: 'translateY(-1px)',
+    },
+    '&:active:not(:disabled)': {
+      transform: 'translateY(0)',
+    },
+    '&:focus-visible': {
+      outline: '2px solid rgba(37, 99, 235, 0.42)',
+      outlineOffset: '2px',
+    },
+    '&:disabled': {
+      opacity: 0.52,
+      cursor: 'not-allowed',
+      boxShadow: 'none',
+    },
+  },
+});
+
+export const v3InstallHelpText = style({
+  maxWidth: '360px',
+  margin: 0,
+  color: vars.colors.subText,
+  fontSize: vars.font.size.xs,
+  fontWeight: vars.font.weight.medium,
+  lineHeight: 1.55,
+  textAlign: 'center',
 });
 
 export const printButton = style({

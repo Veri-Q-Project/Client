@@ -6,11 +6,23 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+const defaultBe1ProxyTarget = 'http://localhost:8081';
+const defaultBe3ProxyTarget = 'http://localhost:8083';
+
+function resolveDevProxyTarget(rawValue: string | undefined, fallback: string): string {
+  const value = rawValue?.trim();
+
+  if (!value || value.startsWith('/')) {
+    return fallback;
+  }
+
+  return value;
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const be1ProxyTarget = env.VITE_BE1_BASE_URL?.trim() || 'http://localhost:8081';
-  const be3ProxyTarget = env.VITE_BE3_BASE_URL?.trim() || 'http://localhost:8083';
+  const be1ProxyTarget = resolveDevProxyTarget(env.VITE_BE1_BASE_URL, defaultBe1ProxyTarget);
+  const be3ProxyTarget = resolveDevProxyTarget(env.VITE_BE3_BASE_URL, defaultBe3ProxyTarget);
 
   return {
     build: {

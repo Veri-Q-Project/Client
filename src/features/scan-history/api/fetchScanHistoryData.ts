@@ -1,3 +1,6 @@
+import { fetchScanDetail } from '@/shared/api/fetchScanDetail';
+import { resolveResultToneFromSource } from '@/shared/api/risk/resolveResultTone';
+import { isWebScanTarget } from '@/shared/lib/scan-session/scanClassification';
 import { useGuestStore } from '@/shared/store/guestStore';
 
 import { fetchScanHistory } from './fetchScanHistory';
@@ -12,12 +15,14 @@ import {
   resolveHistoryTimestamp,
 } from '../lib/historyItemAccess';
 
-import type { ScanHistoryData } from '../types/scanHistory.types';
+import type { ScanHistoryData, ScanHistoryItem } from '../types/scanHistory.types';
 
 const maxRecentScanHistoryItemCount = 5;
 
 type FetchScanHistoryDataOptions = {
+  enrichRiskFromDetail?: boolean;
   limit?: number;
+  onItemsEnriched?: (items: ScanHistoryItem[]) => void;
 };
 
 type HistoryItemWithTargetValue = {
@@ -72,6 +77,62 @@ function formatScannedAt(rawScannedAt: string | null): string {
   return `${year}.${month}.${day}`;
 }
 
+async function resolveDetailRiskLevel(item: ScanHistoryItem): Promise<ScanHistoryItem['status']> {
+  if (!isWebScanTarget(item)) {
+    return item.status;
+  }
+
+  try {
+    const detail = await fetchScanDetail(item.url);
+    return resolveResultToneFromSource(detail) ?? item.status;
+  } catch {
+    return item.status;
+  }
+}
+
+async function enrichHistoryItemRiskLevel(item: ScanHistoryItem): Promise<ScanHistoryItem> {
+  const status = await resolveDetailRiskLevel(item);
+
+  if (status === item.status) {
+    return item;
+  }
+
+  return {
+    ...item,
+    status,
+  };
+}
+
+function startHistoryItemRiskEnrichment(
+  historyItems: ScanHistoryItem[],
+  onItemsEnriched: (items: ScanHistoryItem[]) => void,
+): void {
+  setTimeout(() => {
+    void Promise.allSettled(historyItems.map((item) => enrichHistoryItemRiskLevel(item))).then(
+      (results) => {
+        const enrichedItemsById = new Map<string, ScanHistoryItem>();
+
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            enrichedItemsById.set(historyItems[index].id, result.value);
+          }
+        });
+
+        const enrichedHistoryItems = historyItems.map(
+          (item) => enrichedItemsById.get(item.id) ?? item,
+        );
+        const hasStatusUpdate = enrichedHistoryItems.some(
+          (item, index) => item !== historyItems[index],
+        );
+
+        if (hasStatusUpdate) {
+          onItemsEnriched(enrichedHistoryItems);
+        }
+      },
+    );
+  }, 0);
+}
+
 export async function fetchScanHistoryData(
   options: FetchScanHistoryDataOptions = {},
 ): Promise<ScanHistoryData> {
@@ -82,24 +143,33 @@ export async function fetchScanHistoryData(
     options.limit,
   );
 
+  const historyItems: ScanHistoryItem[] = visibleItems.map(({ item, targetValue }, index) => {
+    return {
+      id: buildHistoryItemId(item, index),
+      isUrl: pickHistoryIsUrl(item),
+      scannedAt: formatScannedAt(pickHistoryScannedAt(item)),
+      schemeType: pickHistorySchemeType(item),
+      status: pickHistoryRiskLevel(item) ?? 'warning',
+      url: targetValue,
+    };
+  });
+  if (options.enrichRiskFromDetail && options.onItemsEnriched) {
+    startHistoryItemRiskEnrichment(historyItems, options.onItemsEnriched);
+  }
+
   return {
-    items: visibleItems.map(({ item, targetValue }, index) => {
-      return {
-        id: buildHistoryItemId(item, index),
-        isUrl: pickHistoryIsUrl(item),
-        scannedAt: formatScannedAt(pickHistoryScannedAt(item)),
-        schemeType: pickHistorySchemeType(item),
-        status: pickHistoryRiskLevel(item) ?? 'warning',
-        url: targetValue,
-      };
-    }),
+    items: historyItems,
     uuid,
   };
 }
 
-export async function fetchRecentScanHistoryData(): Promise<ScanHistoryData> {
+export async function fetchRecentScanHistoryData(
+  options: Pick<FetchScanHistoryDataOptions, 'onItemsEnriched'> = {},
+): Promise<ScanHistoryData> {
   return fetchScanHistoryData({
+    enrichRiskFromDetail: true,
     limit: maxRecentScanHistoryItemCount,
+    onItemsEnriched: options.onItemsEnriched,
   });
 }
 

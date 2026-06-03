@@ -45,6 +45,7 @@ export function buildFinalResultPatch(
     finalResult,
     historySelection: state.historySelection,
     isUrl: resolveScanIsUrl(finalResult, nextDecodedUrl, nextSchemeType) ?? state.isUrl,
+    pendingTextScanUrl: null,
     riskLevel: normalizedResult.riskLevel ?? state.riskLevel,
     schemeType: nextSchemeType,
   };
@@ -61,23 +62,30 @@ export function buildHistorySelectionPatch(
     finalResult: null,
     historySelection,
     isUrl: resolveScanIsUrl(historySelection, historySelection.url, schemeType),
+    pendingTextScanUrl: null,
     riskLevel: historySelection.riskLevel,
     scanResponse: null,
     schemeType,
   };
 }
 
-export function buildScanResponsePatch(scanResponse: BackendScanResponse): ScanSessionPatch {
+export function buildScanResponsePatch(
+  scanResponse: BackendScanResponse,
+  state?: ScanSessionSnapshot,
+): ScanSessionPatch {
   const normalizedResult = normalizeScanResult(scanResponse);
+  const nextDecodedUrl = normalizedResult.decodedUrl ?? state?.decodedUrl ?? null;
+  const nextSchemeType = normalizedResult.schemeType ?? state?.schemeType ?? null;
 
   return {
     analysisDetail: null,
-    decodedUrl: normalizedResult.decodedUrl,
+    decodedUrl: nextDecodedUrl,
     finalResult: null,
     historySelection: null,
-    isUrl: normalizedResult.isUrl,
-    riskLevel: normalizedResult.riskLevel,
+    isUrl: normalizedResult.isUrl ?? state?.isUrl ?? null,
+    pendingTextScanUrl: null,
+    riskLevel: normalizedResult.riskLevel ?? state?.riskLevel ?? null,
     scanResponse,
-    schemeType: normalizedResult.schemeType,
+    schemeType: nextSchemeType,
   };
 }

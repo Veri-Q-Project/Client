@@ -92,4 +92,19 @@ describe('payloadAccess', () => {
       'address',
     ]);
   });
+
+  it('finds threat arrays nested inside analysis response envelopes', () => {
+    expect(
+      pickSourceStringArray(
+        [
+          {
+            analysisResponse: {
+              threats: ['GSB:SOCIAL_ENGINEERING', 'OTX:PHISHING'],
+            },
+          },
+        ],
+        ['threats'],
+      ),
+    ).toEqual(['GSB:SOCIAL_ENGINEERING', 'OTX:PHISHING']);
+  });
 });
